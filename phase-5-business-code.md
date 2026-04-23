@@ -79,7 +79,7 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - [ ] Design deviations are documented and justified
 - [ ] Zero C/H/M issues after Ralph loop completes
 
-## Final Gate: User Approval
+## User Approval
 
 The user must review the final code and test suite:
 - All tests pass? ✅

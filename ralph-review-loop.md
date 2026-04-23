@@ -55,7 +55,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 | ❌ WRONG | Why It's Wrong | ✅ CORRECT |
 |----------|---------------|-----------|
 | Stopping after round 3 because round 3 = 0 issues | 1 zero round is NOT early stop. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 are both 0. |
-| Claiming early stop at round 5 because rounds 3 and 5 are both 0 | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when N and N+1 are both 0. Note: at N ≥ 5 with zero C/H/M, gate-pass is also available as an alternative to continuing. |
+| Claiming early stop at round 5 because rounds 3 and 5 are both 0 | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N are both 0. Note: at N ≥ 5 with zero C/H/M, gate-pass is also available as an alternative to continuing. |
 | Stopping after round 2 with 0 issues because "looks clean" (and round 1 was NOT 0) | Lacks consecutive confirmation — need both round 1 AND round 2 to be 0. (Early stop at round 2 IS valid if round 1 was also 0.) | Need round N-1 to also be 0. |
 | Declaring early stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 issues, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 → round 6 reviews → if still 0 → early stop. |
 | Counting L issues as "zero" | L issues are still issues. Zero means zero C/H/M/L. | Only I (info) or truly empty counts as a zero round. |
@@ -63,7 +63,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 ### Decision Flowchart
 
 ```
-After each round N, evaluate in this order:
+Evaluate after each round N, in this order (before starting round N+1):
 
 1. Count non-I issues (C+H+M+L) found this round
 2. If any C/H/M found → Fix all → Reset consecutive-zero counter to 0 → Go to round N+1
@@ -77,7 +77,7 @@ After each round N, evaluate in this order:
      → NO  → consecutive-zero counter = 1
              → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing early stop)
              → Go to round N+1 (or stop if gate-pass is acceptable)
-5. Before starting any round: if N would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
+5. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
 
 ### Concrete Examples
@@ -98,8 +98,8 @@ Round 1: H=1      → Fix → continue
 Round 2: M=1      → Fix → continue
 Round 3: 0 issues → counter = 1 → continue (NOT early stop!)
 Round 4: L=1      → Counter RESET to 0 (any non-I count resets; fixing L is optional) → continue
-Round 5: 0 issues → counter = 1 → continue (NOT early stop!)
-=== GATE EVALUATION === Minimum 5 rounds met, final round = 0 C/H/M → ✅ PASS GATE (but no early stop)
+Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (accept gate-pass now, or continue to pursue early stop)
+=== Choosing gate-pass === ✅ PASS GATE
 ```
 
 **Example C — Correct early stop (at round 4):**

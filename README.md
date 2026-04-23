@@ -31,7 +31,7 @@ Product Design → Technical Solution → Test Plan → Test Code → Business C
 
 Every phase ends with a mandatory review loop:
 
-- **Up to 10 rounds**; early stop at round 2+ when 2 consecutive zero-issue rounds; minimum 5 if no early stop triggers
+- **Up to 10 rounds**; early stop at round 2+ when 2 consecutive zero-issue rounds; minimum 5 if no early stop triggers; if C/H/M persist after 10 rounds → halt and escalate to user
 - **Early stop**: only after **2 consecutive zero-issue rounds** (zero C/H/M/L; intermittent zeros do not count)
 - **Gate**: zero Critical/High/Major issues to proceed
 - **Independent reviewer** subagent for each round
@@ -96,7 +96,7 @@ MIT
 
 每个阶段结束后启动强制审核循环：
 
-- **最多 10 轮**；连续 2 轮零问题时可在第 2 轮起早停；无早停则至少 5 轮
+- **最多 10 轮**；连续 2 轮零问题时可在第 2 轮起早停；无早停则至少 5 轮；10 轮后 C/H/M 仍未解决则中止并升级给用户
 - **早停条件**：仅当**连续 2 轮零 C/H/M/L 问题**时方可提前结束（间隔的零问题轮次不计）
 - **关卡条件**：零 Critical/High/Major 问题方可进入下一阶段
 - 每轮由**独立审核 subagent** 执行

@@ -55,7 +55,7 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Requirements Document as the deliverable
 - The user's original request as context
 
-**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+**Cross-phase escalation**: Not applicable to Phase 1 (no prior phases exist). If the reviewer identifies a fundamental flaw in the original user request, escalate directly to the user.
 
 ## Gate: What the Reviewer Must Confirm
 
