@@ -85,4 +85,4 @@ The pipeline is complete when:
 1. All 5 phases finished and Ralph loops passed
 2. All tests pass
 3. No business code without test coverage
-4. User has approved the final result
+4. User has approved the final result (configurable: set `approval_mode=every_phase` to require approval at each phase boundary, or `approval_mode=final_only` to approve only at Phase 5 end; default: `every_phase`)

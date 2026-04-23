@@ -61,6 +61,7 @@ Derive a **complete test strategy** from the acceptance criteria and technical d
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Test Plan Document as the deliverable
 - The Phase 1 Requirements Document and Phase 2 Technical Design Document as prior context
+- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
 
 **Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 

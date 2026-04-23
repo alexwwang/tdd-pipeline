@@ -46,7 +46,7 @@ The Ralph loop has **three exit paths**:
 
 **If early stop does NOT trigger**: you MUST complete at least 5 rounds before evaluating gate pass.
 
-**Consecutive-zero counter**: Track the streak of zero-C/H/M/L rounds. Reset to 0 on any round with C/H/M/L > 0. When counter reaches 2 → early stop.
+**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → early stop.
 
 ### ⛔ AVOID — Common Early Stop Mistakes (READ CAREFULLY)
 
@@ -72,11 +72,11 @@ Evaluate after each round N, in this order (before starting round N+1):
    → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue to round N+1 pursuing early stop)
    → If N < 5 → Go to round N+1
 4. If zero issues (only I or nothing):
-   → Was the previous round (N-1) also zero? (At N=1 there is no previous round, so always NO)
-     → YES → ✅ EARLY STOP (2 consecutive zero rounds, regardless of total count)
-     → NO  → consecutive-zero counter = 1
-             → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing early stop)
-             → Go to round N+1 (or stop if gate-pass is acceptable)
+   → Increment consecutive-zero counter by 1
+   → Counter = 2 → ✅ EARLY STOP
+   → Counter = 1:
+     → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing early stop)
+     → Go to round N+1 (or stop if gate-pass is acceptable)
 5. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
 

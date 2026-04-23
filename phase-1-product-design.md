@@ -54,6 +54,7 @@ Understand **what** to build and **why**, not **how**. Surface all ambiguity bef
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Requirements Document as the deliverable
 - The user's original request as context
+- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
 
 **Cross-phase escalation**: Not applicable to Phase 1 (no prior phases exist). If the reviewer identifies a fundamental flaw in the original user request, escalate directly to the user.
 

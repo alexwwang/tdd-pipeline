@@ -60,6 +60,7 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - All business code files, test files, and the Implementation Report as the deliverable
 - The Phase 4 Test Execution Report, Phase 3 Test Plan, Phase 2 Technical Design Document, and Phase 1 Requirements Document as prior context
+- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
 
 **Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 

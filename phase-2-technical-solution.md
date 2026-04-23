@@ -6,6 +6,8 @@ Design the architecture and make **all major technical decisions** before writin
 
 ## Detailed Process
 
+Use **independent subagents** for each role (Planner, Architect, Critic) to ensure diverse perspectives.
+
 1. **Planner step**: Draft high-level approach
    - Component boundaries
    - Data flow between components
@@ -59,6 +61,7 @@ Design the architecture and make **all major technical decisions** before writin
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Technical Design Document as the deliverable
 - The Phase 1 Requirements Document as prior context
+- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
 
 **Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
