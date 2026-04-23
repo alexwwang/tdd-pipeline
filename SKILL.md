@@ -55,6 +55,7 @@ To proceed from phase N to phase N+1, ALL of the following must be true:
 2. Ralph loop completed per round rules (early stop at round 2+, or ≥5 rounds, or 10-round escalation)
 3. Final round has **zero M+ (C/H/M) issues** — L and I are acceptable
 4. **TDD is non-negotiable**: No business code until tests exist and fail
+5. **User has approved** the deliverable before proceeding
 
 ## Progressive Disclosure
 
