@@ -31,8 +31,8 @@ Product Design → Technical Solution → Test Plan → Test Code → Business C
 
 Every phase ends with a mandatory review loop:
 
-- **Minimum 5 rounds** (no exceptions)
-- **Early stop**: only after **2 consecutive zero-issue rounds** (intermittent zeros do not count)
+- **Up to 10 rounds**; early stop at round 2+ when 2 consecutive zero-issue rounds; minimum 5 if no early stop triggers
+- **Early stop**: only after **2 consecutive zero-issue rounds** (zero C/H/M/L; intermittent zeros do not count)
 - **Gate**: zero Critical/High/Major issues to proceed
 - **Independent reviewer** subagent for each round
 
@@ -55,9 +55,11 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 Use natural language triggers in your AI coding tool:
 
 - `tdd pipeline <feature description>`
+- `tdd`
 - `write tests first`
-- `test-driven development`
-- `产品设计` / `技术方案` / `测试驱动` / `先写测试`
+- `test-driven`
+- `red green refactor`
+- `产品设计` / `技术方案` / `测试方案` / `测试驱动` / `先写测试`
 
 ## Key Rules
 
@@ -80,12 +82,22 @@ MIT
 
 > **核心原则**：如果你无法为某个功能写出一个失败的测试，说明你对它的理解还不够深入。
 
+## 5 个阶段
+
+| 阶段 | 交付物 | 审核 |
+|------|--------|------|
+| 1. 产品设计 | 需求文档 | Ralph 设计审核 |
+| 2. 技术方案 | 技术设计文档 | Ralph 设计审核 |
+| 3. 测试方案 | 测试计划文档 | Ralph 设计审核 |
+| 4. 测试代码 | 测试文件（全部失败） | Ralph 代码审核 |
+| 5. 业务代码 | 可工作的实现代码 | Ralph 代码审核 |
+
 ## Ralph 循环审核
 
 每个阶段结束后启动强制审核循环：
 
-- **最少 5 轮**（不可例外）
-- **早停条件**：仅当**连续 2 轮零问题**时方可提前结束（间隔的零问题轮次不计）
+- **最多 10 轮**；连续 2 轮零问题时可在第 2 轮起早停；无早停则至少 5 轮
+- **早停条件**：仅当**连续 2 轮零 C/H/M/L 问题**时方可提前结束（间隔的零问题轮次不计）
 - **关卡条件**：零 Critical/High/Major 问题方可进入下一阶段
 - 每轮由**独立审核 subagent** 执行
 
@@ -98,9 +110,12 @@ MIT
 在 AI 编码工具中使用自然语言触发：
 
 - `tdd pipeline <功能描述>`
+- `tdd`
 - `先写测试`
-- `测试驱动开发`
-- `产品设计` / `技术方案` / `测试方案`
+- `write tests first`
+- `test-driven`
+- `red green refactor`
+- `产品设计` / `技术方案` / `测试方案` / `测试驱动`
 
 ## 核心规则
 

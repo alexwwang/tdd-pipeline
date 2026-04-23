@@ -55,7 +55,9 @@ Write **ALL tests before ANY business code**. Every test MUST fail (Red phase).
 
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - All test files and the Test Execution Report as the deliverable
-- The Phase 3 Test Plan as prior context
+- The Phase 3 Test Plan, Phase 2 Technical Design, and Phase 1 Requirements Document as prior context
+
+**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
 **Phase 4 Code Review Specifics**: The reviewer must check:
 - Are ALL tests genuinely failing? (No premature implementation?)
@@ -72,6 +74,15 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - [ ] Tests are descriptively named and organized by component
 - [ ] Error paths and edge cases are covered
 - [ ] Zero C/H/M issues after Ralph loop completes
+
+## User Approval
+
+After the Ralph loop gate passes, present the Test Execution Report to the user for approval before proceeding to Phase 5. The user confirms:
+- All planned tests are written
+- All tests fail as expected
+- No business code exists
+
+**If the user rejects**: Revise test files based on feedback, then re-run the Ralph loop from Round 1. If the user identifies issues rooted in the test plan, return to Phase 3 (discard Phase 4 work, re-run Phase 3 Ralph loop, then restart Phase 4). If the root cause is design or requirements, return to Phase 2 or Phase 1.
 
 ## Transition
 

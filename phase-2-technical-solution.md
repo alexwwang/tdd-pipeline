@@ -60,6 +60,8 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Technical Design Document as the deliverable
 - The Phase 1 Requirements Document as prior context
 
+**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+
 ## Gate: What the Reviewer Must Confirm
 
 - [ ] Design covers all acceptance criteria from Phase 1
@@ -68,6 +70,15 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - [ ] No over-engineering: every abstraction is justified
 - [ ] Key decisions document alternatives and trade-offs
 - [ ] Zero C/H/M issues after Ralph loop completes
+
+## User Approval
+
+After the Ralph loop gate passes, present the Technical Design Document to the user for approval before proceeding to Phase 3. The user confirms:
+- Architecture and component breakdown are acceptable
+- Key decisions and trade-offs are understood and approved
+- No fundamental concerns with the proposed approach
+
+**If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1. If the user's feedback reveals a fundamental requirements flaw, return to Phase 1 (discard Phase 2 work, re-run Phase 1 Ralph loop, then restart Phase 2).
 
 ## Transition
 

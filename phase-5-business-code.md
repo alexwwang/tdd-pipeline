@@ -9,6 +9,9 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 ### Step 1: Red (Already Done — Phase 4)
 - All tests exist and fail
 - Do NOT modify tests in this phase unless the test itself is proven wrong
+- **If a test is proven wrong**: Document the issue, propose the fix to the user, and either:
+  - (a) Fix the test inline and continue (if the fix is minor — e.g., wrong expected value), OR
+  - (b) Return to the **root-cause phase**: if the flaw is in tests → Phase 4; if in test strategy → Phase 3; if in architecture → Phase 2; if in requirements → Phase 1. **Discard all work from the root-cause phase onward**, re-run that phase's Ralph loop, and re-execute subsequent phases.
 
 ### Step 2: Green
 1. Pick the **simplest failing test**
@@ -27,10 +30,11 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 1. **Only refactor when ALL tests pass**
 2. Clean duplication, improve names, simplify logic, extract abstractions
 3. Run tests **after every refactor step** — they must stay green
-4. If tests break during refactor:
+4. **Log each refactoring round** (count for the deliverable template)
+5. If tests break during refactor:
    - Revert immediately
    - Try a smaller, simpler refactor, or the abstraction is wrong
-5. Document any design deviations from Phase 2 with justification
+6. Document any design deviations from Phase 2 with justification
 
 ### Final Verification
 1. Run the full test suite — all tests must pass
@@ -55,7 +59,9 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - All business code files, test files, and the Implementation Report as the deliverable
-- The Phase 4 Test Execution Report and Phase 2 Technical Design Document as prior context
+- The Phase 4 Test Execution Report, Phase 3 Test Plan, Phase 2 Technical Design Document, and Phase 1 Requirements Document as prior context
+
+**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
 **Phase 5 Code Review Specifics**: The reviewer must check:
 - Is refactoring clean? Any regressions introduced?
@@ -79,5 +85,10 @@ The user must review the final code and test suite:
 - All tests pass? ✅
 - No code without test coverage? ✅
 - Refactoring completed? ✅
+
+**If the user rejects**: Determine the scope of rejection:
+- **Code-level issues** (quality, style, missing edge cases): Revise the code, then re-run the Phase 5 Ralph loop from Round 1.
+- **Test-level issues** (wrong behavior spec, missing scenarios): Return to Phase 4, modify tests, re-run Phase 4 Ralph loop, then restart Phase 5.
+- **Design or requirements issues** (wrong approach, misunderstood requirements): Return to the root-cause phase (Phase 2 or Phase 1), discard all downstream work, re-run that phase's Ralph loop, and re-execute subsequent phases.
 
 After user approval, the pipeline is complete. Invoke `tdd-pipeline` again for the next feature.

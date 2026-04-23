@@ -6,7 +6,7 @@ Understand **what** to build and **why**, not **how**. Surface all ambiguity bef
 
 ## Detailed Process
 
-1. **Deep-interview the user** — Use Socratic questioning (at least 3–5 clarifying questions)
+1. **Deep-interview the user** — Use Socratic questioning (at least 3 clarifying questions; aim for 3–5)
    - What problem does this solve?
    - Who are the actors?
    - What are the boundaries of the system?
@@ -55,6 +55,8 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Requirements Document as the deliverable
 - The user's original request as context
 
+**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+
 ## Gate: What the Reviewer Must Confirm
 
 - [ ] All user stories are traceable to the original request
@@ -63,6 +65,15 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - [ ] Edge cases and error scenarios are identified
 - [ ] Constraints and assumptions are explicit
 - [ ] Zero C/H/M issues after Ralph loop completes
+
+## User Approval
+
+After the Ralph loop gate passes, present the Requirements Document to the user for approval before proceeding to Phase 2. The user confirms:
+- All user stories accurately reflect their intent
+- Acceptance criteria are complete and correct
+- Constraints and assumptions are acceptable
+
+**If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1.
 
 ## Transition
 

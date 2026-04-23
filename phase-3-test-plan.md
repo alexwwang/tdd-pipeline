@@ -50,6 +50,10 @@ Derive a **complete test strategy** from the acceptance criteria and technical d
 ## Dependencies Between Tests
 - Test B requires Test A to exist (but not pass)
 - Tests in `test_payment.py` must not run in parallel
+
+## Open Questions
+- <environment constraint> → <resolution>
+- <mock feasibility concern> → <resolution>
 ```
 
 ## Ralph Loop Integration
@@ -57,6 +61,8 @@ Derive a **complete test strategy** from the acceptance criteria and technical d
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - The Test Plan Document as the deliverable
 - The Phase 1 Requirements Document and Phase 2 Technical Design Document as prior context
+
+**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
 ## Gate: What the Reviewer Must Confirm
 
@@ -66,6 +72,15 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - [ ] Test types are appropriate (not over-relying on E2E, not under-testing integration)
 - [ ] Test data strategy is feasible
 - [ ] Zero C/H/M issues after Ralph loop completes
+
+## User Approval
+
+After the Ralph loop gate passes, present the Test Plan Document to the user for approval before proceeding to Phase 4. The user confirms:
+- Test coverage is adequate for all acceptance criteria
+- Edge cases and error paths are sufficiently covered
+- Test strategy (unit/integration/e2e split) is appropriate
+
+**If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1. If the user's feedback reveals a design flaw, return to Phase 2 (discard Phase 3 work, re-run Phase 2 Ralph loop, then restart Phase 3). If the root cause is requirements, return to Phase 1.
 
 ## Transition
 
