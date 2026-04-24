@@ -105,6 +105,26 @@ Use natural language triggers in your AI coding tool:
 - **Priority drives depth**: core/key items get comprehensive testing; secondary/peripheral get basic coverage
 - **Cross-phase consistency**: priority classifications must be traceable and justified across all phases
 
+## Installation
+
+Copy all files to your Claude Code skills directory:
+
+```bash
+# macOS/Linux
+cp -r tdd-pipeline ~/.claude/skills/
+
+# Verify
+ls ~/.claude/skills/tdd-pipeline/
+```
+
+Or clone directly:
+
+```bash
+git clone <repo-url> ~/.claude/skills/tdd-pipeline
+```
+
+No build step or dependency installation required — skills are loaded on demand by the Claude Code skill system.
+
 ## File Structure
 
 ```
@@ -213,6 +233,41 @@ Phase 3: 测试深度由上游分类驱动
 - `test-driven`
 - `red green refactor`
 - `产品设计` / `技术方案` / `测试方案` / `测试驱动`
+
+## 安装方法
+
+将所有文件复制到 Claude Code 的 skills 目录：
+
+```bash
+# macOS/Linux
+cp -r tdd-pipeline ~/.claude/skills/
+
+# 验证
+ls ~/.claude/skills/tdd-pipeline/
+```
+
+或直接克隆：
+
+```bash
+git clone <仓库地址> ~/.claude/skills/tdd-pipeline
+```
+
+无需构建步骤或依赖安装 —— skills 由 Claude Code skill 系统按需加载。
+
+## 文件结构
+
+```
+tdd-pipeline/
+├── SKILL.md                        ← 入口文件（渐进式披露中心）
+├── ralph-review-loop.md            ← 共享审核协议
+├── task-tree.md                    ← 仅在复杂任务时加载
+├── phase-1-product-design.md
+├── phase-2-technical-solution.md
+├── phase-3-test-plan.md
+├── phase-4-test-code.md
+├── phase-5-business-code.md
+└── README.md
+```
 
 ## 核心规则
 
