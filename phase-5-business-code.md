@@ -57,6 +57,8 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 
 ## Ralph Loop Integration
 
+**Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 implementation files, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
+
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - All business code files, test files, and the Implementation Report as the deliverable
 - The Phase 4 Test Execution Report, Phase 3 Test Plan, Phase 2 Technical Design Document, and Phase 1 Requirements Document as prior context

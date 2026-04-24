@@ -24,10 +24,10 @@ Write **ALL tests before ANY business code**. Every test MUST fail (Red phase).
    - This is intentional — it defines the public interface
 3. **Create minimal stubs ONLY if required for compilation**
    - Empty functions, class skeletons, or type definitions
-   - Stubs must `raise NotImplementedError` or return clearly wrong values
+   - Stubs must `raise NotImplementedError` or return values that make test assertions fail (not merely "wrong" — must guarantee test failure)
    - **Stubs are NOT business logic** — they are structural placeholders
 4. **Run tests and confirm they ALL FAIL**
-   - Document the failure modes — they are the roadmap for Phase 5
+    - Record each test's failure mode in the Test Execution Report (Failure Summary section) — these are the roadmap for Phase 5
    - If any test passes, investigate immediately: business code leaked, or the test is wrong
 5. **Map failures to the Test Plan**
    - Ensure every planned test is represented
@@ -37,21 +37,27 @@ Write **ALL tests before ANY business code**. Every test MUST fail (Red phase).
 
 ```markdown
 # Test Execution Report (Phase 4)
+- Feature: <name>
+- Date: <date>
 - Total tests: <N>
-- Failed: <N> (expected — all should fail)
+- Runtime failures (assertion/stub errors): <N> (expected — all should fail at runtime)
 - Passed: 0 (if any pass, the test is invalid or business code leaked)
-- Errors: <compilation/import errors to fix>
+- Structural errors (compilation bugs to fix before review): 0
 
 ## Test Files
 - `test_component_a.py`: <N> tests
 - `test_component_b.py`: <N> tests
 
 ## Failure Summary
-- `test_should_create_user`: ImportError — `create_user` does not exist ✅ expected
-- `test_should_reject_invalid_email`: AssertionError — stub raises wrong exception ✅ expected
+- `test_should_create_user`: AssertionError — stub raises NotImplementedError ✅ expected (Red phase)
+- `test_should_reject_invalid_email`: AssertionError — stub returns None, expected string ✅ expected (Red phase)
 ```
 
+> **Note**: All imports must succeed (via minimal stubs). If any import fails, create the missing stub before proceeding to review. Import errors are NOT acceptable at gate time — only runtime assertion failures are expected.
+
 ## Ralph Loop Integration
+
+**Before review**: Write an outline. If it contains ≥ 3 test modules or ≥ 5 test groups, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
 
 After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - All test files and the Test Execution Report as the deliverable
@@ -69,10 +75,13 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 ## Gate: What the Reviewer Must Confirm
 
 - [ ] All tests are written per the Test Plan
-- [ ] All tests fail as expected (zero passing tests)
+- [ ] All tests compile/import successfully (via minimal stubs where needed)
+- [ ] Zero structural/compilation errors remaining
+- [ ] All tests fail at runtime as expected (zero passing tests)
 - [ ] No business logic has been written (only minimal stubs allowed)
-- [ ] Stubs do not accidentally make tests pass
-- [ ] Tests are descriptively named and organized by component
+- [ ] Stubs actively cause test failures (raise NotImplementedError or return values that break assertions)
+- [ ] All Test Plan items are mapped to written tests (no gaps)
+- [ ] Tests are descriptively named (should_<expected>_<context>) and organized by component
 - [ ] Error paths and edge cases are covered
 - [ ] Zero C/H/M issues after Ralph loop completes
 

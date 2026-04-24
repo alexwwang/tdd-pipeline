@@ -43,8 +43,11 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 
 Every phase ends with a **mandatory Ralph-loop review** before proceeding. See `ralph-review-loop.md` for the full protocol.
 
-- Up to **10 review rounds**; early stop at round 2+ when 2 consecutive zero-issue rounds; minimum 5 if no early stop; if C/H/M persist after 10 rounds, halt and escalate to user
-- Early stop **only** after **2 consecutive zero-issue rounds** (zero C/H/M/L)
+- Up to **10 review rounds** total
+- Early stop: allowed at any round ≥ 2 when the previous 2 rounds were both zero-issue (zero C/H/M/L — this is stricter than gate pass, which tolerates L issues)
+- Floor: if early stop never triggers, run at least 5 rounds before evaluating gate pass
+- If C/H/M persist after 10 rounds, halt and escalate to user
+- Full protocol with decision flowchart and examples → see `ralph-review-loop.md`
 - Gate: **zero C/H/M issues** remaining (L/I are acceptable)
 - Spawn an **independent reviewer subagent** for each round
 
@@ -52,7 +55,7 @@ Every phase ends with a **mandatory Ralph-loop review** before proceeding. See `
 
 To proceed from phase N to phase N+1, ALL of the following must be true:
 1. Phase N deliverable is complete
-2. Ralph loop completed per round rules (early stop at round 2+, or ≥5 rounds, or 10-round escalation)
+2. Ralph loop terminated via early stop (round ≥ 2 consecutive zero) OR gate pass (round ≥ 5, zero C/H/M); if max rounds reached (10) without resolution, escalate to user — do NOT proceed
 3. Final round has **zero M+ (C/H/M) issues** — L and I are acceptable
 4. **TDD is non-negotiable**: No business code until tests exist and fail
 5. **User has approved** the deliverable before proceeding
@@ -66,6 +69,7 @@ To proceed from phase N to phase N+1, ALL of the following must be true:
 - Phase 3 → `phase-3-test-plan.md`
 - Phase 4 → `phase-4-test-code.md`
 - Phase 5 → `phase-5-business-code.md`
+- Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns
 
@@ -79,10 +83,40 @@ To proceed from phase N to phase N+1, ALL of the following must be true:
 | Writing one giant test file | Poor organization, hard to maintain | One test file per component/module |
 | Only testing happy paths | Misses real-world failures | Explicitly test errors and boundaries |
 
+## Split Decision
+
+Before writing any phase deliverable, evaluate structural complexity:
+
+```
+write_outline()                    // list planned sections, modules, stories, components
+
+// "modules" and "stories" are phase-adaptive:
+//   Phase 1: stories = user stories
+//   Phase 2: stories = components
+//   Phase 3: stories = test groups
+//   Phase 4: stories = test modules
+//   Phase 5: stories = implementation files
+if count(modules) >= 3 OR count(stories) >= 5:
+    SPLIT = true
+    if count(modules) < 3:
+        // Stories triggered the split; group stories into 3-7 cohesive modules
+        modules = group_by_cohesion(stories, target=clamp(count(stories)/2, 3, 7))
+    elif count(modules) > 7:
+        // Too many modules; merge small ones into larger cohesive groups
+        modules = merge_smallest(modules, target=7)
+    // Result: 3-7 modules, each a cohesive group for parallel execution
+else:
+    SPLIT = false                                    // write as single document
+```
+
+If `SPLIT = true`, load **`task-tree.md`** for the decomposition, execution, context-reading, and versioning protocols. If `SPLIT = false`, proceed normally with a single deliverable document.
+
 ## Exit Conditions
 
 The pipeline is complete when:
 1. All 5 phases finished and Ralph loops passed
 2. All tests pass
 3. No business code without test coverage
-4. User has approved the final result (configurable: set `approval_mode=every_phase` to require approval at each phase boundary, or `approval_mode=final_only` to approve only at Phase 5 end; default: `every_phase`)
+4. User has approved the final result. Approval granularity is set at pipeline invocation:
+   - `approval_mode=every_phase` (default): user approves at each phase boundary
+   - `approval_mode=final_only`: user approves only at Phase 5 end
