@@ -43,22 +43,26 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 
 Every phase ends with a **mandatory Ralph-loop review** before proceeding. See `ralph-review-loop.md` for the full protocol.
 
-- Up to **10 review rounds** total
-- Early stop: allowed at any round ≥ 2 when the previous 2 rounds were both zero-issue (zero C/H/M/L — this is stricter than gate pass, which tolerates L issues)
-- Floor: if early stop never triggers, run at least 5 rounds before evaluating gate pass
-- If C/H/M persist after 10 rounds, halt and escalate to user
-- Full protocol with decision flowchart and examples → see `ralph-review-loop.md`
-- Gate: **zero C/H/M issues** remaining (L/I are acceptable)
-- Spawn an **independent reviewer subagent** for each round
+```
+ralph_loop:
+  max_rounds: 10
+  reviewer: independent_subagent   # not involved in creating deliverable
+  early_stop: rounds >= 2 AND consecutive_zero(round_N-1, round_N)  # zero C/H/M/L
+  gate_pass: rounds >= 5 AND current_round.C+H+M == 0              # L/I acceptable
+  escalation: round 10 AND C/H/M > 0 → HALT, report to user       # NOT a pass path
+  termination: early_stop | gate_pass  # one must trigger to proceed
+```
 
 ## Gate Rules
 
-To proceed from phase N to phase N+1, ALL of the following must be true:
-1. Phase N deliverable is complete
-2. Ralph loop terminated via early stop (round ≥ 2 consecutive zero) OR gate pass (round ≥ 5, zero C/H/M); if max rounds reached (10) without resolution, escalate to user — do NOT proceed
-3. Final round has **zero M+ (C/H/M) issues** — L and I are acceptable
-4. **TDD is non-negotiable**: No business code until tests exist and fail
-5. **User has approved** the deliverable before proceeding
+```
+gate_pass(N → N+1) = ALL:
+  deliverable(N).complete == true
+  ralph_loop.termination IN [early_stop, gate_pass]   # NOT max_rounds
+  final_round.severity.C + .H + .M == 0               # L/I acceptable
+  TDD_INVARIANT: no business code without failing test
+  user.approved == true
+```
 
 ## Progressive Disclosure
 
@@ -73,15 +77,15 @@ To proceed from phase N to phase N+1, ALL of the following must be true:
 
 ## Anti-Patterns
 
-| Anti-Pattern | Why It's Wrong | What To Do Instead |
-|-------------|----------------|-------------------|
-| Writing business code before tests | Violates TDD, creates untested code | Stop. Write the test first. |
-| Writing tests that pass immediately | Business code leaked or test is wrong | Remove code, or fix the test |
-| Changing tests to fit implementation | Tests are the spec, not the code | Fix the code, not the test |
-| Skipping the refactor step | Accumulates technical debt | Always refactor when green |
-| Bypassing Ralph loop gates | Hidden flaws propagate downstream | Run rounds until early stop or 10 max, enforce zero M+ |
-| Writing one giant test file | Poor organization, hard to maintain | One test file per component/module |
-| Only testing happy paths | Misses real-world failures | Explicitly test errors and boundaries |
+| Anti-Pattern | Fix |
+|-------------|-----|
+| Business code before tests | STOP → write test first |
+| Test passes immediately | Leaked code or wrong test → remove/fix |
+| Change tests to fit impl | Tests = spec → fix the code |
+| Skip refactor step | Always refactor when green |
+| Bypass Ralph gates | Run until gate pass, enforce zero M+ |
+| One giant test file | 1 file per component/module |
+| Only happy-path tests | MUST test errors + boundaries |
 
 ## Split Decision
 
@@ -90,21 +94,21 @@ Before writing any phase deliverable, evaluate structural complexity:
 ```
 write_outline()                    // list planned sections, modules, stories, components
 
-// "modules" and "stories" are phase-adaptive:
-//   Phase 1: stories = user stories
-//   Phase 2: stories = components
-//   Phase 3: stories = test groups
-//   Phase 4: stories = test modules
-//   Phase 5: stories = implementation files
+# "modules" and "stories" are phase-adaptive:
+#   Phase 1: stories = user stories
+#   Phase 2: stories = components
+#   Phase 3: stories = test groups
+#   Phase 4: stories = test modules
+#   Phase 5: stories = implementation files
 if count(modules) >= 3 OR count(stories) >= 5:
     SPLIT = true
     if count(modules) < 3:
-        // Stories triggered the split; group stories into 3-7 cohesive modules
+        # Stories triggered the split; group stories into 3-7 cohesive modules
         modules = group_by_cohesion(stories, target=clamp(count(stories)/2, 3, 7))
     elif count(modules) > 7:
-        // Too many modules; merge small ones into larger cohesive groups
+        # Too many modules; merge small ones into larger cohesive groups
         modules = merge_smallest(modules, target=7)
-    // Result: 3-7 modules, each a cohesive group for parallel execution
+    # Result: 3-7 modules, each a cohesive group for parallel execution
 else:
     SPLIT = false                                    // write as single document
 ```
@@ -113,10 +117,14 @@ If `SPLIT = true`, load **`task-tree.md`** for the decomposition, execution, con
 
 ## Exit Conditions
 
-The pipeline is complete when:
-1. All 5 phases finished and Ralph loops passed
-2. All tests pass
-3. No business code without test coverage
-4. User has approved the final result. Approval granularity is set at pipeline invocation:
-   - `approval_mode=every_phase` (default): user approves at each phase boundary
-   - `approval_mode=final_only`: user approves only at Phase 5 end
+```
+pipeline_complete = ALL:
+  phases[1..5].gate_passed == true
+  all_tests.pass == true
+  no_business_code_without_test_coverage == true
+  user.approved == true
+
+# Approval granularity (set at invocation):
+#   approval_mode=every_phase  (default) — approve at each phase boundary
+#   approval_mode=final_only   — approve only at Phase 5 end
+```

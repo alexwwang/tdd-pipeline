@@ -6,32 +6,54 @@ Write **ALL tests before ANY business code**. Every test MUST fail (Red phase).
 
 ## ⚠️ TDD Enforcement Rules — Non-Negotiable
 
-1. **No business code yet** — only test files
-2. **Every test must compile/import** but **fail when run**
-3. **Tests define the interface** — they are the contract
-4. **Use descriptive test names** — `should_reject_negative_amount()` not `test1()`
-5. **Group by behavior** — one test file per logical component
-6. **Include error path tests** — happy path alone is insufficient
-7. **No premature implementation** — stubs must throw or return dummy values so tests still fail
+```
+FORBIDDEN: [business_code, premature_implementation, passing_tests]
+
+REQUIRE:
+  tests.compile == true          # imports succeed (via minimal stubs)
+  tests.run     == FAIL          # all fail at runtime (Red phase)
+  test_names    =~ /^should_.*$/ # descriptive, behavior-focused
+  grouping:    1 test file per logical component
+  error_paths: covered           # happy path alone insufficient
+
+stubs:
+  raise NotImplementedError
+  OR return values that break assertions
+  # Stubs are structural placeholders, NOT business logic
+```
 
 ## Detailed Process
 
-1. **Create test files** based on the Test Plan
-   - One file per component/module
-   - Mirror the structure of the planned business code
-2. **Write test cases** importing the (non-existent) business code
-   - Import functions, classes, and modules that do not exist yet
-   - This is intentional — it defines the public interface
-3. **Create minimal stubs ONLY if required for compilation**
-   - Empty functions, class skeletons, or type definitions
-   - Stubs must `raise NotImplementedError` or return values that make test assertions fail (not merely "wrong" — must guarantee test failure)
-   - **Stubs are NOT business logic** — they are structural placeholders
-4. **Run tests and confirm they ALL FAIL**
-    - Record each test's failure mode in the Test Execution Report (Failure Summary section) — these are the roadmap for Phase 5
-   - If any test passes, investigate immediately: business code leaked, or the test is wrong
-5. **Map failures to the Test Plan**
-   - Ensure every planned test is represented
-   - Note any tests that could not be written (escalate to Phase 1 or 3)
+```
+phase_4():
+
+  # 1. Create test files — one per component, mirroring planned business code
+  for component in test_plan:
+    create_test_file(component)
+
+  # 2. Write test cases importing non-existent business code
+  for test_case in test_plan:
+    import(module_from_non_existent_code)  # intentional: defines public interface
+
+  # 3. Create minimal stubs (ALWAYS required — imports must succeed)
+  for module in imported_modules:
+    create_stub(module):
+      raise NotImplementedError
+      # OR return dummy value guaranteed to break assertions
+
+  # 4. Run tests and confirm ALL FAIL
+  run(all_tests)
+  for failure in test_results:
+    record(failure_mode) → Test Execution Report :: Failure Summary  # roadmap for Phase 5
+  if any_test_passes:
+    investigate("business code leaked OR test is wrong")
+
+  # 5. Map failures to Test Plan
+  for planned_test in test_plan:
+    assert: planned_test in written_tests
+    if cannot_write:
+      escalate → Phase 1 or Phase 3
+```
 
 ## Deliverable Template
 
@@ -72,18 +94,19 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - Are stubs truly minimal and not passing tests?
 - Is test coverage complete per the Test Plan?
 
-## Gate: What the Reviewer Must Confirm
+## Gate: Reviewer Checklist
 
-- [ ] All tests are written per the Test Plan
-- [ ] All tests compile/import successfully (via minimal stubs where needed)
-- [ ] Zero structural/compilation errors remaining
-- [ ] All tests fail at runtime as expected (zero passing tests)
-- [ ] No business logic has been written (only minimal stubs allowed)
-- [ ] Stubs actively cause test failures (raise NotImplementedError or return values that break assertions)
-- [ ] All Test Plan items are mapped to written tests (no gaps)
-- [ ] Tests are descriptively named (should_<expected>_<context>) and organized by component
-- [ ] Error paths and edge cases are covered
-- [ ] Zero C/H/M issues after Ralph loop completes
+```
+gate_pass = ALL:
+  all_tests:        written per Test Plan
+  compilation:      zero structural/compilation errors (imports succeed via stubs)
+  runtime:          all tests fail, zero passing tests
+  no_business_code: only minimal stubs that actively cause test failures
+  coverage:         Test Plan fully mapped to written tests (no gaps)
+  naming:           descriptive (should_<expected>_<context>), organized by component
+  edge_cases:       error paths and boundary conditions covered
+  ralph:            zero C/H/M issues
+```
 
 ## User Approval
 
@@ -92,7 +115,7 @@ After the Ralph loop gate passes, present the Test Execution Report to the user 
 - All tests fail as expected
 - No business code exists
 
-**If the user rejects**: Revise test files based on feedback, then re-run the Ralph loop from Round 1. If the user identifies issues rooted in the test plan, return to Phase 3 (discard Phase 4 work, re-run Phase 3 Ralph loop, then restart Phase 4). If the root cause is design or requirements, return to Phase 2 or Phase 1.
+**If the user rejects**: Revise test files based on feedback, then re-run the Ralph loop from Round 1. If the root cause is in the test plan, return to Phase 3 (discard Phase 4 work, re-run Phase 3 Ralph loop, then restart Phase 4). If the root cause is in design or requirements, return to Phase 2 or Phase 1.
 
 ## Transition
 
