@@ -137,7 +137,7 @@ change: "Phase 2 review: restructured module split — separated PaymentProcesso
 | Trigger | Action |
 |---------|--------|
 | Review feedback re-run | version++, describe changes |
-| Rollback + re-execute | start at version 1; `change` refs discarded version |
+| Rollback to prior phase + re-execute | start at version 1; `change` refs discarded version |
 | Minor edit (typos, formatting) | no version bump |
 
 ## 5. Status Tracking

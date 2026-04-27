@@ -30,12 +30,12 @@ REQUIRED_DIMENSIONS = {
 4. **Boundary Review** (systematic audit per module):
 ```
 for module in modules:
-  assert: one_sentence_job(module)            # single responsibility
-  assert: all_deps_justified(module)           # no gratuitous coupling
+  assert: one_sentence_job(module)            # can you describe this module's job in one sentence?
+  assert: all_deps_justified(module)           # is each inter-module dependency justified?
   for req_change in requirement_changes:
-    triggered = modules_affected_by(req_change)
-    if len(triggered) > 1 → redesign boundary  # blast radius too wide
-  assert: min_api_surface(module)              # excess surface = implicit coupling
+    triggered = modules_affected_by(req_change)  # which requirement change triggers this module?
+    if len(triggered) > 1 → investigate boundary  # may indicate wrong split
+  assert: min_api_surface(module)              # excessive API surface is implicit coupling
 ```
 5. **Security Review** (independent audit):
 ```
@@ -57,32 +57,32 @@ security_review = {
 ```
 quality = {
   operability: {
-    concurrency:    [non_blocking_ops, sync_call_risks]
-    reversibility:  [ops_needing_rollback]
-    resources:      [timeout, memory, concurrency_limits]
+    concurrency:    "which operations must be non-blocking? Any sync call risks?"
+    reversibility:  "which write operations need rollback capability?"
+    resources:      "execution timeout, memory, or concurrency limits?"
   }
   observability: {
-    alerts:         { who_notified, alert_conditions }
-    health:         { normal_metrics, deviation_definition }
-    debug:          { structured_logs, correlation_ids, log_semantics }
+    alerts:         "who is notified on anomalies? Are alert conditions defined?"
+    health:         "what are normal-operation metrics? How is deviation defined?"
+    debug:          "are logs structured? Do critical paths have correlation IDs?"
   }
   data: {
-    isolation:      [data_excluded_from_LLM_context]
-    loss_risk:      [nodes_with_potential_data_loss]
+    isolation:      "which data must not enter LLM context?"
+    loss_risk:      "which nodes have potential data loss?"
   }
   security: {  # confirm Security Review findings
-    all_threats_addressed:  bool
-    trust_boundary_gaps:    none
+    all_threats_addressed:  "all threat scenarios have a design response?"
+    trust_boundary_gaps:    "no trust boundary gaps remain unresolved?"
   }
   performance: {
-    latency:        { targets_per_op }
-    throughput:     { expected_rate, burst_patterns }
-    caching:        { cacheable_data, invalidation_rules }
+    latency:        "response time requirements per operation?"
+    throughput:     "expected request rate? Any burst patterns?"
+    caching:        "which data is cacheable? Invalidation rules?"
   }
   maintainability: {
-    change_point:   "requirement change affects ≤ N modules"
-    logic_leakage:  centralized | scattered
-    extension_cost: N modules to change for new capability
+    change_point:   "a requirement change affects at most how many modules?"
+    logic_leakage:  "is business logic centralized or scattered?"
+    extension_cost: "how many modules must change to add a new capability?"
   }
 }
 ```

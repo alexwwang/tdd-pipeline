@@ -77,15 +77,15 @@ gate_pass(N → N+1) = ALL:
 
 ## Anti-Patterns
 
-| Anti-Pattern | Fix |
-|-------------|-----|
-| Business code before tests | STOP → write test first |
-| Test passes immediately | Leaked code or wrong test → remove/fix |
-| Change tests to fit impl | Tests = spec → fix the code |
-| Skip refactor step | Always refactor when green |
-| Bypass Ralph gates | Run until gate pass, enforce zero M+ |
-| One giant test file | 1 file per component/module |
-| Only happy-path tests | MUST test errors + boundaries |
+| Anti-Pattern | Why It's Wrong | Fix |
+|-------------|----------------|-----|
+| Business code before tests | Violates TDD, creates untested code | STOP → write test first |
+| Test passes immediately | Business code leaked or test is wrong | Remove leaked code or fix test |
+| Change tests to fit impl | Tests are the spec, not the code | Fix the code, not the test |
+| Skip refactor step | Accumulates technical debt | Always refactor when green |
+| Bypass Ralph gates | Hidden flaws propagate downstream | Run until gate pass, enforce zero M+ |
+| One giant test file | Poor organization, hard to maintain | 1 file per component/module |
+| Only happy-path tests | Misses real-world failures | MUST test errors + boundaries |
 
 ## Split Decision
 

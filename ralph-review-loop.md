@@ -37,7 +37,11 @@ for round N:
       Recommend rollback to Phase N-k, discard downstream, re-run Ralph loop."
     FORBIDDEN: fix prior-phase issues in current deliverable
 
-  report: numbered issues with severity labels  # e.g. [H-1], [M-2], [L-3]
+  report: numbered issues with severity labels
+    # e.g.:
+    #   [H-1] Missing boundary condition handling in AC-3
+    #   [M-2] Test plan omits integration test for payment webhook
+    #   [L-3] Could use more descriptive variable names in stubs
   tally: C=0, H=1, M=2, L=3, I=1
   fix: all C + H + M (L + I optional)
   log: { round: N, tally, fixes_applied }
