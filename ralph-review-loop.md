@@ -25,16 +25,27 @@ Every issue found by the reviewer MUST be classified by severity:
 
 ## Review Process (Per Round)
 
-1. **Present**: Feed the deliverable and relevant prior phase outputs to the reviewer subagent
-2. **Review**: The reviewer examines the deliverable against the phase's gate criteria (see individual `phase-N-*.md` files)
-3. **Cross-phase escalation**: If the reviewer identifies a root cause in a **prior phase** (not the current deliverable), halt the loop and escalate to the user with a recommendation: "Root cause found in Phase N-k. Recommend rolling back to Phase N-k, discarding all downstream work, and re-running that phase's Ralph loop." Do NOT attempt to fix prior-phase issues within the current deliverable.
-4. **Report**: The reviewer outputs a numbered list of issues with severity labels, e.g.:
-   - `[H-1]` Missing boundary condition handling in AC-3
-   - `[M-2]` Test plan omits integration test for payment webhook
-   - `[L-3]` Could use more descriptive variable names in stubs
-5. **Tally**: Count issues by severity: `C=0, H=1, M=2, L=3, I=1`
-6. **Fix**: Address all C, H, and M issues. L and I issues are optional
-7. **Log**: Record the round number, issue tally, and fixes applied
+```
+for round N:
+  present(deliverable, prior_phase_outputs) → reviewer
+  review_against(gate_criteria)              # see phase-N-*.md files
+
+  # Cross-phase escalation
+  if root_cause in prior_phase:
+    HALT loop
+    ESCALATE to user: "Root cause in Phase N-k.
+      Recommend rollback to Phase N-k, discard downstream, re-run Ralph loop."
+    FORBIDDEN: fix prior-phase issues in current deliverable
+
+  report: numbered issues with severity labels
+    # e.g.:
+    #   [H-1] Missing boundary condition handling in AC-3
+    #   [M-2] Test plan omits integration test for payment webhook
+    #   [L-3] Could use more descriptive variable names in stubs
+  tally: C=0, H=1, M=2, L=3, I=1
+  fix: all C + H + M (L + I optional)
+  log: { round: N, tally, fixes_applied }
+```
 
 ## Rounds & Early Stop Rule
 
@@ -120,10 +131,11 @@ Round 10: M=1 → ⛔ MAX ROUNDS → HALT → Escalate to user with issue summar
 
 ## Gate Condition
 
-Proceed to the next phase **ONLY IF**:
-1. The Ralph loop has completed via early stop (any round ≥ 2), OR at least 5 rounds have been completed without early stop. In both cases, if C/H/M > 0 the loop continues (up to round 10 max).
-2. The **final round** has **zero C, H, and M issues** remaining
-3. L and I issues may be carried forward into the next phase
+```
+gate_proceed = ALL:
+  ralph_termination IN [early_stop, gate_pass]  # NOT max_rounds
+  final_round.C + .H + .M == 0                  # L/I acceptable, carried forward
+```
 
 ## Design Review Checklist (Phases 1–3)
 

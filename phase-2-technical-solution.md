@@ -9,12 +9,16 @@ Design the architecture and make **all major technical decisions** before writin
 Use **independent subagents** for each role (Planner, Architect, Critic) to ensure diverse perspectives.
 
 1. **Constraints input** (before drafting):
-    - Scalability envelope: expected load now vs. 12-month projection
-    - Extension vectors: what new capabilities are most likely to be added?
-    - Non-negotiable constraints: latency, data isolation, reversibility requirements
-    - Security constraints: authentication/authorization model, encryption requirements, key management
-    - Cost constraints: infrastructure budget limits, third-party service cost ceilings
-    - Compliance constraints: regulatory requirements (GDPR, data residency, audit trail)
+```
+REQUIRED_DIMENSIONS = {
+  scalability:    { current: <load>, projection_12mo: <load> }
+  extension:      <likely new capabilities>
+  non_negotiable: [latency, data_isolation, reversibility]
+  security:       { auth_model, encryption, key_management }
+  cost:           { infra_budget, third_party_ceiling }
+  compliance:     [GDPR, data_residency, audit_trail]
+}
+```
 2. **Planner step**: Draft high-level approach
     - Component boundaries
     - Data flow between components
@@ -23,47 +27,65 @@ Use **independent subagents** for each role (Planner, Architect, Critic) to ensu
     - Module decomposition
     - Interface definitions (function signatures, API contracts, type definitions)
     - Data models and persistence strategy
-4. **Boundary Review**: Systematically audit each module boundary
-    - Single responsibility check: can you describe this module's job in one sentence?
-    - Dependency necessity: is each inter-module dependency justified?
-    - Change impact mapping: which requirement change triggers this module to change?
-    - Blast radius check: does the same requirement change also trigger other modules? (If yes → boundary may be wrong)
-    - API surface check: does each module expose the minimum necessary interface? Excessive API surface is implicit coupling
-5. **Security Review**: Independently audit security posture
-    - Threat modeling: identify threat actors, attack surfaces, and high-risk data flows
-    - Trust boundaries: map where trust level changes (external API → internal service → database)
-    - Authentication & authorization: identity model, access control strategy, privilege escalation risks
-    - Data protection: encryption at rest and in transit, key management, sensitive data handling
-    - Input validation: where are trust boundaries? What input sanitization is needed?
-    - Audit trail: which operations must be logged for compliance? What fields are required?
-    - Security test scenarios: list the security test cases that Phase 3/4 must include
+4. **Boundary Review** (systematic audit per module):
+```
+for module in modules:
+  assert: one_sentence_job(module)            # can you describe this module's job in one sentence?
+  assert: all_deps_justified(module)           # is each inter-module dependency justified?
+  for req_change in requirement_changes:
+    triggered = modules_affected_by(req_change)  # which requirement change triggers this module?
+    if len(triggered) > 1 → investigate boundary  # may indicate wrong split
+  assert: min_api_surface(module)              # excessive API surface is implicit coupling
+```
+5. **Security Review** (independent audit):
+```
+security_review = {
+  threat_model:    [actors, attack_surfaces, high_risk_data_flows]
+  trust_boundaries: map(trust_level_changes)  # e.g. external API → internal → DB
+  auth:            { identity_model, access_control, privilege_escalation_risks }
+  data_protection: { encryption: [at_rest, in_transit], key_mgmt, sensitive_data }
+  input_validation: { trust_boundaries, sanitization_points }
+  audit_trail:     { required_logged_ops, required_fields }
+  test_scenarios:  → Phase 3/4 security test cases
+}
+```
 6. **Critic step**: Challenge every decision
     - Find gaps, over-engineering, missing edge cases
     - Question every abstraction: is it necessary?
     - Identify failure modes the design does not handle
-    - **System quality checklist** (Critic must address each item):
-        - Operability:
-            - [ ] Concurrency/blocking: which operations must be non-blocking? Any synchronous call risks?
-            - [ ] Operation reversibility: which write operations need rollback capability?
-            - [ ] Resource boundaries: are there execution timeout, memory, or concurrency limits?
-        - Observability:
-            - [ ] Discoverability: who is notified on anomalies? Are alert conditions defined?
-            - [ ] Health baseline: what are the metrics for normal operation? How is deviation defined?
-            - [ ] Debuggability: are logs structured? Do critical paths have correlation IDs? Is log semantics complete?
-        - Data:
-            - [ ] Data isolation: which data must not enter LLM context?
-            - [ ] Data loss risk: which nodes have potential data loss?
-        - Security (confirm Security Review findings):
-            - [ ] All threat scenarios from Security Review have a design response
-            - [ ] No trust boundary gaps remain unresolved
-        - Performance:
-            - [ ] Latency targets: what are the response time requirements per operation?
-            - [ ] Throughput: what is the expected request rate? Any burst patterns?
-            - [ ] Caching strategy: which data is cacheable? Invalidation rules?
-        - Maintainability:
-            - [ ] Single change point: a requirement change affects at most how many modules?
-            - [ ] Logic leakage: is business logic centralized or scattered across modules?
-            - [ ] Extension cost: how many existing modules must change to add a new capability?
+    - **System quality checklist** (Critic must address each):
+```
+quality = {
+  operability: {
+    concurrency:    "which operations must be non-blocking? Any sync call risks?"
+    reversibility:  "which write operations need rollback capability?"
+    resources:      "execution timeout, memory, or concurrency limits?"
+  }
+  observability: {
+    alerts:         "who is notified on anomalies? Are alert conditions defined?"
+    health:         "what are normal-operation metrics? How is deviation defined?"
+    debug:          "are logs structured? Do critical paths have correlation IDs?"
+  }
+  data: {
+    isolation:      "which data must not enter LLM context?"
+    loss_risk:      "which nodes have potential data loss?"
+  }
+  security: {  # confirm Security Review findings
+    all_threats_addressed:  "all threat scenarios have a design response?"
+    trust_boundary_gaps:    "no trust boundary gaps remain unresolved?"
+  }
+  performance: {
+    latency:        "response time requirements per operation?"
+    throughput:     "expected request rate? Any burst patterns?"
+    caching:        "which data is cacheable? Invalidation rules?"
+  }
+  maintainability: {
+    change_point:   "a requirement change affects at most how many modules?"
+    logic_leakage:  "is business logic centralized or scattered?"
+    extension_cost: "how many modules must change to add a new capability?"
+  }
+}
+```
 7. **Consensus step**: Resolve conflicts
     - Merge Planner and Architect outputs with Critic feedback
     - Produce a single, unified design document
@@ -73,29 +95,29 @@ Use **independent subagents** for each role (Planner, Architect, Critic) to ensu
     - This classification drives test depth in Phase 3: key functional points require comprehensive test cases (happy path, edge cases, error scenarios); peripheral items require at least basic coverage
 9. **Validate priority consistency with Phase 1**
     ```
-    // Forward check: core requirements must be served by key components
+    # Forward check: core requirements must be served by key components
     for each core_ac in Phase1.acceptance_criteria where priority == "core":
         parent_story = Phase1.user_story_for(core_ac)    // look up parent US regardless of its priority
         serving_components = Phase2.components_that_serve(core_ac)
         key_components     = serving_components.where(priority == "key")
 
         if key_components.is_empty:
-            // PRIORITY INCONSISTENCY: core requirement → only peripheral components
+            # PRIORITY INCONSISTENCY: core requirement → only peripheral components
             action = reclassify_a_component_as_key
                      OR document_explicit_justification_for_downgrade
-            // e.g., "core requirement satisfied by well-tested third-party library"
+            # e.g., "core requirement satisfied by well-tested third-party library"
 
-    // Reverse check: orphaned key components (no core requirement trace)
+    # Reverse check: orphaned key components (no core requirement trace)
     for each key_component in Phase2.items where priority == "key":
         served_requirements = Phase1.items_served_by(key_component)
         core_served         = served_requirements.where(priority == "core")
 
         if core_served.is_empty:
-            // Not an error, but document: this key component serves only
-            // secondary requirements — verify classification is intentional
+            # Not an error, but document: this key component serves only
+            # secondary requirements — verify classification is intentional
 
-    // Note: peripheral requirement → key components is acceptable
-    // (utility feature may depend on critical shared component)
+    # Note: peripheral requirement → key components is acceptable
+    # (utility feature may depend on critical shared component)
     ```
 10. **Map design to Phase 1 requirements**
     - Every acceptance criterion must be achievable with this design
@@ -175,20 +197,23 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 
 **Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
-## Gate: What the Reviewer Must Confirm
+## Gate: Reviewer Checklist
 
-- [ ] Design covers all acceptance criteria from Phase 1
-- [ ] Every component, interface, and failure mode is classified as key or peripheral
-- [ ] Priority consistency with Phase 1: every core requirement maps to at least one key component/interface; any downgrade is explicitly justified
-- [ ] Interfaces are concrete enough to write tests against
-- [ ] Failure modes and error paths are designed for (not just happy path)
-- [ ] No over-engineering: every abstraction is justified
-- [ ] Boundary review completed: each module passes single-responsibility, blast-radius, and API surface checks
-- [ ] Security review completed: threat model, trust boundaries, data protection, and security test scenarios documented
-- [ ] System quality checklist addressed: operability, observability, data, security confirmation, performance, and maintainability items confirmed
-- [ ] Non-functional constraints documented in the deliverable
-- [ ] Key decisions document alternatives and trade-offs
-- [ ] Zero C/H/M issues after Ralph loop completes
+```
+gate_pass = ALL:
+  coverage:     all Phase1.AC covered by design
+  classification: all components/interfaces/failure_modes ∈ {key, peripheral}
+  consistency:  Phase1.core → maps_to ≥ 1 Phase2.key  # downgrades justified
+  testability:  interfaces concrete enough for test authoring
+  failure:      error paths designed (not just happy path)
+  lean:         every abstraction justified (no over-engineering)
+  boundary:     single_responsibility + blast_radius + min_api_surface ✓
+  security:     threat_model + trust_boundaries + data_protection + test_scenarios ✓
+  quality:      operability + observability + data + performance + maintainability ✓
+  nfr:          non-functional constraints documented
+  decisions:    alternatives + trade-offs recorded
+  ralph:        zero C/H/M issues
+```
 
 ## User Approval
 

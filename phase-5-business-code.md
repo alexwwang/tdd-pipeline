@@ -6,40 +6,54 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 
 ## Detailed Process
 
-### Step 1: Red (Already Done — Phase 4)
-- All tests exist and fail
-- Do NOT modify tests in this phase unless the test itself is proven wrong
-- **If a test is proven wrong**: Document the issue, propose the fix to the user, and either:
-  - (a) Fix the test inline and continue (if the fix is minor — e.g., wrong expected value), OR
-  - (b) Return to the **root-cause phase**: if the flaw is in tests → Phase 4; if in test strategy → Phase 3; if in architecture → Phase 2; if in requirements → Phase 1. **Discard all work from the root-cause phase onward**, re-run that phase's Ralph loop, and re-execute subsequent phases.
+```
+phase_5():
 
-### Step 2: Green
-1. Pick the **simplest failing test**
-2. Write the **minimum** code to make **only that test** pass
-3. Run the **full test suite**
-   - If the target test passes, move to the next failing test
-   - If other tests break, stop — the implementation is too broad
-4. If stuck (cannot make a test pass without major redesign):
-   - Escalate to the user: propose a design change or test modification
-   - Do NOT silently change the test to make it easier
-5. **Rule**: No code without a failing test justifying it
-   - If you want to add a helper function, write a test for it first
-   - If no test justifies the code, do not write it
+  # Step 1: Red — already done (Phase 4)
+  assert: all_tests_exist AND all_tests_fail
+  FORBIDDEN: modify tests unless test proven wrong
+  if test_proven_wrong:
+    minor_fix (e.g. wrong expected value) → fix inline, continue
+    structural_flaw → return_to_root_cause:
+      tests_flawed     → Phase 4
+      strategy_flawed  → Phase 3
+      architecture_flawed → Phase 2
+      requirements_flawed → Phase 1
+      # DISCARD all work from root-cause phase onward
+      # (if SPLIT=true: mark in tree.md as [DISCARDED]; if SPLIT=false: archive or revert files)
+      # RE-RUN that phase's Ralph loop → re-execute subsequent phases
 
-### Step 3: Refactor
-1. **Only refactor when ALL tests pass**
-2. Clean duplication, improve names, simplify logic, extract abstractions
-3. Run tests **after every refactor step** — they must stay green
-4. **Log each refactoring round** (count for the deliverable template)
-5. If tests break during refactor:
-   - Revert immediately
-   - Try a smaller, simpler refactor, or the abstraction is wrong
-6. Document any design deviations from Phase 2 with justification
+  # Step 2: Green
+  while failing_tests.exist:
+    test = pick_simplest(failing_tests)
+    write(minimum_code_to_pass(test))
+    run(full_test_suite)
+    if test.passes AND suite.green → next failing test
+    if other_tests_break → STOP (implementation too broad)
+    if stuck (needs redesign):
+      ESCALATE to user (propose design change OR test modification)
+      FORBIDDEN: silently change test to make it easier
 
-### Final Verification
-1. Run the full test suite — all tests must pass
-2. Check coverage — no business code without a test
-3. Review for code smells (duplication, long functions, poor names)
+  RULE: no code without failing test justifying it
+    want helper? → write test first
+    no test justifies code? → do NOT write it
+
+  # Step 3: Refactor
+  assert: all_tests_pass before refactoring
+  while smells_detected:
+    refactor: [duplication, naming, logic, abstractions]
+    run(full_test_suite) → MUST stay green
+    log_refactoring_round()
+    if tests_break:
+      revert_immediately
+      try_smaller_refactor (abstraction may be wrong)
+  document: design_deviations_from_Phase2 with justification
+
+  # Final Verification
+  run(full_test_suite) → all_pass == true
+  assert: no_business_code_without_test
+  check: code_smells (duplication, long_functions, poor_names)
+```
 
 ## Deliverable Template
 
@@ -73,14 +87,17 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 - Are abstractions justified by the tests?
 - Are there any design deviations that were not documented?
 
-## Gate: What the Reviewer Must Confirm
+## Gate: Reviewer Checklist
 
-- [ ] All tests pass
-- [ ] No code exists without test coverage
-- [ ] Refactoring is complete and tests remain green
-- [ ] Minimum implementation principle was followed (no over-engineering)
-- [ ] Design deviations are documented and justified
-- [ ] Zero C/H/M issues after Ralph loop completes
+```
+gate_pass = ALL:
+  all_tests_pass: true
+  coverage:       no business code without test
+  refactor:       complete + tests green
+  lean:           minimum implementation (no over-engineering)
+  deviations:     documented + justified
+  ralph:          zero C/H/M issues
+```
 
 ## User Approval
 
