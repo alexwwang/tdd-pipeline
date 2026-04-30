@@ -138,10 +138,12 @@ When the main agent REJECTs a C/H/M issue, it becomes a **contested issue**:
 2. The contested issue is included in the next round's context for the reviewer
 3. The reviewer in the next round MUST explicitly address each contested issue:
    - **Accept the rejection** (reviewer agrees the assumption was wrong) → issue is dropped from tally
-   - **Provide additional evidence** to re-raise the issue → issue stays in tally; main agent should ADOPT or MODIFY based on the new evidence. If the main agent REJECTs again despite additional evidence, this counts as a second dispute round and triggers the escalation rule (max 2 dispute rounds before user escalation).
-4. **Escalation rule**: If the same issue remains contested after 2 rounds, **escalate to the user** for resolution. Do NOT silently drop or keep contested issues beyond 2 rounds.
+   - **Provide additional evidence** to re-raise the issue → issue stays in tally. If the reviewer re-raises on the **same grounds**, the main agent **must** ADOPT or MODIFY. After ADOPT or MODIFY, the issue transitions from contested to **pending verification** and remains in the tally until the reviewer confirms resolution in the next round. On **different grounds**, the main agent may REJECT (see §Rule 3 / Rule 4 interaction). If the main agent improperly REJECTs on the same grounds (violating Rule 3), this still counts as a dispute round toward the escalation limit.
+4. **Escalation rule**: If the same issue remains contested after 2 dispute rounds, **escalate to the user** for resolution with a structured dossier (see Example G for the 5-section template). A **dispute round** = one complete exchange on an issue. Round 1 = the round where the reviewer raises the issue and the main agent REJECTs it (the issue becomes contested at the end of this round). Each subsequent reviewer re-assessment of the contested issue = another dispute round. Do NOT silently drop or keep contested issues beyond 2 dispute rounds.
 
-**Key invariant**: REJECTed C/H/M issues **remain in the gate tally** until the reviewer explicitly drops them. The gate condition `final_round.C + .H + .M == 0` uses the tally after contested-issue resolution, not before.
+**Key invariant**: REJECTed C/H/M issues **remain in the gate tally** until the reviewer explicitly drops them. The gate condition `final_round.C + .H + .M == 0` uses the tally after contested-issue resolution, not before. Escalated issues are **suspended** from the gate tally (pending external resolution); the gate evaluates on remaining issues only.
+
+**Rule 3 / Rule 4 interaction**: Rule 3 (must ADOPT/MODIFY) and Rule 4 (2-round limit) are independent. Same grounds with additional evidence → Rule 3 forces ADOPT/MODIFY, blocking escalation. Different grounds → Rule 3 doesn't apply, but Rule 4 still triggers at the 2-round limit → escalation.
 
 ## Rounds & Early Stop Rule
 
@@ -243,34 +245,85 @@ Round 4: reviewer receives contested [M-3] in context
   → No new C/H/M issues → tally = 0
   → Consecutive-zero counter = 1 → continue
 ```
+> **Key lesson**: The reviewer is not obligated to fight every rejection. When the main agent
+> provides specific, verifiable evidence (line reference, component specification), the reviewer
+> should check that evidence and accept the rejection if it holds. This is the "graceful
+> concession" pattern — it keeps the review loop moving and builds trust for future disputes.
 
-**Example F — Contested issue escalation (2-round dispute):**
+**Example F — Contested issue resolved via MODIFY (real: ky prefixUrl dispute [sindresorhus/ky]):**
 ```
-Round 5: reviewer finds [H-2] No input validation on user email field
-  → main agent REJECTs: "Email validation is the frontend's responsibility per Phase 1 AC-3"
-  → [H-2] contested, forwarded to Round 6
+Round N: reviewer finds [H-2] prefixUrl rejects leading slashes, blocking standard API workflows
+  (GitHub, Reddit, Twilio, Netlify, Twitter/X, Salesforce docs all use /path format)
+  → main agent REJECTs: "This is documented intentional behavior. prefixUrl does string
+     concatenation, not URL resolution. Leading slashes create false expectations."
+  → [H-2] becomes contested, forwarded to Round N+1
+  → Tally still includes [H-2] in H count
 
-Round 6: reviewer re-examines Phase 1 AC-3
-  → reviewer provides evidence: "AC-3 says 'system must reject invalid emails' — 'system' includes backend (see Phase 1 US-1 scope: 'server-side validation')"
-  → reviewer re-raises [H-2] with additional evidence
-  → main agent must now ADOPT or MODIFY (cannot REJECT again on same grounds)
-  → main agent MODIFYs: "Add validation but only as defense-in-depth, not primary validation"
+Round N+1: reviewer investigates evidence
+  → reviewer finds: 6 major API docs ALL use leading-slash paths
+  → reviewer re-raises [H-2]: "Documented intent is acknowledged, but user-side cost is
+     library incompatibility with standard practice. The design principle is valid;
+     the strict rejection of /path is the problem."
+  → main agent cannot REJECT on the same grounds ("documented intentional behavior")
+  → main agent MODIFYs: "Add slash stripping as a normalization step before concatenation.
+     Preserves prefixUrl's string-concatenation semantics while accepting standard API paths."
+  → Rationale: Keep the design principle (prefixUrl = concatenation, not URL resolution),
+     adjust the implementation (strip leading slash instead of rejecting it).
+  → [H-2] still in H tally (contested, pending verification)
 
-Round 7: reviewer verifies the modified fix
-  → No new issues → tally = 0
+Round N+2: reviewer verifies the slash-stripping modification
+  → Modification correctly implements the normalization
+  → Zero new issues → tally = 0
 ```
+> **Key lesson**: "Documented intentional behavior" is a valid first-round REJECT, but when the
+> reviewer produces evidence that the intentional behavior creates widespread user harm, the
+> same rationale cannot be reused. MODIFY preserves the design principle while addressing the
+> practical cost — this is the canonical "principled compromise" pattern. ADOPT = reviewer's
+> evidence fully invalidates the original rejection (issue was correct as-stated).
+> MODIFY = evidence warrants action but the design principle should be preserved.
 
-**Example G — Contested issue escalation to user (unresolvable):**
+**Example G — Contested issue escalation to user with dossier (real: requests URL parser deadlock [psf/requests#6927]):**
 ```
-Round 3: reviewer finds [H-1] Security vulnerability in auth token handling
-  → main agent REJECTs: "This follows the standard OAuth2 flow per our architecture"
-  → [H-1] contested, forwarded to Round 4
+Round N: reviewer finds [H-1] URL parsing regression breaks IPv6 zone ID support
+  (urlparse cannot handle [fe80::1%eth0], causes socket errors on multi-NIC machines)
+  → main agent REJECTs: "Using stdlib urlparse is correct. urllib3.parse_url has its own
+     compatibility issues. Every URL parsing change is a minefield."
+  → [H-1] contested, forwarded to Round N+1
 
-Round 4: reviewer re-raises with evidence
-  → main agent REJECTs again (2nd round of dispute)
-  → ⚠️ 2-round dispute limit reached → ESCALATE to user
-  → HALT loop, present both positions to user for resolution
+Round N+1: reviewer provides counter-evidence
+  → reviewer: "stdlib urlparse explicitly does NOT support RFC 6874 zone identifiers.
+     Socket errors confirmed on multi-NIC machines. User reports filed."
+  → reviewer re-raises [H-1] with RFC 6874 citations and concrete error traces
+  → main agent REJECTs again on NEW grounds (2nd dispute round):
+     "Historical evidence shows every parser replacement causes regressions.
+      Risk outweighs the fix."
+  → ⚠️ Rule 3 doesn't apply — grounds shifted ("stdlib correctness" → "regression risk"),
+     constituting a new rejection rationale. Rule 4 still triggers at 2-round limit → ESCALATE
+  → [H-1] suspended from gate tally (pending external resolution)
+
+=== Escalation Dossier ===
+1. Original Issue: urlparse regression in v2.32.3 breaks IPv6 zone ID URLs
+   Severity: H — causes socket errors on multi-NIC production machines
+2. Reviewer Evidence Chain:
+   - RFC 6874: zone identifiers are standards-track, not edge cases
+   - Concrete socket.gaierror traces on [fe80::1%eth0]
+   - Affected user reports (link to issues)
+3. Main Agent Rejection Rationale:
+   - Round 1: stdlib urlparse is correct; urllib3.parse_url has compatibility issues
+   - Round 2: every prior parser replacement caused regressions (historical record)
+4. Dispute Trajectory:
+   - Round N: reviewer raises [H-1], main agent REJECTs (stdlib correctness)
+   - Round N+1: reviewer provides RFC + error evidence, main agent REJECTs (regression risk)
+5. Current Status: regression is live, affecting multi-NIC users
+=== End Dossier ===
+
+User decision: "Conditional accept — use urllib3.parse_url ONLY for URLs containing
+zone IDs, keep urlparse for all others." (This matches the eventual PR #7065 approach.)
 ```
+> **Key lesson**: The escalation dossier is not "both sides argued, you decide." It is a
+> structured evidence package: (1) what was found, (2) reviewer's evidence chain, (3) main
+> agent's rejection rationale per round, (4) dispute trajectory, (5) current impact. The user
+> should be able to make an informed decision without re-reading the entire review log.
 
 ## Gate Condition
 
