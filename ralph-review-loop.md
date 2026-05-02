@@ -1,11 +1,12 @@
 # Ralph Loop Review Protocol
 
-This protocol governs **all reviews** in the TDD Pipeline. It is invoked after every phase (1–5).
+This protocol governs **all reviews in Phases 1–5** of the TDD Pipeline. Phase 6 (Pre-Release Testing) uses a different quality mechanism — see `phase-6-pre-release-testing.md` Part 5 for the 追问 protocol, rollback paths, and user go/no-go decision.
 
 ## When to Invoke
 
 - **After Phases 1–3 (design phases)**: Launch Ralph loop **design review**
 - **After Phases 4–5 (code phases)**: Launch Ralph loop **code review**
+- **Phase 6 (pre-release testing)**: Does NOT use Ralph loop. See `phase-6-pre-release-testing.md` Part 5.
 
 ## Reviewer Selection
 
