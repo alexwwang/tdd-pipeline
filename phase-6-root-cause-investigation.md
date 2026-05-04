@@ -162,9 +162,10 @@ grep -rn 'parentId\|sessionId\|ownerId' src/ | grep -v test  # IDs propagated, n
 HC1. Depth limit: 5 Why levels maximum (ceiling, not target).
      Reached level 5 without T1-T3 → evidence insufficient → stop, add logging/telemetry, reproduce, then resume.
 
-HC2. Branch limit: 2 independent investigation chains per bug maximum.
+HC2. Branch limit: 3 independent investigation chains per bug maximum.
      Chain 1 fails T2/T3 → try chain 2 with different direction.
-     Chain 2 also fails → escalate to user with evidence gathered.
+     Chain 2 fails → try chain 3 with different framing.
+     Chain 3 also fails → escalate to user with evidence gathered.
 
 HC3. Evidence anchoring: Every Why answer must cite concrete evidence.
      "I think it might be..." → invalid. Must cite log/code/config line.

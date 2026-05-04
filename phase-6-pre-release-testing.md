@@ -130,7 +130,7 @@ Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 o
 Sub-phase fails
   → Layer Isolation (Q1→Q4): locate broken layer
   → Evidence Collection (Q5→Q7): gather facts before hypothesizing
-  → 5-Why Drill (≤5 levels, ≤2 branches, every level needs evidence)
+  → 5-Why Drill (≤5 levels, ≤3 branches, every level needs evidence)
   → Termination check (T1+T2+T3 all required):
        T1. Actionability: maps to specific implementable fix
        T2. Counterfactual: "If we had [prevention], would bug still occur?" → No
@@ -139,7 +139,7 @@ Sub-phase fails
   → Root cause confirmed → enter rollback path
 ```
 
-**Hard constraints:** HC1 depth≤5, HC2 branches≤2, HC3 evidence anchoring, HC4 layer scope (code/arch/config/process only). Independent confirmation required (CONFIRM→fix, CHALLENGE→resume with new evidence, no counter reset). Full definitions in `phase-6-root-cause-investigation.md`.
+**Hard constraints:** HC1 depth≤5, HC2 branches≤3, HC3 evidence anchoring, HC4 layer scope (code/arch/config/process only). Independent confirmation required (CONFIRM→fix, CHALLENGE→resume with new evidence, no counter reset). Full definitions in `phase-6-root-cause-investigation.md`.
 
 ### Rollback Paths
 
