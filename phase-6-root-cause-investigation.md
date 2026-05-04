@@ -166,6 +166,7 @@ HC2. Branch limit: 3 independent investigation chains per bug maximum.
      Chain 1 fails T2/T3 → try chain 2 with different direction.
      Chain 2 fails → try chain 3 with different framing.
      Chain 3 also fails → escalate to user with evidence gathered.
+     T2b alternative tested per branch comes from hypotheses already considered-but-rejected in that chain (no extra divergence).
 
 HC3. Evidence anchoring: Every Why answer must cite concrete evidence.
      "I think it might be..." → invalid. Must cite log/code/config line.
@@ -188,8 +189,9 @@ Input: root cause statement + evidence chain + T1-T3 verification
 
 Independent confirmer (NOT involved in the investigation):
   1. Read root cause statement and evidence chain
-  2. Independently execute T2 counterfactual check
-  3. Conclusion:
+  2. Identify the most plausible alternative explanation (from hypotheses already considered during investigation)
+  3. Independently execute T2a (sufficiency) and T2b (specificity against that alternative)
+  4. Conclusion:
      CONFIRM  → proceed to fix → enter rollback path
      CHALLENGE → challenge reason becomes new evidence → resume 5-Why
                  (hard constraints remain — does NOT reset counters)

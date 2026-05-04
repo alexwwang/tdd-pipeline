@@ -133,9 +133,12 @@ Sub-phase fails
   → 5-Why Drill (≤5 levels, ≤3 branches, every level needs evidence)
   → Termination check (T1+T2+T3 all required):
        T1. Actionability: maps to specific implementable fix
-       T2. Counterfactual: "If we had [prevention], would bug still occur?" → No
+       T2. Falsifiability (two sub-checks):
+           T2a. Sufficiency: "If we implement [prevention], would bug disappear?" → Yes
+           T2b. Specificity: "If real cause were [most plausible alternative], would [prevention] still fix it?" → No
+           (T2b skippable only when no plausible alternative exists; must document why)
        T3. Explanatory power: root cause explains ALL observed symptoms
-  → Independent confirmation (one person/agent, T2 check only, no loop)
+  → Independent confirmation (one person/agent, T2a+T2b check, no loop)
   → Root cause confirmed → enter rollback path
 ```
 
