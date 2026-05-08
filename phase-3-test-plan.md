@@ -70,17 +70,38 @@ Derive a **complete test strategy** from the acceptance criteria and technical d
 5. **Map each criterion to test type**
 ```
    test_types = {
-     unit:        "individual functions/components in isolation (fast, deterministic)"
-     integration: "component interactions, API contracts, database calls"
-     e2e:         "full user flows, critical paths (minimal — only where necessary)"
-   }
+      unit:        "individual functions/components in isolation (fast, deterministic)"
+      integration: "component interactions, API contracts, database calls"
+      e2e:         "full user flows, critical paths (minimal — only where necessary)"
+
+      # Advanced test types (apply when Phase 2 design identifies relevant risks)
+      advanced: {
+        contract:    "consumer-driven contracts verifying API compatibility between services (Pact, Spring Cloud Contract). Catches version drift and schema evolution breaks."
+        soak:        "long-running iterations detecting resource leaks (memory, FDs, connections). N iterations + assert resource growth < threshold."
+        concurrency: "concurrent stress tests detecting race conditions. N threads hit shared state simultaneously, assert invariants hold."
+        fault:       "fault injection testing resilience and graceful degradation. Kill/timeout/error dependencies, verify system degrades gracefully."
+      }
+
+      # When to add advanced tests (decision guide):
+      #   contract:    ≥2 independent deployable components communicating via API/IPC
+      #   soak:        long-running processes, connection pools, file handle management
+      #   concurrency: shared mutable state, concurrent access patterns, startup/shutdown races
+      #   fault:       external dependencies (network, DB, third-party APIs), retry logic, circuit breakers
+    }
 ```
 6. **Identify edge cases, error paths, boundary conditions**
 ```
    edge_categories = [
      null_inputs, empty_collections, max_values,
      concurrent_access, timeouts, network_failures,
-     invalid_state_transitions
+     invalid_state_transitions,
+     # --- Advanced dimensions ---
+     serialization_boundary,     # encoding, precision, special chars, cross-language schema mismatch
+     error_handler_correctness,  # catch blocks that swallow, amplify, or mishandle errors
+     implicit_contract,          # call order, sync/async semantics, thread safety assumptions
+     resource_leak,              # memory, FDs, connections growing over iterations
+     cascading_failure,          # single failure propagating through dependency chain
+     performance_logic,          # N+1 queries, slow paths, batch operations hitting single-item paths
    ]
 ```
 7. **Define test data requirements**
@@ -146,6 +167,40 @@ _Traces Phase 1 user stories and acceptance criteria to test cases. For Phase 2 
 - <boundary condition>
 - <error scenario>
 - <concurrency scenario>
+
+### Advanced Edge Case Dimensions (if applicable per Phase 2 risk assessment)
+
+#### Serialization Boundary
+- <cross-language numeric precision: int64 → JS Number truncation>
+- <null vs missing vs empty string for same field>
+- <unicode beyond BMP (emoji, CJK Extension B)>
+- <date/time format consistency (timezone, precision)>
+- <enum case sensitivity across components>
+
+#### Error Handler Correctness
+- <every catch/except block has ≥1 test triggering it>
+- <error context preserved (cause chain, stack trace, error codes)>
+- <cleanup/finally runs even on error, no resource leaks>
+- <system recoverable after error (state is valid, retry works)>
+
+#### Implicit Contract
+- <call order dependencies verified (A must complete before B)>
+- <sync vs async error propagation tested separately>
+- <shared state thread safety under concurrent access>
+
+#### Resource Stability
+- <N-iteration soak test for resource-heavy operations>
+- <memory/FD/connection count measured before and after N iterations>
+
+#### Cascading Failure Prevention
+- <non-critical dependency failure doesn't break core flow>
+- <retry budget prevents amplification>
+- <timeout propagation correct (caller timeout ≤ callee timeout)>
+
+#### Performance Logic
+- <hot paths tested with realistic data volume (not just 1-item)>
+- <N+1 query detection: verify batch operations don't trigger per-item calls>
+- <slow path remains within latency budget under expected load>
 
 ## Test Data
 - <fixtures, mocks, factories needed>
@@ -224,6 +279,15 @@ gate_pass = ALL:
     test_data: explicitly specified in deliverable
     test_deps + ordering: documented
     ralph: zero C/H/M issues
+
+  # Step 5 — Advanced risk coverage (if applicable)
+  advanced_coverage:
+    contract_tests:    added if ≥2 deployable components with API boundary
+    soak_tests:        added if long-running process or resource management
+    concurrency_tests: added if shared mutable state exists
+    fault_tests:       added if external dependencies or retry logic
+    error_handlers:    every catch/except block has ≥1 test
+    performance_tests: added if hot paths with data volume sensitivity (N+1, batch vs single)
 ```
 
 ## User Approval

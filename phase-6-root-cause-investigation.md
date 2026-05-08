@@ -154,6 +154,156 @@ grep -rn 'limit\|truncat\|max.*output\|budget' config/ src/ --include='*.json' -
 grep -rn 'parentId\|sessionId\|ownerId' src/ | grep -v test  # IDs propagated, not hardcoded?
 ```
 
+### Pattern 7: Resource Leaks — Memory, FDs, Connections
+
+System degrades after minutes/hours (OOM, FD exhaustion, connection refused).
+
+```sh
+# File descriptors
+lsof -p $PID | wc -l   # before and after
+
+# Connection pool
+grep -rn 'pool\|connection\|client' src/ --include='*.py' --include='*.ts' | grep -v test | grep -c 'close\|release\|disconnect'
+# Low count = likely leak
+```
+
+```python
+# Memory: N-iteration growth check
+import tracemalloc, gc
+tracemalloc.start(); gc.collect()
+before = tracemalloc.get_traced_memory()
+for _ in range(1000): operation_under_test()
+gc.collect()
+after = tracemalloc.get_traced_memory()
+growth_kb = (after[0] - before[0]) / 1024
+assert growth_kb < 100, f'Leaked {growth_kb}KB'
+```
+
+**Prevention:** N-iteration soak test for every module managing resources. Gate behind `SOAK_TEST=1` in CI.
+
+### Pattern 8: Race Conditions — Concurrent Access & Startup Races
+
+Flaky test (passes 99/100), intermittent wrong results, "ghost" processes after shutdown.
+
+```sh
+# Startup race: PID file / lock file
+grep -rn '\.pid\|\.lock\|\.active' src/ | grep -v test
+# Check: is creation atomic? (O_CREAT | O_EXCL, not check-then-create)
+
+# Shared state race
+grep -rn 'global\|static\|\.cache\|\.state' src/ --include='*.py' --include='*.ts' | grep -v test | grep -v 'const '
+# Each hit: is access synchronized?
+```
+
+**Test pattern:**
+```text
+# N threads × M iterations, assert invariant
+spawn N workers (ThreadPoolExecutor / thread pool), each performing shared_operation
+assert invariant_holds(results)  # e.g., counter == expected, no duplicates
+```
+
+**Prevention:** `pytest-run-parallel` (Python), `go test -race` (Go), `jest --detectOpenHandles` (Node.js). Every mutable shared state must have a concurrent test.
+
+### Pattern 9: Serialization Boundary Bugs — Cross-Language & Edge Cases
+
+Data arrives corrupted, truncated, or with wrong type. Only manifests when Producer and Consumer are in different languages.
+
+```sh
+# Check for cross-language boundary
+grep -rn 'JSON\.\(parse\|stringify\)\|json\.loads\|json\.dumps\|serialize\|deserialize' src/ | grep -v test
+```
+
+**Quick check list for every cross-language API boundary:**
+
+| Risk | Test Input | Expected Behavior |
+|------|-----------|-------------------|
+| Integer > 2^53 | `9007199254740993` | Serialized as string, not number |
+| Null vs missing | `{"a": null}`, `{}`, `{"a": ""}` | Consumer distinguishes all three |
+| Unicode beyond BMP | `"🚀🎉"` | Round-trip preserves bytes |
+| Float precision | `0.1 + 0.2` | Assert approximate, not exact |
+| Date timezone | `"2024-01-01T00:00:00+05:00"` | Consumer interprets timezone correctly |
+
+**Prevention:** Shared test corpus (JSONL file) run through all language implementations. JSON Schema validation at integration points.
+
+### Pattern 10: Cascading Failures & Retry Storms
+
+One component slow → upstream retries amplify load → downstream collapses → chain reaction.
+
+```sh
+# Check retry configuration
+grep -rn 'retry\|backoff\|maxAttempt\|circuit' src/ config/ --include='*.py' --include='*.ts' --include='*.json' --include='*.yaml'
+# Warning signs: no backoff, no jitter, no retry budget, no circuit breaker
+
+# Check timeout chain
+grep -rn 'timeout\|Timeout\|TIMEOUT' src/ config/ | grep -v test
+# For each A→B call: verify timeout_A ≤ timeout_B
+```
+
+**Test pattern:**
+```text
+1. Inject 100% error rate on dependency X (via Toxiproxy or mock)
+2. Assert: upstream request count ≤ normal × (1 + retry_budget)
+3. Assert: circuit breaker opens within N failures
+4. Assert: core functionality degrades gracefully (fallback works)
+5. Restore dependency → assert system recovers automatically
+```
+
+**Lightweight fault injection:** Route test traffic through Toxiproxy (TCP proxy), inject latency/errors deterministically. No chaos infrastructure needed.
+
+**Prevention:** Every external dependency must have timeout + retry budget + circuit breaker. Test the retry/circuit logic, not just the happy path. For lightweight CI integration, use Toxiproxy as a test dependency.
+
+### Pattern 11: Error Handling Bugs — Handlers That Introduce Bugs
+
+System fails in a way the error handler should have prevented. Error message is generic, context lost, or partial cleanup.
+
+```sh
+# Find catch/except blocks without assertions in tests
+grep -rn 'catch\|except\|try' src/ --include='*.py' --include='*.ts' | grep -v test | wc -l
+# Count should match (approximately) test count targeting error paths
+
+# Find empty catch blocks (silent swallow)
+grep -A2 'catch\|except' src/ --include='*.py' --include='*.ts' | grep -v test | grep -E '^\s*(pass|}|return|//|#$)'
+# Each hit is a potential silent failure
+```
+
+**Error handler test checklist (per catch/except block):**
+```text
+- Test injects the exact exception type the catch handles
+- Asserts error context preserved (cause chain, error code, relevant IDs)
+- Asserts cleanup/finally ran (no resource leak on error path)
+- Asserts system is usable after error recovery
+- If retry: assert retry classification (retryable vs non-retryable)
+- If fallback: assert fallback output is valid, not just "no crash"
+```
+
+**Prevention:** Code review checklist — every catch block must have ≥1 test. Mutation testing focused on error paths catches "covered but not tested" handlers.
+
+### Pattern 12: Performance Logic Defects — N+1, Slow Paths, Batch Misrouting
+
+System works correctly but latency degrades sharply at specific data volumes or patterns. Not a resource leak — the logic itself is slow.
+
+```sh
+# N+1 detection: look for loops containing async/DB calls
+grep -rn 'for\|while\|\.forEach\|\.map' src/ --include='*.py' --include='*.ts' | grep -v test | grep -B1 -A1 'await\|fetch\|\.query\|\.execute\|\.get\|\.find'
+# Each hit: is this a loop-per-item query? → N+1 candidate
+
+# Batch misrouting: single-item path used for batch operations
+grep -rn 'batch\|bulk\|createMany\|insert_all\|bulkWrite' src/ --include='*.py' --include='*.ts' | grep -v test
+grep -rn 'for.*in\|\.forEach\|\.map' src/ --include='*.py' --include='*.ts' | grep -v test | grep -c 'await\|create\|insert\|save'
+# High count + low batch usage = likely misrouting
+```
+
+**Test pattern:**
+```text
+1. Prepare N items (N > 10, ideally realistic production volume)
+2. Run batch operation, measure latency
+3. Assert: latency grows linearly O(N), not quadratically O(N²)
+4. Compare: N items via batch API vs N items via single-item calls
+5. Assert batch path is significantly faster (≥5× for same N)
+```
+
+**Prevention:** Every data-access function that accepts collections must have a test with N > 1 items. Query logging in tests: fail if N+1 queries detected for a single logical operation.
+
 ---
 
 ## Hard Constraints (HC1–HC4)

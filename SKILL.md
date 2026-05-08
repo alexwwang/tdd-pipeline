@@ -81,7 +81,7 @@ gate_pass(5 → 6):
   # Phase 6 begins automatically — no additional gate between 5 and 6
 
 gate_pass(6 → pipeline_complete) = ALL:
-  phase_6.all_sub_phases_passed == true                 # Phase 0–3 all green
+  phase_6.all_sub_phases_passed == true                 # Phase 0–3 (+ conditional 1.5/1.6) all green
   release_gate_checklist.all_checked == true            # evidence-based
   user_go_nogo_decision == GO                           # user decides, not reviewer
 ```

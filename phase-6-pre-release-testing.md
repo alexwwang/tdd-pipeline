@@ -2,7 +2,8 @@
 name: pre-release-testing
 description: >
   Pre-release testing and bug root cause analysis for the TDD pipeline's
-  validation closure (Phase 6). Covers: sub-phase testing (Phase 0–3),
+  validation closure (Phase 6). Covers: sub-phase testing (Phase 0–3,
+  with conditional Phase 1.5 Soak Test and Phase 1.6 Contract Verification),
   追问 protocol with termination guarantees, rollback paths, and user
   go/no-go decision. On sub-phase failure, additionally load
   phase-6-root-cause-investigation.md.
@@ -45,6 +46,45 @@ Layer 3: Does the business logic work across the full chain? (E2E test)
 
 **Watch for:** path-resolution failures (tilde, symlinks, hardcoded paths), config drift between environments, registration gaps (implemented but unwired tools), startup-blocking bugs (stale PID files, dead queues).
 
+### Phase 1.5: Resource Stability (Soak Test)
+
+**When to run:** System has long-running processes, connection pools, file handle management, or in-memory caches.
+
+```text
+Pattern: N-iteration resource stability test
+  1. Measure baseline: memory (RSS/heap), open FDs, pool connections
+  2. Run core operation N times (N ≥ 100, scale by operation cost)
+  3. Force GC/cleanup
+  4. Assert: growth within tolerance (e.g., <5MB memory, <1 FD, pool returned to baseline)
+```
+
+**Language-specific tools:**
+- Python: `tracemalloc` + `gc.collect()` + `psutil.Process().num_fds()`
+- Node.js: `--expose-gc` + `process.memoryUsage()` + `/proc/self/fd`
+- CI flag: gate behind `SOAK_TEST=1` env var to avoid slowing fast test runs
+
+**Gate:** Resource metrics stable across iterations. Zero monotonic growth.
+
+### Phase 1.6: Contract Verification
+
+**When to run:** ≥2 independent deployable components communicating via API/IPC.
+
+```text
+Pattern: Consumer-driven contract test
+  1. Consumer defines expected API shape (request + response schema)
+  2. Generate contract file from consumer test
+  3. Provider verifies against real implementation
+  4. CI gate: can-i-deploy check before deployment
+```
+
+**Lightweight alternative (no Pact Broker):**
+- Define shared JSON Schema for each API boundary
+- Producer test: output validates against schema
+- Consumer test: input validates against same schema
+- CI: schema files are single source of truth, any breaking change fails both sides
+
+**Gate:** All contracts verified. No schema drift between consumer expectations and provider output.
+
 ### Phase 2: Cross-Cutting Validation
 
 | Dimension | What to check | How |
@@ -79,12 +119,17 @@ Catches bugs requiring subjective judgment (comprehensibility of messages, appro
 - [ ] Documentation accurate (test counts, paths, commands)
 - [ ] User-visible behaviors manually verified
 - [ ] Known limitations documented
+- [ ] Resource stability verified (soak test passed, no leaks)
+- [ ] API contracts verified (no schema drift between components)
+- [ ] Fault tolerance tested (non-critical dependency failure degrades gracefully)
+- [ ] Error handler coverage (every catch block tested)
+- [ ] No retry amplification (retry budget bounded under failure injection)
 
 ---
 
 ## Part 2: Bug Root Cause Investigation
 
-> **Extracted for progressive disclosure.** Load **`phase-6-root-cause-investigation.md`** when a sub-phase fails. Contains: Layer Isolation (Q1–Q4), Evidence Collection (Q5–Q7), 5-Why Drill, Fix Verification (V1–V5), and 6 common bug patterns.
+> **Extracted for progressive disclosure.** Load **`phase-6-root-cause-investigation.md`** when a sub-phase fails. Contains: Layer Isolation (Q1–Q4), Evidence Collection (Q5–Q7), 5-Why Drill, Fix Verification (V1–V5), and 12 common bug patterns.
 
 ---
 
@@ -102,6 +147,12 @@ For each pair of interacting components, walk through every row. If any cell is 
 | **Registration chain** | Is every service discoverable by its consumers? | Enumerate registered tools/services, compare with expected |
 | **Lifecycle** | Does shutdown clean up everything startup creates? | Kill process, check for orphaned files/processes |
 | **Freshness** | Does the system work on a clean slate AND with residual state? | Test with and without `rm -rf` of temp dirs |
+| **Serialization** | Do cross-language components handle edge cases (precision, encoding, null semantics) consistently? | Shared test corpus: serialize in Lang A → deserialize in Lang B → re-serialize → compare |
+| **Error handler** | Does each catch block actually work? | Inject specific error → assert correct handling (no swallow, no amplification, cleanup ran) |
+| **Timeout chain** | Is timeout propagation correct through the dependency chain? | Verify caller timeout < callee timeout at each hop; inject latency > caller timeout, assert fast fail |
+| **Retry budget** | Does retry amplification stay bounded when a dependency fails? | Inject 100% error rate → verify upstream request count ≤ normal × (1 + retry_budget) |
+| **Concurrency** | Is shared mutable state safe under concurrent access? | N threads hit shared state simultaneously, assert invariants hold (counter = expected, no duplicates) |
+| **Performance logic** | Do hot paths handle realistic data volume? | Test with N > 1 items; verify batch operations don't trigger per-item queries; assert latency within budget |
 
 ---
 
@@ -113,13 +164,13 @@ Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 o
 
 | Mechanism | When | Purpose |
 |-----------|------|---------|
-| **Sub-phase gates** | Phase 0–3 | Objective pass/fail verification |
+| **Sub-phase gates** | Phase 0–3 (0 → 1 → 1.5? → 1.6? → 2 → 3) | Objective pass/fail verification |
 | **追问 protocol** | Sub-phase failure | Root cause investigation with termination guarantees |
 | **User go/no-go** | All sub-phases pass | Final business decision |
 
 ### Sub-phase Execution Rules
 
-1. **Strict sequential**: Phase 0 → 1 → 2 → 3. No skipping.
+1. **Strict sequential**: Phase 0 → 1 → 1.5 (if applicable) → 1.6 (if applicable) → 2 → 3. No skipping.
 2. **Gate is pass/fail**: No severity classification. Green or red.
 3. **Any failure** → load `phase-6-root-cause-investigation.md`, run 追问 protocol → determine rollback target.
 4. **All pass** → fill Release Gate Checklist with evidence → submit to user.
