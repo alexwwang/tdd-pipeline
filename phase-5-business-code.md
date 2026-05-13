@@ -1,3 +1,20 @@
+## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 5 execution)
+
+Before any work in this phase, articulate your understanding of this task:
+explain what this phase protects, where the key risks lie, and why your
+chosen approach will achieve the goal. Do not proceed to execution until
+you have produced this reasoning.
+
+> **Phase 5 risk hint**: Business code protects the minimal-implementation principle. Skipping it means potential over-engineering or introducing behavior not covered by tests.
+
+### ❌ What superficial Why Articulation looks like
+- Writing code without explaining why this implementation is the minimal solution that satisfies the tests
+- Restating the task description ("Phase 5's goal is to make tests pass")
+- Listing steps without rationale ("I'll do A, then B")
+- Dodging risk assessment ("Risks are low, just proceed normally")
+
+---
+
 # Phase 5: 业务代码 (Business Code)
 
 ## Objective

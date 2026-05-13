@@ -1,3 +1,20 @@
+## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 1 execution)
+
+Before any work in this phase, articulate your understanding of this task:
+explain what this phase protects, where the key risks lie, and why your
+chosen approach will achieve the goal. Do not proceed to execution until
+you have produced this reasoning.
+
+> **Phase 1 risk hint**: Product design protects the accuracy of requirements understanding. Skipping it means all subsequent technical decisions rest on wrong premises.
+
+### ❌ What superficial Why Articulation looks like
+- Writing user stories directly without explaining why these stories cover the core requirements
+- Restating the task description ("Phase 1's goal is to complete product requirements")
+- Listing steps without rationale ("I'll do A, then B")
+- Dodging risk assessment ("Risks are low, just proceed normally")
+
+---
+
 # Phase 1: 产品设计 (Product Design)
 
 ## Objective

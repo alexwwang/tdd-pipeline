@@ -1,3 +1,20 @@
+## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 2 execution)
+
+Before any work in this phase, articulate your understanding of this task:
+explain what this phase protects, where the key risks lie, and why your
+chosen approach will achieve the goal. Do not proceed to execution until
+you have produced this reasoning.
+
+> **Phase 2 risk hint**: Technical solution protects the traceability of architectural decisions. Skipping it means technology choices lack rationale and future change costs become unpredictable.
+
+### ❌ What superficial Why Articulation looks like
+- Listing components without explaining why this architecture addresses the identified risks
+- Restating the task description ("Phase 2's goal is to design the technical solution")
+- Listing steps without rationale ("I'll do A, then B")
+- Dodging risk assessment ("Risks are low, just proceed normally")
+
+---
+
 # Phase 2: 技术方案 (Technical Solution)
 
 ## Objective

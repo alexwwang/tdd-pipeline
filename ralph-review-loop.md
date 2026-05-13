@@ -156,7 +156,7 @@ The Ralph loop has **three exit paths**:
 
 **If early stop does NOT trigger**: you MUST complete at least 5 rounds before evaluating gate pass.
 
-**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → early stop.
+**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Early-Stop Why Articulation → 确认安全后 early stop。
 
 ### ⛔ AVOID — Common Early Stop Mistakes (READ CAREFULLY)
 
@@ -188,12 +188,31 @@ Evaluate after each round N, in this order (before starting round N+1):
    → If N < 5 → Go to round N+1
 7. If zero issues (only I or nothing):
    → Increment consecutive-zero counter by 1
-   → Counter = 2 → ✅ EARLY STOP
+   → Counter = 2:
+     → 🔒 **必须完成早停前 Why Articulation**（见下方 §Pre-Early-Stop Why Articulation）
+     → If articulation confirms stopping is safe → ✅ EARLY STOP
+     → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
      → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing early stop)
      → Go to round N+1 (or stop if gate-pass is acceptable)
 8. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
+
+### 🔒 Pre-Early-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
+
+Before confirming early stop, articulate your reasoning: explain why stopping
+now is safe, what has been reviewed and how thoroughly, and what risks remain.
+If you cannot clearly articulate this, the review may not be thorough enough —
+continue to the next round.
+
+> ⚠️ Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Complex tasks may warrant additional rounds at the model's discretion.
+> Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
+> If articulation reveals concerns 2 times in a row, treat the review as not yet converged: reset counter to 0 (not 1).
+
+**❌ What superficial pre-early-stop articulation looks like**
+- "Two rounds with zero issues, safe to stop" (no analysis of why zero issues implies safety)
+- "Task is simple, two rounds is enough" (no specific justification for this judgment)
+- "Didn't find anything missing" (did not identify what type of issue could still be missed)
 
 ### Concrete Examples
 

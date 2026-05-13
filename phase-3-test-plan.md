@@ -1,3 +1,20 @@
+## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 3 execution)
+
+Before any work in this phase, articulate your understanding of this task:
+explain what this phase protects, where the key risks lie, and why your
+chosen approach will achieve the goal. Do not proceed to execution until
+you have produced this reasoning.
+
+> **Phase 3 risk hint**: Test plan protects the alignment between test coverage and requirements. Skipping it means tests may miss critical scenarios or test the wrong things.
+
+### ❌ What superficial Why Articulation looks like
+- Listing test cases without explaining why these cases have their assigned priority levels (why certain scenarios are critical while others are downgraded)
+- Restating the task description ("Phase 3's goal is to write the test plan")
+- Listing steps without rationale ("I'll do A, then B")
+- Dodging risk assessment ("Risks are low, just proceed normally")
+
+---
+
 # Phase 3: 测试方案 (Test Plan)
 
 ## Objective

@@ -1,3 +1,20 @@
+## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 4 execution)
+
+Before any work in this phase, articulate your understanding of this task:
+explain what this phase protects, where the key risks lie, and why your
+chosen approach will achieve the goal. Do not proceed to execution until
+you have produced this reasoning.
+
+> **Phase 4 risk hint**: Test code protects the accuracy of tests-as-specification. Skipping it means tests may pass but verify the wrong behavior.
+
+### ❌ What superficial Why Articulation looks like
+- Writing assertions directly without explaining what invariant each assertion verifies
+- Restating the task description ("Phase 4's goal is to write test code")
+- Listing steps without rationale ("I'll do A, then B")
+- Dodging risk assessment ("Risks are low, just proceed normally")
+
+---
+
 # Phase 4: 测试代码 (Test Code)
 
 ## Objective
