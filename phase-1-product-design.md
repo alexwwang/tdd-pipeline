@@ -1,9 +1,11 @@
 ## ⛔ Prerequisite: Why Articulation (MUST complete before Phase 1 execution)
 
-Before any work in this phase, articulate your understanding of this task:
-explain what this phase protects, where the key risks lie, and why your
-chosen approach will achieve the goal. Do not proceed to execution until
-you have produced this reasoning.
+Before any work in this phase, articulate your understanding of this task.
+Do not proceed to execution until you have produced this reasoning.
+
+After articulating, check: did you address what this phase protects,
+where the key risks lie, and why your approach will work?
+If not, supplement before proceeding.
 
 > **Phase 1 risk hint**: Product design protects the accuracy of requirements understanding. Skipping it means all subsequent technical decisions rest on wrong premises.
 

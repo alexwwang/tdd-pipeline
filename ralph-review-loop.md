@@ -200,10 +200,14 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 ### 🔒 Pre-Early-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
 
-Before confirming early stop, articulate your reasoning: explain why stopping
-now is safe, what has been reviewed and how thoroughly, and what risks remain.
-If you cannot clearly articulate this, the review may not be thorough enough —
-continue to the next round.
+Before confirming early stop, articulate your reasoning.
+Do not confirm early stop until you have produced this reasoning.
+
+After articulating, check: did you address how many rounds were completed
+and whether each covered different dimensions, whether the task's complexity
+justifies stopping now, and what type of issue is most likely to be missed?
+If not, supplement before confirming. If you cannot clearly articulate this,
+the review may not be thorough enough — continue to the next round.
 
 > ⚠️ Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Complex tasks may warrant additional rounds at the model's discretion.
 > Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
