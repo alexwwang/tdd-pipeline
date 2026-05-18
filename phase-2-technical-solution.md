@@ -38,41 +38,11 @@ REQUIRED_DIMENSIONS = {
   compliance:     [GDPR, data_residency, audit_trail]
 }
 ```
-2. **Planner step**: Draft high-level approach
-    - Component boundaries
-    - Data flow between components
-    - Technology stack choices (with justification)
-3. **Architect step**: Refine into concrete design
-    - Module decomposition
-    - Interface definitions (function signatures, API contracts, type definitions)
-    - Data models and persistence strategy
-4. **Boundary Review** (systematic audit per module):
-```
-for module in modules:
-  assert: one_sentence_job(module)            # can you describe this module's job in one sentence?
-  assert: all_deps_justified(module)           # is each inter-module dependency justified?
-  for req_change in requirement_changes:
-    triggered = modules_affected_by(req_change)  # which requirement change triggers this module?
-    if len(triggered) > 1 → investigate boundary  # may indicate wrong split
-  assert: min_api_surface(module)              # excessive API surface is implicit coupling
-```
-5. **Security Review** (independent audit):
-```
-security_review = {
-  threat_model:    [actors, attack_surfaces, high_risk_data_flows]
-  trust_boundaries: map(trust_level_changes)  # e.g. external API → internal → DB
-  auth:            { identity_model, access_control, privilege_escalation_risks }
-  data_protection: { encryption: [at_rest, in_transit], key_mgmt, sensitive_data }
-  input_validation: { trust_boundaries, sanitization_points }
-  audit_trail:     { required_logged_ops, required_fields }
-  test_scenarios:  → Phase 3/4 security test cases
-}
-```
-6. **Critic step**: Challenge every decision
-    - Find gaps, over-engineering, missing edge cases
-    - Question every abstraction: is it necessary?
-    - Identify failure modes the design does not handle
-    - **System quality checklist** (Critic must address each):
+2. **Boundary Review** (systematic audit per module):
+
+Boundary check: if a requirement change triggers changes in >1 module → investigate whether the module boundary is wrong. Each module should have minimal API surface.
+
+3. **System quality checklist**
 ```
 quality = {
   operability: {
@@ -105,14 +75,10 @@ quality = {
   }
 }
 ```
-7. **Consensus step**: Resolve conflicts
-    - Merge Planner and Architect outputs with Critic feedback
-    - Produce a single, unified design document
-    - Document rejected alternatives and why they were rejected
-8. **Classify functional points by priority**
+4. **Classify functional points by priority**
     - Label each component, interface, and failure mode as **key** (critical path, high-risk, core business logic, or externally visible behavior) or **peripheral** (utility, helper, or low-risk)
     - This classification drives test depth in Phase 3: key functional points require comprehensive test cases (happy path, edge cases, error scenarios); peripheral items require at least basic coverage
-9. **Validate priority consistency with Phase 1**
+5. **Validate priority consistency with Phase 1**
     ```
     # Forward check: core requirements must be served by key components
     for each core_ac in Phase1.acceptance_criteria where priority == "core":
@@ -138,7 +104,7 @@ quality = {
     # Note: peripheral requirement → key components is acceptable
     # (utility feature may depend on critical shared component)
     ```
-10. **Map design to Phase 1 requirements**
+6. **Map design to Phase 1 requirements**
     - Every acceptance criterion must be achievable with this design
     - If a criterion cannot be met, flag it and propose a requirements change
 
@@ -205,16 +171,7 @@ quality = {
 - <question> → <resolution>
 ```
 
-## Ralph Loop Integration
-
-**Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 components, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
-
-After completing this deliverable, **invoke `ralph-review-loop.md`** with:
-- The Technical Design Document as the deliverable
-- The Phase 1 Requirements Document as prior context
-- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
-
-**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+**Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 components, follow the Task Tree & Context Management protocol in SKILL.md.
 
 ## Gate: Reviewer Checklist
 
@@ -243,6 +200,4 @@ After the Ralph loop gate passes, present the Technical Design Document to the u
 
 **If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1. If the user's feedback reveals a fundamental requirements flaw, return to Phase 1 (discard Phase 2 work, re-run Phase 1 Ralph loop, then restart Phase 2).
 
-## Transition
 
-Once the gate passes, proceed to **Phase 3: 测试方案**. Read `phase-3-test-plan.md` for detailed instructions.

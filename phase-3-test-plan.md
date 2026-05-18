@@ -19,10 +19,6 @@ If not, supplement before proceeding.
 
 # Phase 3: 测试方案 (Test Plan)
 
-## Objective
-
-Derive a **complete test strategy** from the acceptance criteria and technical design. The test plan is the bridge between design and code.
-
 ## Detailed Process
 
 1. **Identify core scenarios and key functional points**
@@ -79,65 +75,18 @@ Derive a **complete test strategy** from the acceptance criteria and technical d
             # or functional points were misclassified as peripheral
             block_until_resolved
     ```
-3. **Extract and map acceptance criteria** from Phase 1 Requirements Document
-    - List every criterion; none may be omitted
-    - Immediately map each to tests → build the Requirements Coverage Matrix (Phase 1 → Tests)
-    - Verify: every AC appears in the matrix; no AC was skipped during mapping
-4. **Map each Phase 2 design element to tests**
-   - Cover every component, interface, and failure mode from Phase 2
-   - Build the Design Coverage Matrix (Phase 2 → Tests)
-5. **Map each criterion to test type**
-```
-   test_types = {
-      unit:        "individual functions/components in isolation (fast, deterministic)"
-      integration: "component interactions, API contracts, database calls"
-      e2e:         "full user flows, critical paths (minimal — only where necessary)"
 
-      # Advanced test types (apply when Phase 2 design identifies relevant risks)
-      advanced: {
-        contract:    "consumer-driven contracts verifying API compatibility between services (Pact, Spring Cloud Contract). Catches version drift and schema evolution breaks."
-        soak:        "long-running iterations detecting resource leaks (memory, FDs, connections). N iterations + assert resource growth < threshold."
-        concurrency: "concurrent stress tests detecting race conditions. N threads hit shared state simultaneously, assert invariants hold."
-        fault:       "fault injection testing resilience and graceful degradation. Kill/timeout/error dependencies, verify system degrades gracefully."
-      }
-
-      # When to add advanced tests (decision guide):
-      #   contract:    ≥2 independent deployable components communicating via API/IPC
-      #   soak:        long-running processes, connection pools, file handle management
-      #   concurrency: shared mutable state, concurrent access patterns, startup/shutdown races
-      #   fault:       external dependencies (network, DB, third-party APIs), retry logic, circuit breakers
-    }
-```
-6. **Identify edge cases, error paths, boundary conditions**
-```
    edge_categories = [
      null_inputs, empty_collections, max_values,
      concurrent_access, timeouts, network_failures,
      invalid_state_transitions,
-     # --- Advanced dimensions ---
-     serialization_boundary,     # encoding, precision, special chars, cross-language schema mismatch
-     error_handler_correctness,  # catch blocks that swallow, amplify, or mishandle errors
-     implicit_contract,          # call order, sync/async semantics, thread safety assumptions
-     resource_leak,              # memory, FDs, connections growing over iterations
-     cascading_failure,          # single failure propagating through dependency chain
-     performance_logic,          # N+1 queries, slow paths, batch operations hitting single-item paths
+     serialization_boundary,
+     error_handler_correctness,
+     implicit_contract,
+     resource_leak,
+     cascading_failure,
+     performance_logic,
    ]
-```
-7. **Define test data requirements**
-```
-   test_data = { fixtures, mocks, factories, stubs }
-   setup_strategy: shared_setup | per_test_setup
-```
-8. **Note execution-order constraints**
-```
-   # Constraints are about shared fixtures/setup, NOT logical test dependencies
-   # RULE: no test may depend on another test passing
-   parallel_groups: <which tests can run in parallel>
-```
-9. **Name every test descriptively**
-```
-   naming: should_<expected_behavior>_<context>()
-   FORBIDDEN: [test1, test_foo, impl_centric_names]
 ```
 
 ## Deliverable Template
@@ -183,43 +132,20 @@ _Traces Phase 1 user stories and acceptance criteria to test cases. For Phase 2 
 | 2 | Key | DB timeout | Failure Mode | Integration | `test_db.py` | `should_retry_on_timeout` | Retry logic |
 
 ## Edge Cases & Error Paths
-- <boundary condition>
-- <error scenario>
-- <concurrency scenario>
-
-### Advanced Edge Case Dimensions (if applicable per Phase 2 risk assessment)
-
-#### Serialization Boundary
-- <cross-language numeric precision: int64 → JS Number truncation>
-- <null vs missing vs empty string for same field>
-- <unicode beyond BMP (emoji, CJK Extension B)>
-- <date/time format consistency (timezone, precision)>
-- <enum case sensitivity across components>
-
-#### Error Handler Correctness
-- <every catch/except block has ≥1 test triggering it>
-- <error context preserved (cause chain, stack trace, error codes)>
-- <cleanup/finally runs even on error, no resource leaks>
-- <system recoverable after error (state is valid, retry works)>
-
-#### Implicit Contract
-- <call order dependencies verified (A must complete before B)>
-- <sync vs async error propagation tested separately>
-- <shared state thread safety under concurrent access>
-
-#### Resource Stability
-- <N-iteration soak test for resource-heavy operations>
-- <memory/FD/connection count measured before and after N iterations>
-
-#### Cascading Failure Prevention
-- <non-critical dependency failure doesn't break core flow>
-- <retry budget prevents amplification>
-- <timeout propagation correct (caller timeout ≤ callee timeout)>
-
-#### Performance Logic
-- <hot paths tested with realistic data volume (not just 1-item)>
-- <N+1 query detection: verify batch operations don't trigger per-item calls>
-- <slow path remains within latency budget under expected load>
+Checklist (verify each category is covered):
+- [ ] null_inputs
+- [ ] empty_collections
+- [ ] max_values
+- [ ] concurrent_access
+- [ ] timeouts
+- [ ] network_failures
+- [ ] invalid_state_transitions
+- [ ] serialization_boundary
+- [ ] error_handler_correctness
+- [ ] implicit_contract
+- [ ] resource_leak
+- [ ] cascading_failure
+- [ ] performance_logic
 
 ## Test Data
 - <fixtures, mocks, factories needed>
@@ -249,16 +175,7 @@ _Traces Phase 1 user stories and acceptance criteria to test cases. For Phase 2 
 - <item>: Peripheral → Key — <reason for upgrade or scope-creep assessment>
 ```
 
-## Ralph Loop Integration
-
 **Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 test groups, follow the Task Tree & Context Management protocol in SKILL.md (write index.md first, then parallel modules, then merged Ralph loop).
-
-After completing this deliverable, **invoke `ralph-review-loop.md`** with:
-- The Test Plan Document as the deliverable
-- The Phase 1 Requirements Document and Phase 2 Technical Design Document as prior context
-- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
-
-**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
 
 ## Gate: Reviewer Checklist
 
@@ -294,6 +211,7 @@ gate_pass = ALL:
   quality:
     edge_cases + error_paths explicit
     test_names: descriptive, behavior-focused
+    FORBIDDEN: [test1, test_foo, impl_centric_names]
     test_types: appropriate split (not over-E2E, not under-integration)
     test_data: explicitly specified in deliverable
     test_deps + ordering: documented
@@ -317,7 +235,3 @@ After the Ralph loop gate passes, present the Test Plan Document to the user for
 - Test strategy (unit/integration/e2e split) is appropriate
 
 **If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1. If the user's feedback reveals a design flaw, return to Phase 2 (discard Phase 3 work, re-run Phase 2 Ralph loop, then restart Phase 3). If the root cause is requirements, return to Phase 1.
-
-## Transition
-
-Once the gate passes, proceed to **Phase 4: 测试代码**. Read `phase-4-test-code.md` for detailed instructions.
