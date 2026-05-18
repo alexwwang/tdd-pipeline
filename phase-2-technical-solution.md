@@ -64,8 +64,7 @@ quality = {
     trust_boundary_gaps:    "no trust boundary gaps remain unresolved?"
   }
   performance: {
-    latency:        "response time requirements per operation?"
-    throughput:     "expected request rate? Any burst patterns?"
+    burst:          "any burst patterns beyond average load?"
     caching:        "which data is cacheable? Invalidation rules?"
   }
   maintainability: {
@@ -79,31 +78,9 @@ quality = {
     - Label each component, interface, and failure mode as **key** (critical path, high-risk, core business logic, or externally visible behavior) or **peripheral** (utility, helper, or low-risk)
     - This classification drives test depth in Phase 3: key functional points require comprehensive test cases (happy path, edge cases, error scenarios); peripheral items require at least basic coverage
 5. **Validate priority consistency with Phase 1**
-    ```
-    # Forward check: core requirements must be served by key components
-    for each core_ac in Phase1.acceptance_criteria where priority == "core":
-        parent_story = Phase1.user_story_for(core_ac)    // look up parent US regardless of its priority
-        serving_components = Phase2.components_that_serve(core_ac)
-        key_components     = serving_components.where(priority == "key")
-
-        if key_components.is_empty:
-            # PRIORITY INCONSISTENCY: core requirement → only peripheral components
-            action = reclassify_a_component_as_key
-                     OR document_explicit_justification_for_downgrade
-            # e.g., "core requirement satisfied by well-tested third-party library"
-
-    # Reverse check: orphaned key components (no core requirement trace)
-    for each key_component in Phase2.items where priority == "key":
-        served_requirements = Phase1.items_served_by(key_component)
-        core_served         = served_requirements.where(priority == "core")
-
-        if core_served.is_empty:
-            # Not an error, but document: this key component serves only
-            # secondary requirements — verify classification is intentional
-
-    # Note: peripheral requirement → key components is acceptable
-    # (utility feature may depend on critical shared component)
-    ```
+    - Forward: every Phase 1 core AC must map to ≥1 Phase 2 key component. If only peripheral components serve a core AC → reclassify a component as key OR document explicit justification
+    - Reverse: key components with no core requirement trace are not errors, but document that they serve only secondary requirements (verify intentional)
+    - Note: peripheral requirement → key component is acceptable (shared component serving utility + core features)
 6. **Map design to Phase 1 requirements**
     - Every acceptance criterion must be achievable with this design
     - If a criterion cannot be met, flag it and propose a requirements change
