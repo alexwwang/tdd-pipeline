@@ -177,6 +177,9 @@ Checklist (verify each category is covered — find the analogous risk if catego
 
 **Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 test groups, follow the Task Tree & Context Management protocol in SKILL.md (write index.md first, then parallel modules, then merged Ralph loop).
 
+After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review). The reviewer should additionally load `phase-3-edge-reference.md` for edge case depth verification.
+Upon gate pass + user approval, proceed to Phase 4 → `phase-4-test-code.md`.
+
 ## Gate: Reviewer Checklist
 
 ```

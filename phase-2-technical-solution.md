@@ -150,6 +150,9 @@ quality = {
 
 **Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 components, follow the Task Tree & Context Management protocol in SKILL.md.
 
+After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
+Upon gate pass + user approval, proceed to Phase 3 → `phase-3-test-plan.md`.
+
 ## Gate: Reviewer Checklist
 
 ```

@@ -39,6 +39,9 @@ Implement the **minimum code** to make all tests pass, then refactor. Business c
 
 **Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 implementation files, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
 
+After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
+Upon gate pass + user approval, proceed to Phase 6 → `phase-6-pre-release-testing.md`.
+
 **Phase 5 Code Review Specifics**: The reviewer must check:
 - Is refactoring clean? Any regressions introduced?
 - Is the minimum code principle respected? (No gold-plating?)
