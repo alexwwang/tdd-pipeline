@@ -132,13 +132,13 @@ _Traces Phase 1 user stories and acceptance criteria to test cases. For Phase 2 
 | 2 | Key | DB timeout | Failure Mode | Integration | `test_db.py` | `should_retry_on_timeout` | Retry logic |
 
 ## Edge Cases & Error Paths
-Checklist (verify each category is covered):
+Checklist (verify each category is covered — find the analogous risk if category seems inapplicable):
 - [ ] null_inputs — None/null passed where a value is expected
 - [ ] empty_collections — empty arrays, strings, or maps fed to processing logic
 - [ ] max_values — overflow, infinity, or boundary-maximum inputs
-- [ ] concurrent_access — race conditions under simultaneous multi-thread/actor access
-- [ ] timeouts — operations that exceed time limits or receive zero/negative timeout
-- [ ] network_failures — external dependency unavailability, clock skew, connectivity loss
+- [ ] concurrent_access — race conditions under simultaneous multi-thread/actor access (e.g., shared state if parallelized later)
+- [ ] timeouts — operations that exceed time limits or receive zero/negative timeout (e.g., I/O stall on large file, infinite loop from malformed input)
+- [ ] network_failures — external dependency unavailability, clock skew, connectivity loss (e.g., file I/O errors, encoding corruption from external data)
 - [ ] invalid_state_transitions — operations called out of order or on corrupted state
 - [ ] serialization_boundary — encoding, precision loss, schema mismatch across boundaries
 - [ ] error_handler_correctness — catch blocks that swallow, amplify, or leak resources
