@@ -42,6 +42,36 @@ Every issue found by the reviewer MUST be classified by severity:
 
 ## Review Process (Per Round)
 
+```
+for round N:
+  present(deliverable, prior_phase_outputs, contested_issues_from_prior_rounds) → reviewer
+  review_against(gate_criteria)              # see phase-N-*.md files
+
+  # Cross-phase escalation (UNCONDITIONAL — cannot be overridden by critical evaluation)
+  if root_cause in prior_phase:
+    HALT loop
+    ESCALATE to user: "Root cause in Phase N-k.
+      Recommend rollback to Phase N-k, discard downstream, re-run Ralph loop."
+    FORBIDDEN: fix prior-phase issues in current deliverable
+
+  # Step 1: Reviewer produces three output categories (see §Reviewer Output Requirements)
+  report:
+    severity_issues: numbered with C/H/M/L/I labels
+    constructive_suggestions: actionable fixes paired with severity issues
+    critical_opinions: architectural/strategic critique (when substantive concerns exist)
+
+  tally: C=0, H=1, M=2, L=3, I=1
+
+  # Step 2: Main agent critical evaluation (see §Main Agent Critical Evaluation)
+  for each review item:
+    evaluate_against(project_context) → ADOPT | REJECT | MODIFY
+
+  # Step 3: Apply fixes
+  fix: all ADOPTed and MODIFYed C + H + M (L + I + ADOPTed opinions optional)
+
+  log: { round: N, tally, contested, evaluation_decisions, fixes_applied }
+```
+
 ### Reviewer Output Requirements
 
 The reviewer produces **three output categories** per round. Their relationship is:
@@ -220,6 +250,32 @@ Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (may stop here, or
 Round 6: 0 issues → counter = 2 → ✅ STOP (rounds 5 & 6 both 0)
 ```
 
+**Example B — Cannot stop (only 1 zero):**
+```
+Round 1: H=1      → Fix → continue
+Round 2: M=1      → Fix → continue
+Round 3: 0 issues → counter = 1 → continue (NOT stop — need 2 consecutive!)
+Round 4: L=1      → Counter RESET to 0 (any non-I count resets; fixing L is optional) → continue
+Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (accept gate-pass now, or continue to pursue stop)
+=== Choosing gate-pass === ✅ PASS GATE
+```
+
+**Example C — Correct stop (at round 4):**
+```
+Round 1: M=2      → Fix → continue
+Round 2: M=1      → Fix → continue
+Round 3: 0 issues → counter = 1 → continue
+Round 4: 0 issues → counter = 2 → ✅ STOP (rounds 3 & 4 both 0, consecutive)
+```
+
+**Example D — Escalation at max rounds:**
+```
+Round 1-7: persistent M issues, fixed and re-found → continue
+Round 8: H=1 → Fix → continue
+Round 9: M=1 → Fix → continue
+Round 10: M=1 → ⛔ MAX ROUNDS → HALT → Escalate to user with issue summary
+```
+
 **Example E — Contested issue lifecycle (reviewer re-raises, then drops):**
 ```
 Round 3: reviewer finds [M-3] Missing timeout handling in API client
@@ -312,6 +368,14 @@ zone IDs, keep urlparse for all others." (This matches the eventual PR #7065 app
 > structured evidence package: (1) what was found, (2) reviewer's evidence chain, (3) main
 > agent's rejection rationale per round, (4) dispute trajectory, (5) current impact. The user
 > should be able to make an informed decision without re-reading the entire review log.
+
+## Gate Condition
+
+```
+gate_proceed = ALL:
+  ralph_termination IN [early_stop, gate_pass]  # NOT max_rounds
+  final_round.C + .H + .M == 0                  # L/I acceptable, carried forward
+```
 
 ## Design Review Checklist (Phases 1–3)
 
