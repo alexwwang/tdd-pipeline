@@ -82,10 +82,10 @@ V5: Regression test added → same bug caught if it returns?
 
 ## Part 3: Common Bug Patterns
 
-Based on 18 bugs from real projects. **⛔ Systematically check ALL 12 patterns — ruling out non-matches is as important as confirming matches.**
+Based on 18 bugs from real projects. **⛔ Systematically check ALL 16 patterns — ruling out non-matches is as important as confirming matches.**
 
 ### Pattern 1: Path & Config Issues (5/18)
-Hardcoded paths, tildes in config, symlinks not resolved. Check: `~/` in config files, `/Users/` in source, symlink resolution.
+Hardcoded paths, tildes in config, symlinks not resolved. Also check: SQL string interpolation with unquoted column/table names (`", ".join(cols)` without quoting), env vars used without default or validation.
 
 ### Pattern 2: Registration / Wiring Gaps (3/18)
 Exported but not registered = invisible at runtime. Compare exported symbols vs registered tools/services.
@@ -120,14 +120,26 @@ Cross-language edge cases — test each boundary:
 | Float precision | `0.1 + 0.2` | Assert approximate, not exact |
 | Date timezone | `"2024-01-01T00:00:00+05:00"` | Consumer interprets timezone correctly |
 
-### Pattern 10: Cascading Failures & Retry Storms
+### Pattern 10: Version Drift — Interface Contract Breaking
+Component A upgraded its API, component B still calls the old interface. Distinct from integration bugs (P6): P6 is about initial mismatch, this is about drift over time. Check: are component versions pinned? Do consumer tests verify against actual provider (not mocks)?
+
+### Pattern 11: Cascading Failures & Retry Storms
 Inject 100% error rate → verify retry budget bounded (upstream requests ≤ normal × (1 + retry_budget)), circuit breaker opens, graceful degradation, auto-recovery.
 
-### Pattern 11: Error Handling Bugs — Handlers That Introduce Bugs
-Every catch/except block must have ≥1 test: inject exact exception → assert context preserved, cleanup ran, system usable after recovery.
+### Pattern 12: Auth / Permission Boundary Inconsistency
+Components enforce different access control policies — one checks permissions, another trusts internal calls unconditionally. Check: is auth verified at every boundary, or only at the edge?
 
-### Pattern 12: Performance Logic Defects — N+1, Slow Paths, Batch Misrouting
+### Pattern 13: Error Handling Bugs — Handlers That Introduce Bugs
+Check every error path for three dimensions: (1) catch/except blocks tested — inject exact exception, assert context preserved and cleanup ran; (2) return value semantics — does the function return what it claims (actual DB rows, not input count)? (3) schema consistency — do success and failure paths return the same shape (missing columns on error = downstream KeyError)?
+
+### Pattern 14: Performance Logic Defects — N+1, Slow Paths, Batch Misrouting
 Test with N>1 items → assert O(N) growth not O(N²), verify batch API used for batch operations (≥5× faster than single-item calls).
+
+### Pattern 15: Implicit Contract Violations
+Undocumented semantic assumptions broken at component boundaries: call ordering (must init before query), sync vs async expectations, thread-safety assumptions. Distinct from P6 (explicit interface mismatch) — these are assumptions never written down.
+
+### Pattern 16: Data Validation Logic Defects
+Validation rules that are too aggressive (nullifying valid data) or too permissive (accepting garbage). Check: does the validation threshold have a sound basis? Could legitimate outliers be caught? Does a failing validation cascade to unrelated data (e.g., nullifying entire row for one bad column)?
 
 ---
 
