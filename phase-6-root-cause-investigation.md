@@ -80,227 +80,30 @@ V5: Regression test added → same bug caught if it returns?
 
 ---
 
-## Part 3: Common Bug Patterns & Quick Checks
+## Part 3: Bug Pattern Quick Reference
 
-Based on 18 bugs from real projects. **⛔ Systematically check ALL 16 patterns — ruling out non-matches is as important as confirming matches.**
+After 5-Why reaches root cause, classify the bug pattern. If pattern matched, load **`phase-7-system-quality-audit.md`** for grep commands and test scaffolding.
 
-> Adapt grep paths/extensions to your project. The categories are universal even if paths are not.
+| # | Pattern | One-Line Description |
+|---|---------|---------------------|
+| P1 | Path & Config Issues | Hardcoded paths, tildes, unresolved symlinks, SQL unquoted identifiers |
+| P2 | Registration / Wiring Gaps | Exported but not registered = invisible at runtime |
+| P3 | Initialization / Startup Blocking | Stale PID/lock files, init awaits without timeout |
+| P4 | Silent Failures / Missing Feedback | Errors at debug/info level, no completion notification |
+| P5 | Test–Production Parity | Test harness uses different activation path than real users |
+| P6 | Integration Bugs | Only manifest when two components interact |
+| P7 | Resource Leaks | Memory/FD/connection monotonic growth over time |
+| P8 | Race Conditions | Flaky tests, shared mutable state, non-atomic lock creation |
+| P9 | Serialization Boundary | Cross-language type corruption (int>2^53, null vs missing) |
+| P10 | Version Drift | Component A upgraded, B still calls old interface |
+| P11 | Cascading Failures | Retry amplification, no circuit breaker, timeout chain |
+| P12 | Auth Boundary Inconsistency | Different access control at different component boundaries |
+| P13 | Error Handling Bugs | Return value semantics, schema inconsistency on error paths |
+| P14 | Performance Logic | N+1 queries, batch misrouting, O(N²) in hot paths |
+| P15 | Implicit Contract Violations | Undocumented call ordering, sync/async assumptions |
+| P16 | Data Validation Defects | Over-aggressive validation cascading to unrelated data |
 
-### Pattern 1: Path & Config Issues (5/18)
-
-```sh
-grep -rn '/Users/\|/home/\|C:\\' --include='*.ts' --include='*.py' --include='*.json' .
-grep -rn '~/' --include='*.json' --include='*.yaml' --include='*.toml' .
-grep -rn 'join.*cols\|", "\.join\|format.*column' --include='*.py' --include='*.ts' .  # SQL unquoted identifiers
-```
-
-Hardcoded paths, tildes in config, symlinks not resolved. Also check: SQL string interpolation with unquoted column/table names (`", ".join(cols)` without quoting), env vars used without default or validation.
-
-### Pattern 2: Registration / Wiring Gaps (3/18)
-
-```sh
-grep -rn 'export function\|export class\|def ' src/ | grep -v test    # exports
-grep -rn 'register\|\.tool(\|mcp\.tool(' src/init.ts                    # registrations
-```
-
-Exported but not registered = invisible at runtime. Compare exported symbols vs registered tools/services.
-
-### Pattern 3: Initialization / Startup Blocking (2/18)
-
-```sh
-time <start-command>                                                    # should be < 5s
-grep -rn 'await\|fetch\|connect' src/init.ts | grep -v 'timeout'       # no timeout protection
-grep -rn 'marker\|\.pid\|\.lock\|\.active' src/                         # stale state cleanup?
-```
-
-Verify fails fast, not hangs. Simulate unavailable dependency → verify fails fast, not hangs.
-
-### Pattern 4: Silent Failures / Missing Feedback (2/18)
-
-```sh
-grep -rn 'notify\|toast\|alert\|callback' src/ --include='*.ts' | grep -v test
-grep -rn 'logger\.\(debug\|info\)' src/ | grep -v test
-```
-
-Non-interactive errors must use warn/error, not debug/info. Every background operation needs completion notification.
-
-### Pattern 5: Test–Production Parity Gaps (2/18)
-
-```sh
-grep -rn 'send-keys\|stdin\|mock.*trigger' test/ | head -5
-grep -rn 'SIGKILL\|kill -9' test/
-grep -rn 'beforeEach\|beforeAll\|setUp\|rm -f' test/ | grep -c 'marker\|\.active'
-```
-
-Bugs in production but invisible to tests happen when test harness uses a different activation path than real users.
-
-### Pattern 6: Integration Bugs (4/18)
-
-```sh
-grep -rn 'execFile\|execSync' src/ && echo "Warning: use spawn for bidirectional IPC"
-grep -rn 'agent:\|model:' src/ | grep -v test          # unsupported params silently ignored?
-grep -rn 'parentId\|sessionId\|ownerId' src/ | grep -v test  # IDs propagated, not hardcoded?
-```
-
-Only manifest when two components interact — invisible to single-component tests. Check: subprocess IPC, silently ignored params, IPC limits, ID propagation.
-
-### Pattern 7: Resource Leaks — Memory, FDs, Connections
-
-```sh
-lsof -p $PID | wc -l   # FDs: before and after
-grep -rn 'pool\|connection\|client' src/ --include='*.py' --include='*.ts' | grep -v test | grep -c 'close\|release\|disconnect'
-# Low close/release count = likely leak
-```
-
-```python
-# Memory: N-iteration growth check
-import tracemalloc, gc
-tracemalloc.start(); gc.collect()
-before = tracemalloc.get_traced_memory()
-for _ in range(1000): operation_under_test()
-gc.collect()
-after = tracemalloc.get_traced_memory()
-growth_kb = (after[0] - before[0]) / 1024
-assert growth_kb < 100, f'Leaked {growth_kb}KB'
-```
-
-System degrades over time. N-iteration soak test → assert no monotonic growth in memory, FDs, connections.
-
-### Pattern 8: Race Conditions — Concurrent Access & Startup Races
-
-```sh
-grep -rn '\.pid\|\.lock\|\.active' src/ | grep -v test
-# Check: is creation atomic? (O_CREAT | O_EXCL, not check-then-create)
-grep -rn 'global\|static\|\.cache\|\.state' src/ --include='*.py' --include='*.ts' | grep -v test | grep -v 'const '
-# Each hit: is access synchronized?
-```
-
-**Test pattern:**
-```text
-# N threads × M iterations, assert invariant
-spawn N workers (ThreadPoolExecutor / thread pool), each performing shared_operation
-assert invariant_holds(results)  # e.g., counter == expected, no duplicates
-```
-
-Flaky tests, intermittent wrong results, ghost processes.
-
-### Pattern 9: Serialization Boundary Bugs — Cross-Language & Edge Cases
-
-```sh
-grep -rn 'JSON\.\(parse\|stringify\)\|json\.loads\|json\.dumps\|serialize\|deserialize' src/ | grep -v test
-```
-
-| Risk | Test Input | Expected Behavior |
-|------|-----------|-------------------|
-| Integer > 2^53 | `9007199254740993` | Serialized as string, not number |
-| Null vs missing | `{"a": null}`, `{}`, `{"a": ""}` | Consumer distinguishes all three |
-| Unicode beyond BMP | `"🚀🎉"` | Round-trip preserves bytes |
-| Float precision | `0.1 + 0.2` | Assert approximate, not exact |
-| Date timezone | `"2024-01-01T00:00:00+05:00"` | Consumer interprets timezone correctly |
-
-### Pattern 10: Version Drift — Interface Contract Breaking
-
-```sh
-grep -rn 'version\|pin\|lock' package.json requirements.txt pyproject.toml  # are deps pinned?
-grep -rn 'mock\|Mock\|stub' test/ | grep -c 'import\|from'                  # how many tests mock providers?
-```
-
-Component A upgraded its API, component B still calls the old interface. Distinct from P6 (initial mismatch) — this is drift over time. Check: are component versions pinned? Do consumer tests verify against actual provider (not mocks)?
-
-### Pattern 11: Cascading Failures & Retry Storms
-
-```sh
-grep -rn 'retry\|backoff\|maxAttempt\|circuit' src/ config/ --include='*.py' --include='*.ts' --include='*.json' --include='*.yaml'
-# Warning signs: no backoff, no jitter, no retry budget, no circuit breaker
-grep -rn 'timeout\|Timeout\|TIMEOUT' src/ config/ | grep -v test
-# For each A→B call: verify timeout_A ≤ timeout_B
-```
-
-**Test pattern:**
-```text
-1. Inject 100% error rate on dependency X (via Toxiproxy or mock)
-2. Assert: upstream request count ≤ normal × (1 + retry_budget)
-3. Assert: circuit breaker opens within N failures
-4. Assert: core functionality degrades gracefully (fallback works)
-5. Restore dependency → assert system recovers automatically
-```
-
-### Pattern 12: Auth / Permission Boundary Inconsistency
-
-```sh
-grep -rn 'auth\|permission\|token\|session' src/ --include='*.py' --include='*.ts' | grep -v test
-# For each component boundary: is auth verified, or does it trust internal calls?
-```
-
-Components enforce different access control policies — one checks permissions, another trusts internal calls unconditionally. Check: is auth verified at every boundary, or only at the edge?
-
-### Pattern 13: Error Handling Bugs — Handlers That Introduce Bugs
-
-```sh
-# Find catch/except blocks without test coverage
-grep -rn 'catch\|except\|try' src/ --include='*.py' --include='*.ts' | grep -v test | wc -l
-# Count should match (approximately) test count targeting error paths
-
-# Find empty catch blocks (silent swallow)
-grep -A2 'catch\|except' src/ --include='*.py' --include='*.ts' | grep -v test | grep -E '^\s*(pass|}|return|//|#$)'
-# Each hit is a potential silent failure
-```
-
-**Error handler test checklist (per catch/except block):**
-```text
-- Test injects the exact exception type the catch handles
-- Asserts error context preserved (cause chain, error code, relevant IDs)
-- Asserts cleanup/finally ran (no resource leak on error path)
-- Asserts system is usable after error recovery
-- If retry: assert retry classification (retryable vs non-retryable)
-- If fallback: assert fallback output is valid, not just "no crash"
-```
-
-Check every error path for three dimensions: (1) catch/except blocks tested, (2) return value semantics — does the function return what it claims (actual DB rows, not input count)? (3) schema consistency — do success and failure paths return the same shape?
-
-### Pattern 14: Performance Logic Defects — N+1, Slow Paths, Batch Misrouting
-
-```sh
-# N+1 detection: loops containing async/DB calls
-grep -rn 'for\|while\|\.forEach\|\.map' src/ --include='*.py' --include='*.ts' | grep -v test | grep -B1 -A1 'await\|fetch\|\.query\|\.execute'
-# Each hit: is this a loop-per-item query? → N+1 candidate
-
-# Batch misrouting: single-item path used for batch operations
-grep -rn 'batch\|bulk\|createMany\|insert_all' src/ --include='*.py' --include='*.ts' | grep -v test
-grep -rn 'for.*in\|\.forEach' src/ --include='*.py' --include='*.ts' | grep -v test | grep -c 'await\|create\|insert\|save'
-# High loop count + low batch usage = likely misrouting
-```
-
-**Test pattern:**
-```text
-1. Prepare N items (N > 10, ideally realistic production volume)
-2. Run batch operation, measure latency
-3. Assert: latency grows linearly O(N), not quadratically O(N²)
-4. Compare: N items via batch API vs N items via single-item calls
-5. Assert batch path is ≥5× faster for same N
-```
-
-### Pattern 15: Implicit Contract Violations
-
-```sh
-grep -rn 'init\|setup\|configure\|start' src/ --include='*.py' --include='*.ts' | grep -v test | head -10
-# Are there call-ordering requirements? (must init before query)
-grep -rn 'async def\|await\|asyncio\|Promise' src/ | grep -c 'sync\|Sync\|blocking'
-# Mixing sync/async expectations at boundaries?
-```
-
-Undocumented semantic assumptions broken at component boundaries: call ordering (must init before query), sync vs async expectations, thread-safety assumptions. Distinct from P6 (explicit interface mismatch) — these are assumptions never written down.
-
-### Pattern 16: Data Validation Logic Defects
-
-```sh
-grep -rn 'assert\|validate\|check\|sanity\|threshold\|clip\|clamp\|nullif' src/ --include='*.py' --include='*.ts' | grep -v test
-# For each: does validation nullify the entire row, or only the offending field?
-grep -rn 'fillna\|isna\|isnull\|dropna\|np.nan' src/ --include='*.py' | grep -v test
-# Check: does validation failure cascade to unrelated columns?
-```
-
-Validation rules that are too aggressive (nullifying valid data) or too permissive (accepting garbage). Check: does the validation threshold have a sound basis? Could legitimate outliers be caught? Does a failing validation cascade to unrelated data (e.g., nullifying entire row for one bad column)?
+**⛔ Ruling out non-matches is as important as confirming matches.**
 
 ---
 
@@ -357,7 +160,7 @@ Purpose: break confirmation bias. Only once because if one challenge + continued
 2. **Run Layer Isolation** (Step 1) → find broken layer
 3. **Collect Evidence** (Step 2) before hypothesizing
 4. **Run 5-Why Drill** (Step 3) → reach root cause
-5. **Classify the bug pattern** (Part 3) → match a known pattern? Add its Quick Check to CI for recurrence prevention.
+5. **Classify the bug pattern** (Part 3 quick reference) → match a known pattern? Load `phase-7-system-quality-audit.md` for grep commands. Add its Quick Check to CI for recurrence prevention.
 6. **Verify the fix** (Step 4) in strict V1→V5 sequence
 
 ---
