@@ -23,14 +23,7 @@ description: >
 
 Run each component's test suite in isolation.
 
-```sh
-pytest                    # Python
-vitest run                # TypeScript
-```
-
 **Gate:** All unit tests pass. Zero exceptions.
-
-> Unit tests typically catch ~22% of real bugs. The rest are integration or cross-cutting. Passing this gate is necessary but far from sufficient.
 
 ### Phase 1: Integration / E2E Tests
 
@@ -50,18 +43,7 @@ Layer 3: Does the business logic work across the full chain? (E2E test)
 
 **When to run:** System has long-running processes, connection pools, file handle management, or in-memory caches.
 
-```text
-Pattern: N-iteration resource stability test
-  1. Measure baseline: memory (RSS/heap), open FDs, pool connections
-  2. Run core operation N times (N ≥ 100, scale by operation cost)
-  3. Force GC/cleanup
-  4. Assert: growth within tolerance (e.g., <5MB memory, <1 FD, pool returned to baseline)
-```
-
-**Language-specific tools:**
-- Python: `tracemalloc` + `gc.collect()` + `psutil.Process().num_fds()`
-- Node.js: `--expose-gc` + `process.memoryUsage()` + `/proc/self/fd`
-- CI flag: gate behind `SOAK_TEST=1` env var to avoid slowing fast test runs
+Pattern: measure baseline (memory/FDs/pool) → run core operation N≥100 iterations → force GC/cleanup → assert growth within tolerance. Gate behind `SOAK_TEST=1` env var in CI.
 
 **Gate:** Resource metrics stable across iterations. Zero monotonic growth.
 
@@ -69,43 +51,19 @@ Pattern: N-iteration resource stability test
 
 **When to run:** ≥2 independent deployable components communicating via API/IPC.
 
-```text
-Pattern: Consumer-driven contract test
-  1. Consumer defines expected API shape (request + response schema)
-  2. Generate contract file from consumer test
-  3. Provider verifies against real implementation
-  4. CI gate: can-i-deploy check before deployment
-```
-
-**Lightweight alternative (no Pact Broker):**
-- Define shared JSON Schema for each API boundary
-- Producer test: output validates against schema
-- Consumer test: input validates against same schema
-- CI: schema files are single source of truth, any breaking change fails both sides
+Use JSON Schema at each API boundary as single source of truth — producer and consumer tests validate against the same schema. No Pact Broker needed.
 
 **Gate:** All contracts verified. No schema drift between consumer expectations and provider output.
 
 ### Phase 2: Cross-Cutting Validation
 
-| Dimension | What to check | How |
-|-----------|---------------|-----|
-| Config consistency | Same paths, ports, env vars across all config files | grep for hardcoded paths, tilde, localhost |
-| CI reproducibility | Tests pass in CI, not just locally | Run CI pipeline |
-| Regression guard | Previously fixed bugs haven't returned | Run regression test suite |
-| Format / lint | Code style consistent | `ruff format --check`, `ruff check` |
-| Build artifact | Build output is correct and deployable | Build + deploy to staging |
-| Doc accuracy | Docs match current state | Verify test counts, paths, commands |
+Check: config consistency, CI reproducibility, regression guard, format/lint, build artifact, doc accuracy.
 
 **Gate:** All checks pass. Document deviations.
 
 ### Phase 3: Manual / Exploratory Validation
 
 Catches bugs requiring subjective judgment (comprehensibility of messages, appropriateness of error handling, edge cases tests didn't cover).
-
-- Passive trigger detection (does the system activate when it should?)
-- False positive check (does it activate when it shouldn't?)
-- User-visible feedback (completion notifications, error messages)
-- Edge cases tests didn't cover
 
 **Gate:** Manual checklist all ✅ or documented as known limitation.
 
