@@ -133,19 +133,19 @@ _Traces Phase 1 user stories and acceptance criteria to test cases. For Phase 2 
 
 ## Edge Cases & Error Paths
 Checklist (verify each category is covered):
-- [ ] null_inputs
-- [ ] empty_collections
-- [ ] max_values
-- [ ] concurrent_access
-- [ ] timeouts
-- [ ] network_failures
-- [ ] invalid_state_transitions
-- [ ] serialization_boundary
-- [ ] error_handler_correctness
-- [ ] implicit_contract
-- [ ] resource_leak
-- [ ] cascading_failure
-- [ ] performance_logic
+- [ ] null_inputs — None/null passed where a value is expected
+- [ ] empty_collections — empty arrays, strings, or maps fed to processing logic
+- [ ] max_values — overflow, infinity, or boundary-maximum inputs
+- [ ] concurrent_access — race conditions under simultaneous multi-thread/actor access
+- [ ] timeouts — operations that exceed time limits or receive zero/negative timeout
+- [ ] network_failures — external dependency unavailability, clock skew, connectivity loss
+- [ ] invalid_state_transitions — operations called out of order or on corrupted state
+- [ ] serialization_boundary — encoding, precision loss, schema mismatch across boundaries
+- [ ] error_handler_correctness — catch blocks that swallow, amplify, or leak resources
+- [ ] implicit_contract — undocumented call-order, sync/async, or thread-safety assumptions
+- [ ] resource_leak — memory, FDs, connections growing over iterations (soak test)
+- [ ] cascading_failure — single failure propagating through dependency chain
+- [ ] performance_logic — N+1 patterns, hot paths under load, batch-vs-single inefficiency
 
 ## Test Data
 - <fixtures, mocks, factories needed>

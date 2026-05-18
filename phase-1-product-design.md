@@ -29,6 +29,11 @@ Understand **what** to build and **why**, not **how**. Surface all ambiguity bef
 ```markdown
 # Requirements Document: <Feature Name>
 
+## System Boundaries
+- **In scope**: <what this feature must do>
+- **Out of scope**: <what is explicitly excluded>
+- **External dependencies**: <services, APIs, libraries this feature depends on>
+
 ## User Stories
 | # | Priority | User Story |
 |---|----------|-----------|
@@ -55,6 +60,7 @@ Understand **what** to build and **why**, not **how**. Surface all ambiguity bef
 
 ```
 gate_pass = ALL:
+  boundaries:     system scope, exclusions, and external deps explicitly defined
   traceability:   all user_stories → traceable to original request
   testability:    every AC testable (binary pass/fail, no subjective language)
   classification: every US + AC ∈ {core, secondary}
