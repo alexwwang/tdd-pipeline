@@ -1,16 +1,13 @@
 ---
 name: tdd-pipeline
-  description: >
-  A rigorous 7-phase TDD development workflow enforcing Red-Green-Refactor
+description: >
+  A rigorous 6-phase TDD development workflow enforcing Red-Green-Refactor
   at the pipeline level: Product Design → Technical Solution → Test Plan →
-  Test Code → Business Code → Pre-Release Testing → System Quality Audit.
-  Phases 1–5 are creation phases with mandatory Ralph-loop review.
-  Phase 6 is the pipeline's validation closure — systematic pre-release
-  testing with bug root cause analysis, rollback paths, and user go/no-go
-  decision. Phase 7 is a system-level quality audit with 16 bug patterns,
-  integration pair discovery, and execution-order analysis — loaded on
-  demand during Phase 6. No business code is written until tests exist and
-  fail.
+  Test Code → Business Code → Pre-Release Testing. Phases 1–5 are creation
+  phases with mandatory Ralph-loop review. Phase 6 is the pipeline's
+  validation closure — systematic pre-release testing with bug root cause
+  analysis, rollback paths to earlier phases, and user go/no-go decision.
+  No business code is written until tests exist and fail.
 triggers:
   - tdd
   - tdd pipeline
@@ -22,10 +19,6 @@ triggers:
   - ship it
   - go/no-go
   - ready to deploy
-  - system audit
-  - quality audit
-  - bug pattern
-  - integration gap
   - 产品设计
   - 技术方案
   - 测试驱动
@@ -48,9 +41,9 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 >
 > **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
-## The 7 Phases
+## The 6 Phases
 
-Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop). Phase 7 is a **system-level quality audit** — loaded on demand during Phase 6 when deeper pattern analysis or integration pair discovery is needed.
+Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop).
 
 
 ## Ralph Loop Review (Phases 1–5)
@@ -74,7 +67,6 @@ After completing each phase deliverable (Phases 1–5), run the ralph-review-loo
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
   - On pattern match or 5-Why stuck → additionally load `phase-7-system-quality-audit.md`
   - Sub-phase 1.6 (Gap Detection) → load `phase-7-system-quality-audit.md`
-- Phase 7 → `phase-7-system-quality-audit.md` (system-level quality audit: 16 patterns with grep commands, pair discovery, execution order analysis)
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns
