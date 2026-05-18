@@ -37,7 +37,7 @@ level: 3
 
 The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the primary specification artifact. Business code is the *implementation detail* that makes tests pass — nothing more.
 
-> **Core Principle**: If you cannot write a failing test for it, you do not understand it well enough to build it.
+> **Core Principle**: If you can't write a failing test for it, you don't understand it.
 >
 > **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
@@ -45,58 +45,24 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 
 Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop).
 
-| Phase | Chinese Name | English Name | Deliverable | Quality Mechanism |
-|-------|-------------|--------------|-------------|-------------------|
-| 1 | 产品设计 | Product Design | Requirements Document | Ralph design review |
-| 2 | 技术方案 | Technical Solution | Technical Design Document | Ralph design review |
-| 3 | 测试方案 | Test Plan | Test Plan Document | Ralph design review |
-| 4 | 测试代码 | Test Code | Test Files (all failing) | Ralph code review |
-| 5 | 业务代码 | Business Code | Working Business Code | Ralph code review |
-| 6 | 预发布测试 | Pre-Release Testing | Release Gate Checklist (with evidence) | Testing flow + 追问 + user go/no-go |
 
 ## Ralph Loop Review (Phases 1–5)
 
 Phases 1–5 each end with a **mandatory Ralph-loop review** before proceeding. Phase 6 uses a different quality mechanism — see `phase-6-pre-release-testing.md` for details. See `ralph-review-loop.md` for the full protocol.
 
-```
-ralph_loop:
-  max_rounds: 10
-  reviewer: independent_subagent   # not involved in creating deliverable
-  early_stop: rounds >= 2 AND consecutive_zero(round_N-1, round_N)  # zero C/H/M/L
-  gate_pass: rounds >= 5 AND current_round.C+H+M == 0              # L/I acceptable
-  escalation: round 10 AND C/H/M > 0 → HALT, report to user       # NOT a pass path
-  termination: early_stop | gate_pass  # one must trigger to proceed
-```
+After completing each phase deliverable (Phases 1–5), run the ralph-review-loop.md protocol before user approval.
 
-## Gate Rules
 
-```
-gate_pass(1–5, N → N+1) = ALL:
-  deliverable(N).complete == true
-  ralph_loop.termination IN [early_stop, gate_pass]   # NOT max_rounds
-  final_round.severity.C + .H + .M == 0               # L/I acceptable
-  TDD_INVARIANT: no business code without failing test
-  user.approved == true
-
-gate_pass(5 → 6):
-  Phase 5 Ralph gate passed == true
-  # Phase 6 begins automatically — no additional gate between 5 and 6
-
-gate_pass(6 → pipeline_complete) = ALL:
-  phase_6.all_sub_phases_passed == true                 # Phase 0–3 (+ conditional 1.5/1.6) all green
-  release_gate_checklist.all_checked == true            # evidence-based
-  user_go_nogo_decision == GO                           # user decides, not reviewer
-```
 
 ## Progressive Disclosure
 
 **At each phase, read ONLY the corresponding `phase-N-*.md` file for detailed instructions. Do NOT load all phase files at once. The `ralph-review-loop.md` protocol is loaded automatically at each phase's review step.**
 
-- Phase 1 → `phase-1-product-design.md`
-- Phase 2 → `phase-2-technical-solution.md`
-- Phase 3 → `phase-3-test-plan.md`
-- Phase 4 → `phase-4-test-code.md`
-- Phase 5 → `phase-5-business-code.md`
+- Phase 1 → `phase-1-product-design.md` (Requirements Document)
+- Phase 2 → `phase-2-technical-solution.md` (Technical Design Document)
+- Phase 3 → `phase-3-test-plan.md` (Test Plan Document)
+- Phase 4 → `phase-4-test-code.md` (Test Files)
+- Phase 5 → `phase-5-business-code.md` (Business Code)
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
@@ -157,17 +123,4 @@ When Phase 6 discovers issues, the 追问 (root cause investigation) determines 
 
 See `phase-6-pre-release-testing.md` for the complete 追问 protocol with termination criteria and rollback procedures.
 
-## Exit Conditions
 
-```
-pipeline_complete = ALL:
-  phases[1..6].gate_passed == true
-  all_tests.pass == true
-  no_business_code_without_test_coverage == true
-  release_gate_checklist.all_checked == true
-  user.approved == true
-
-# Approval granularity (set at invocation):
-#   approval_mode=every_phase  (default) — approve at each phase boundary
-#   approval_mode=final_only   — approve only at Phase 6 end
-```

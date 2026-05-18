@@ -38,41 +38,11 @@ REQUIRED_DIMENSIONS = {
   compliance:     [GDPR, data_residency, audit_trail]
 }
 ```
-2. **Planner step**: Draft high-level approach
-    - Component boundaries
-    - Data flow between components
-    - Technology stack choices (with justification)
-3. **Architect step**: Refine into concrete design
-    - Module decomposition
-    - Interface definitions (function signatures, API contracts, type definitions)
-    - Data models and persistence strategy
-4. **Boundary Review** (systematic audit per module):
-```
-for module in modules:
-  assert: one_sentence_job(module)            # can you describe this module's job in one sentence?
-  assert: all_deps_justified(module)           # is each inter-module dependency justified?
-  for req_change in requirement_changes:
-    triggered = modules_affected_by(req_change)  # which requirement change triggers this module?
-    if len(triggered) > 1 → investigate boundary  # may indicate wrong split
-  assert: min_api_surface(module)              # excessive API surface is implicit coupling
-```
-5. **Security Review** (independent audit):
-```
-security_review = {
-  threat_model:    [actors, attack_surfaces, high_risk_data_flows]
-  trust_boundaries: map(trust_level_changes)  # e.g. external API → internal → DB
-  auth:            { identity_model, access_control, privilege_escalation_risks }
-  data_protection: { encryption: [at_rest, in_transit], key_mgmt, sensitive_data }
-  input_validation: { trust_boundaries, sanitization_points }
-  audit_trail:     { required_logged_ops, required_fields }
-  test_scenarios:  → Phase 3/4 security test cases
-}
-```
-6. **Critic step**: Challenge every decision
-    - Find gaps, over-engineering, missing edge cases
-    - Question every abstraction: is it necessary?
-    - Identify failure modes the design does not handle
-    - **System quality checklist** (Critic must address each):
+2. **Boundary Review** (systematic audit per module):
+
+Boundary check: if a requirement change triggers changes in >1 module → investigate whether the module boundary is wrong. Each module should have minimal API surface.
+
+3. **System quality checklist**
 ```
 quality = {
   operability: {
@@ -94,8 +64,7 @@ quality = {
     trust_boundary_gaps:    "no trust boundary gaps remain unresolved?"
   }
   performance: {
-    latency:        "response time requirements per operation?"
-    throughput:     "expected request rate? Any burst patterns?"
+    burst:          "any burst patterns beyond average load?"
     caching:        "which data is cacheable? Invalidation rules?"
   }
   maintainability: {
@@ -105,40 +74,14 @@ quality = {
   }
 }
 ```
-7. **Consensus step**: Resolve conflicts
-    - Merge Planner and Architect outputs with Critic feedback
-    - Produce a single, unified design document
-    - Document rejected alternatives and why they were rejected
-8. **Classify functional points by priority**
+4. **Classify functional points by priority**
     - Label each component, interface, and failure mode as **key** (critical path, high-risk, core business logic, or externally visible behavior) or **peripheral** (utility, helper, or low-risk)
     - This classification drives test depth in Phase 3: key functional points require comprehensive test cases (happy path, edge cases, error scenarios); peripheral items require at least basic coverage
-9. **Validate priority consistency with Phase 1**
-    ```
-    # Forward check: core requirements must be served by key components
-    for each core_ac in Phase1.acceptance_criteria where priority == "core":
-        parent_story = Phase1.user_story_for(core_ac)    // look up parent US regardless of its priority
-        serving_components = Phase2.components_that_serve(core_ac)
-        key_components     = serving_components.where(priority == "key")
-
-        if key_components.is_empty:
-            # PRIORITY INCONSISTENCY: core requirement → only peripheral components
-            action = reclassify_a_component_as_key
-                     OR document_explicit_justification_for_downgrade
-            # e.g., "core requirement satisfied by well-tested third-party library"
-
-    # Reverse check: orphaned key components (no core requirement trace)
-    for each key_component in Phase2.items where priority == "key":
-        served_requirements = Phase1.items_served_by(key_component)
-        core_served         = served_requirements.where(priority == "core")
-
-        if core_served.is_empty:
-            # Not an error, but document: this key component serves only
-            # secondary requirements — verify classification is intentional
-
-    # Note: peripheral requirement → key components is acceptable
-    # (utility feature may depend on critical shared component)
-    ```
-10. **Map design to Phase 1 requirements**
+5. **Validate priority consistency with Phase 1**
+    - Forward: every Phase 1 core AC must map to ≥1 Phase 2 key component. If only peripheral components serve a core AC → reclassify a component as key OR document explicit justification
+    - Reverse: key components with no core requirement trace are not errors, but document that they serve only secondary requirements (verify intentional)
+    - Note: peripheral requirement → key component is acceptable (shared component serving utility + core features)
+6. **Map design to Phase 1 requirements**
     - Every acceptance criterion must be achievable with this design
     - If a criterion cannot be met, flag it and propose a requirements change
 
@@ -205,16 +148,10 @@ quality = {
 - <question> → <resolution>
 ```
 
-## Ralph Loop Integration
+**Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 components, follow the Task Tree & Context Management protocol in SKILL.md.
 
-**Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 components, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
-
-After completing this deliverable, **invoke `ralph-review-loop.md`** with:
-- The Technical Design Document as the deliverable
-- The Phase 1 Requirements Document as prior context
-- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
-
-**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
+Upon gate pass + user approval, proceed to Phase 3 → `phase-3-test-plan.md`.
 
 ## Gate: Reviewer Checklist
 
@@ -243,6 +180,4 @@ After the Ralph loop gate passes, present the Technical Design Document to the u
 
 **If the user rejects**: Revise the deliverable based on feedback, then re-run the Ralph loop from Round 1. If the user's feedback reveals a fundamental requirements flaw, return to Phase 1 (discard Phase 2 work, re-run Phase 1 Ralph loop, then restart Phase 2).
 
-## Transition
 
-Once the gate passes, proceed to **Phase 3: 测试方案**. Read `phase-3-test-plan.md` for detailed instructions.

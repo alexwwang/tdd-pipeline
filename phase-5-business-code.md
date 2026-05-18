@@ -23,57 +23,6 @@ If not, supplement before proceeding.
 
 Implement the **minimum code** to make all tests pass, then refactor. Business code is only the implementation detail that satisfies tests.
 
-## Detailed Process
-
-```
-phase_5():
-
-  # Step 1: Red — already done (Phase 4)
-  assert: all_tests_exist AND all_tests_fail
-  FORBIDDEN: modify tests unless test proven wrong
-  if test_proven_wrong:
-    minor_fix (e.g. wrong expected value) → fix inline, continue
-    structural_flaw → return_to_root_cause:
-      tests_flawed     → Phase 4
-      strategy_flawed  → Phase 3
-      architecture_flawed → Phase 2
-      requirements_flawed → Phase 1
-      # DISCARD all work from root-cause phase onward
-      # (if SPLIT=true: mark in tree.md as [DISCARDED]; if SPLIT=false: archive or revert files)
-      # RE-RUN that phase's Ralph loop → re-execute subsequent phases
-
-  # Step 2: Green
-  while failing_tests.exist:
-    test = pick_simplest(failing_tests)
-    write(minimum_code_to_pass(test))
-    run(full_test_suite)
-    if test.passes AND suite.green → next failing test
-    if other_tests_break → STOP (implementation too broad)
-    if stuck (needs redesign):
-      ESCALATE to user (propose design change OR test modification)
-      FORBIDDEN: silently change test to make it easier
-
-  RULE: no code without failing test justifying it
-    want helper? → write test first
-    no test justifies code? → do NOT write it
-
-  # Step 3: Refactor
-  assert: all_tests_pass before refactoring
-  while smells_detected:
-    refactor: [duplication, naming, logic, abstractions]
-    run(full_test_suite) → MUST stay green
-    log_refactoring_round()
-    if tests_break:
-      revert_immediately
-      try_smaller_refactor (abstraction may be wrong)
-  document: design_deviations_from_Phase2 with justification
-
-  # Final Verification
-  run(full_test_suite) → all_pass == true
-  assert: no_business_code_without_test
-  check: code_smells (duplication, long_functions, poor_names)
-```
-
 ## Deliverable Template
 
 ```markdown
@@ -88,16 +37,10 @@ phase_5():
 - `module_b.py`: <description>
 ```
 
-## Ralph Loop Integration
-
 **Before review**: Write an outline. If it contains ≥ 3 modules or ≥ 5 implementation files, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
 
-After completing this deliverable, **invoke `ralph-review-loop.md`** with:
-- All business code files, test files, and the Implementation Report as the deliverable
-- The Phase 4 Test Execution Report, Phase 3 Test Plan, Phase 2 Technical Design Document, and Phase 1 Requirements Document as prior context
-- Use the **Review Log Template** in `ralph-review-loop.md` to record all rounds
-
-**Cross-phase escalation**: If the reviewer identifies a root cause in a prior phase during the Ralph loop, follow the cross-phase escalation protocol in `ralph-review-loop.md` step 3 (halt loop, recommend rollback to user).
+After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
+Upon gate pass + user approval, proceed to Phase 6 → `phase-6-pre-release-testing.md`.
 
 **Phase 5 Code Review Specifics**: The reviewer must check:
 - Is refactoring clean? Any regressions introduced?
@@ -112,6 +55,8 @@ After completing this deliverable, **invoke `ralph-review-loop.md`** with:
 gate_pass = ALL:
   all_tests_pass: true
   coverage:       no business code without test
+  no_silent_test_modification: FORBIDDEN changing tests to make them easier to pass
+  no_code_without_failing_test: every line of business code must have a failing test justifying it
   refactor:       complete + tests green
   lean:           minimum implementation (no over-engineering)
   deviations:     documented + justified
@@ -129,5 +74,3 @@ The user must review the final code and test suite:
 - **Code-level issues** (quality, style, missing edge cases): Revise the code, then re-run the Phase 5 Ralph loop from Round 1.
 - **Test-level issues** (wrong behavior spec, missing scenarios): Return to Phase 4, modify tests, re-run Phase 4 Ralph loop, then restart Phase 5.
 - **Design or requirements issues** (wrong approach, misunderstood requirements): Return to the root-cause phase (Phase 2 or Phase 1), discard all downstream work, re-run that phase's Ralph loop, and re-execute subsequent phases.
-
-After user approval, the pipeline is complete. Invoke `tdd-pipeline` again for the next feature.

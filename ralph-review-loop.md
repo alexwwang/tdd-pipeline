@@ -4,8 +4,6 @@ This protocol governs **all reviews in Phases 1–5** of the TDD Pipeline. Phase
 
 ## When to Invoke
 
-- **After Phases 1–3 (design phases)**: Launch Ralph loop **design review**
-- **After Phases 4–5 (code phases)**: Launch Ralph loop **code review**
 - **Phase 6 (pre-release testing)**: Does NOT use Ralph loop. See `phase-6-pre-release-testing.md` Part 5.
 
 ## Reviewer Selection
@@ -59,7 +57,6 @@ for round N:
   # Step 1: Reviewer produces three output categories (see §Reviewer Output Requirements)
   report:
     severity_issues: numbered with C/H/M/L/I labels
-      # e.g.: [H-1] Missing boundary condition handling in AC-3
     constructive_suggestions: actionable fixes paired with severity issues
     critical_opinions: architectural/strategic critique (when substantive concerns exist)
 
@@ -68,18 +65,12 @@ for round N:
   # Step 2: Main agent critical evaluation (see §Main Agent Critical Evaluation)
   for each review item:
     evaluate_against(project_context) → ADOPT | REJECT | MODIFY
-    # C/H/M issues: REJECT requires documented evidence of reviewer assumption error
-    # L/I/opinions: full discretion
 
   # Step 3: Apply fixes
   fix: all ADOPTed and MODIFYed C + H + M (L + I + ADOPTed opinions optional)
-  # REJECTed C/H/M remain in tally — they still count toward gate condition
-  # unless reviewer explicitly drops them in the next round (see §Contested Issue Protocol)
 
   log: { round: N, tally, contested, evaluation_decisions, fixes_applied }
 ```
-
-> **Note**: The pseudocode above is a simplified overview. Full details for each step are in the sections below.
 
 ### Reviewer Output Requirements
 
