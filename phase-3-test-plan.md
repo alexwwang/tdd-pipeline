@@ -225,6 +225,14 @@ gate_pass = ALL:
     fault_tests:       added if external dependencies or retry logic
     error_handlers:    every catch/except block has ≥1 test
     performance_tests: added if hot paths with data volume sensitivity (N+1, batch vs single)
+
+  # Step 6 — Edge case depth verification (reviewer probes for thin coverage)
+  depth_verification:
+    cumulative_precision: serialization operations tested for drift over N iterations (not just single-operation accuracy)
+    error_recovery: system state valid after error, retry works, resources released on failure path
+    call_order_deps: operations that must complete before others verified (including across components)
+    failure_isolation: non-critical dependency failure doesn't propagate to core flow
+    analogous_risks: categories marked "N/A" have analogous risks identified (e.g., file I/O errors for network_failures, shared state for concurrent_access if parallelizable)
 ```
 
 ## User Approval
