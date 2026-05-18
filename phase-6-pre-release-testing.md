@@ -93,7 +93,7 @@ Catches bugs requiring subjective judgment (comprehensibility of messages, appro
 
 ## Part 3: Integration Gap Detection Checklist
 
-For each pair of interacting components, walk through every row. If any cell is "we don't know," that's your gap.
+**⛔ Mandatory: enumerate ALL interacting component pairs. For EACH pair, walk through ALL 14 rows.** Skipping rows or pairs means undetected integration bugs. If any cell is "we don't know," that's your gap.
 
 | Gap | Question | Evidence to collect |
 |-----|----------|-------------------|

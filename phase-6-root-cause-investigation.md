@@ -82,10 +82,10 @@ V5: Regression test added → same bug caught if it returns?
 
 ## Part 3: Common Bug Patterns
 
-Based on 18 bugs from real projects. Check proactively before they bite.
+Based on 18 bugs from real projects. **⛔ Systematically check ALL 12 patterns — ruling out non-matches is as important as confirming matches.**
 
 ### Pattern 1: Path & Config Issues (5/18)
-Hardcoded paths, tildes in config, symlinks not resolved. Check: `~/` in config files, `/Users/` in source.
+Hardcoded paths, tildes in config, symlinks not resolved. Check: `~/` in config files, `/Users/` in source, symlink resolution.
 
 ### Pattern 2: Registration / Wiring Gaps (3/18)
 Exported but not registered = invisible at runtime. Compare exported symbols vs registered tools/services.
@@ -93,11 +93,20 @@ Exported but not registered = invisible at runtime. Compare exported symbols vs 
 ### Pattern 3: Initialization / Startup Blocking (2/18)
 Verify fails fast, not hangs. Check for init-phase awaits without timeout, stale PID/lock/marker files.
 
+### Pattern 4: Silent Failures / Missing Feedback (2/18)
+Non-interactive errors logged at debug/info instead of warn+. Background operations missing completion notification.
+
 ### Pattern 5: Test–Production Parity Gaps (2/18)
 Bugs in production but invisible to tests happen when test harness uses a different activation path than real users.
 
 ### Pattern 6: Integration Bugs (4/18)
 Only manifest when two components interact. Check: subprocess IPC (use spawn, not exec), silently ignored params, IPC limits, ID propagation.
+
+### Pattern 7: Resource Leaks (Memory, FDs, Connections)
+System degrades over time. Run N-iteration soak test → assert no monotonic growth in memory, FDs, connections.
+
+### Pattern 8: Race Conditions — Concurrent Access & Startup Races
+Flaky tests, intermittent wrong results, ghost processes. Check: shared mutable state synchronized? PID/lock file creation atomic?
 
 ### Pattern 9: Serialization Boundary Bugs
 
