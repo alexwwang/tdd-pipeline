@@ -38,6 +38,8 @@ level: 3
 The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the primary specification artifact. Business code is the *implementation detail* that makes tests pass — nothing more.
 
 > **Core Principle**: If you cannot write a failing test for it, you do not understand it well enough to build it.
+>
+> **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
 ## The 6 Phases
 

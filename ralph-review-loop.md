@@ -12,6 +12,18 @@ This protocol governs **all reviews in Phases 1–5** of the TDD Pipeline. Phase
 
 Spawn an **independent subagent** (oracle or dedicated reviewer) that was **not involved in creating the deliverable under review**. The reviewer has no bias from the creation process, but WILL be provided with prior phase outputs for cross-phase consistency checking.
 
+### ❌ What contaminated reviewer prompts look like
+
+NEVER include any of the following in a reviewer's prompt — they bias the review:
+
+| ❌ DO NOT Include | Why | ✅ Instead |
+|---|---|---|
+| Stop condition rules or cumulative tallies: "consecutive zero = 1, one more and we stop" | Creates confirmation bias and anchoring — reviewer looks for reasons to confirm stop | Provide ONLY the deliverable and prior phase outputs |
+| Prior round findings or fix lists: "R1 found X and Y, fixed as Z" | Destroys independent judgment — reviewer evaluates against known fixes, not the deliverable itself | Present the current deliverable as-is |
+| Hints about progress or remaining rounds: "This is round 4 of max 10" | Signals that stopping is near, discourages thorough review | Do not mention round counts or loop state |
+| Narrow scope limiting: "Please verify the fix for [M-1] is correct" | Reduces full review to fix-checking — other issues may be missed | Request FULL review of the complete deliverable |
+| Using generic subagent instead of dedicated reviewer | Lacks specialization; may share context with fix agent | Use independent, specialized reviewer subagent |
+
 ## Severity Classification
 
 Every issue found by the reviewer MUST be classified by severity:
@@ -23,6 +35,12 @@ Every issue found by the reviewer MUST be classified by severity:
 | **M** | Major | Important issue that contradicts requirements or best practices | Must fix before proceeding |
 | **L** | Low | Minor improvement, style issue, or optimization | Optional; may carry forward |
 | **I** | Info | Observation, question, or suggestion with no defect | No action required |
+
+### ❌ What wrong severity systems look like
+
+- Using fewer levels (e.g., C/M/m instead of C/H/M/L/I) — loses distinction between significant gaps and minor improvements, breaks stop condition counting
+- Re-labeling H findings as "accepted design deviations" or "intentional simplifications" to bypass the contested issue protocol
+- Treating L as "effectively zero" — L still resets the consecutive-zero counter and must be counted
 
 ## Review Process (Per Round)
 
@@ -131,6 +149,13 @@ The severity system is the quality gate: C/H/M means **must fix**. REJECT of a C
 - "I disagree with the priority" → severity is the reviewer's call, not the author's
 - "It works in practice" → if the reviewer identified a risk, it needs addressing
 
+#### ❌ What wrong evaluation looks like
+
+- **Mechanical adoption**: applying all reviewer suggestions without independent judgment — every suggestion must be evaluated against project context
+- **Dismissive rejection**: characterizing H/M issues as "known design deviations" or "intentional simplifications" without specific evidence — this is severity manipulation, not critical evaluation
+- **Fix-and-declare**: fixing issues then immediately declaring gate PASS without another review round — fixes may introduce regressions
+- **Deferred escaping**: pushing C/H/M issues to "handle in a later phase" — each phase gate must close on its own
+
 #### Contested Issue Protocol
 
 When the main agent REJECTs a C/H/M issue, it becomes a **contested issue**:
@@ -146,29 +171,33 @@ When the main agent REJECTs a C/H/M issue, it becomes a **contested issue**:
 
 **Rule 3 / Rule 4 interaction**: Rule 3 (must ADOPT/MODIFY) and Rule 4 (2-round limit) are independent. Same grounds with additional evidence → Rule 3 forces ADOPT/MODIFY, blocking escalation. Different grounds → Rule 3 doesn't apply, but Rule 4 still triggers at the 2-round limit → escalation.
 
-## Rounds & Early Stop Rule
+## Rounds & Stop Conditions
 
 The Ralph loop has **three exit paths**:
 
-1. **Early Stop**: 2 consecutive rounds with zero C/H/M/L issues (only I or nothing). Can trigger at any round N ≥ 2.
-2. **Gate Pass**: At round N ≥ 5 with zero C/H/M in the current round (L acceptable). You MAY stop here; continuing to pursue early stop is optional.
+1. **Stop**: 2 consecutive rounds with zero C/H/M/L issues (only I or nothing). Can trigger at any round N ≥ 2.
+2. **Gate Pass**: At round N ≥ 5 with zero C/H/M in the current round (L acceptable). You MAY stop here; continuing to pursue stop is optional.
 3. **Max Rounds Escalation**: If C/H/M persist after 10 rounds, halt and escalate to the user with a summary.
 
-**If early stop does NOT trigger**: you MUST complete at least 5 rounds before evaluating gate pass.
+**If stop does NOT trigger**: you MUST complete at least 5 rounds before evaluating gate pass.
 
-**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Early-Stop Why Articulation → 确认安全后 early stop。
+**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Stop Why Articulation → 确认安全后 stop。
 
-### ⛔ AVOID — Common Early Stop Mistakes (READ CAREFULLY)
+### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
 These are the most frequent errors LLMs make. **DO NOT do any of these:**
 
 | ❌ WRONG | Why It's Wrong | ✅ CORRECT |
 |----------|---------------|-----------|
-| Stopping after round 3 because round 3 = 0 issues | 1 zero round is NOT early stop. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 are both 0. |
-| Claiming early stop at round 5 because rounds 3 and 5 are both 0 | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N are both 0. Note: at N ≥ 5 with zero C/H/M, gate-pass is also available as an alternative to continuing. |
+| Stopping after round 3 because round 3 = 0 issues | 1 zero round does NOT satisfy stop condition. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 are both 0. |
+| Claiming stop at round 5 because rounds 3 and 5 are both 0 | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N are both 0. Note: at N ≥ 5 with zero C/H/M, gate-pass is also available as an alternative to continuing. |
 | Stopping after round 2 with 0 issues because "looks clean" (and round 1 was NOT 0) | Lacks consecutive confirmation — need both round 1 AND round 2 to be 0. (Early stop at round 2 IS valid if round 1 was also 0.) | Need round N-1 to also be 0. |
-| Declaring early stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 issues, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 → round 6 reviews → if still 0 → early stop. |
+| Declaring stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 issues, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 → round 6 reviews → if still 0 → stop. |
 | Counting L issues as "zero" | L issues are still issues. Zero means zero C/H/M/L. | Only I (info) or truly empty counts as a zero round. |
+| Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both zero. |
+| Counting 0C/0H as "zero" while L>0 exists | Stop condition requires zero C/H/M/L, not zero C/H only. L still resets the counter. | L issues count. Only I or truly empty = zero round. |
+| Re-labeling H/M issues as "accepted design deviations" to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
+| Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
 
 ### Decision Flowchart
 
@@ -184,24 +213,24 @@ Evaluate after each round N, in this order (before starting round N+1):
 5. If any C/H/M remain in tally → Reset consecutive-zero counter to 0 → Go to round N+1
 6. If only L found (no C/H/M):
    → L fix is optional → Reset consecutive-zero counter to 0
-   → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue to round N+1 pursuing early stop)
+   → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue to round N+1 pursuing stop)
    → If N < 5 → Go to round N+1
 7. If zero issues (only I or nothing):
    → Increment consecutive-zero counter by 1
    → Counter = 2:
-     → 🔒 **必须完成早停前 Why Articulation**（见下方 §Pre-Early-Stop Why Articulation）
+     → 🔒 **必须完成停止前 Why Articulation**（见下方 §Pre-Stop Why Articulation）
      → If articulation confirms stopping is safe → ✅ EARLY STOP
      → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
-     → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing early stop)
+     → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing stop)
      → Go to round N+1 (or stop if gate-pass is acceptable)
 8. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
 
-### 🔒 Pre-Early-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
+### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
 
-Before confirming early stop, articulate your reasoning.
-Do not confirm early stop until you have produced this reasoning.
+Before confirming stop, articulate your reasoning.
+Do not confirm stop until you have produced this reasoning.
 
 After articulating, check: did you address how many rounds were completed
 and whether each covered different dimensions, whether the task's complexity
@@ -220,32 +249,32 @@ the review may not be thorough enough — continue to the next round.
 
 ### Concrete Examples
 
-**Example A — Cannot early stop (intermittent zeros):**
+**Example A — Cannot stop (intermittent zeros):**
 ```
 Round 1: H=1, M=2 → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 issues → consecutive counter = 1 → continue (NOT early stop!)
+Round 3: 0 issues → consecutive counter = 1 → continue (NOT stop — need 2 consecutive!)
 Round 4: M=1      → Fix → counter RESET to 0 → continue
 Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (may stop here, or continue)
-Round 6: 0 issues → counter = 2 → ✅ EARLY STOP (rounds 5 & 6 both 0)
+Round 6: 0 issues → counter = 2 → ✅ STOP (rounds 5 & 6 both 0)
 ```
 
-**Example B — Cannot early stop (only 1 zero):**
+**Example B — Cannot stop (only 1 zero):**
 ```
 Round 1: H=1      → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 issues → counter = 1 → continue (NOT early stop!)
+Round 3: 0 issues → counter = 1 → continue (NOT stop — need 2 consecutive!)
 Round 4: L=1      → Counter RESET to 0 (any non-I count resets; fixing L is optional) → continue
-Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (accept gate-pass now, or continue to pursue early stop)
+Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (accept gate-pass now, or continue to pursue stop)
 === Choosing gate-pass === ✅ PASS GATE
 ```
 
-**Example C — Correct early stop (at round 4):**
+**Example C — Correct stop (at round 4):**
 ```
 Round 1: M=2      → Fix → continue
 Round 2: M=1      → Fix → continue
 Round 3: 0 issues → counter = 1 → continue
-Round 4: 0 issues → counter = 2 → ✅ EARLY STOP (rounds 3 & 4 both 0, consecutive)
+Round 4: 0 issues → counter = 2 → ✅ STOP (rounds 3 & 4 both 0, consecutive)
 ```
 
 **Example D — Escalation at max rounds:**
@@ -429,7 +458,7 @@ The reviewer must verify each item below. When defects are found, provide constr
 - Fixes applied: ...
 - Contested issues forwarded to next round: (none)
 
-... (continue until early stop or 5 rounds minimum) ...
+... (continue until stop or 5 rounds minimum) ...
 
 ### Final Gate
 - Final round C/H/M count (after contested resolution): 0
