@@ -54,6 +54,33 @@ Phases 1–5 each end with a **mandatory Ralph-loop review** before proceeding. 
 
 After completing each phase deliverable (Phases 1–5), run the ralph-review-loop.md protocol before user approval.
 
+### GPAV (Guarded Pipeline Authority Verification)
+
+When the **Watchdog** package is active, each review round's findings MUST be submitted via `ralph_round_finding` to the Watchdog observer. This gives the pipeline authoritative, tamper-proof tally tracking.
+
+**After each review round**, the orchestrator submits:
+
+```
+watchdog.observe('ralph_round_finding', {
+  phase: <current phase>,
+  round: <round number>,
+  findings: [
+    { severity: 'H', description: '<issue description>' },
+    { severity: 'M', description: '<issue description>', original: 'H', downgrade_reason: '<why>' },
+    // ... one entry per C/H/M/L/I finding
+  ]
+})
+```
+
+**Rules:**
+- `findings` is a flat array — every C/H/M/L/I issue from the reviewer's report becomes one entry
+- When the main agent downgrades a severity (e.g., H→M), include `original` and `downgrade_reason`
+- `downgrade_reason` must be non-empty when severity < original
+- Submit AFTER the main agent critical evaluation (ADOPT/REJECT/MODIFY decisions), so the tally reflects the final verdict
+- The Watchdog records authoritative counts; its tally is the ground truth for stop/gate decisions
+
+See `ralph-review-loop.md` §GPAV Submission Protocol for full details.
+
 
 
 ## Progressive Disclosure

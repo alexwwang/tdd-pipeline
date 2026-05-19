@@ -29,6 +29,7 @@ The reviewer must verify each item below. When defects are found, provide constr
 - Is refactoring clean? Any regressions introduced?
 - Is the minimum code principle respected? No gold-plating?
 - Does every line of business code have test coverage?
+- Are review prompt contents clean? (No round counts, tallies, or fix lists leaked into reviewer prompts — RPS will flag these)
 
 ## Single-Pass Review
 

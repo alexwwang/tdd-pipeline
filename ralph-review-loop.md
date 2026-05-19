@@ -203,6 +203,65 @@ When the main agent REJECTs a C/H/M issue, it becomes a **contested issue**:
 
 **Rule 3 / Rule 4 interaction**: Rule 3 (must ADOPT/MODIFY) and Rule 4 (2-round limit) are independent. Same grounds with additional evidence → Rule 3 forces ADOPT/MODIFY, blocking escalation. Different grounds → Rule 3 doesn't apply, but Rule 4 still triggers at the 2-round limit → escalation.
 
+## GPAV Submission Protocol (Guarded Pipeline Authority Verification)
+
+When the **Watchdog** observer is active in the pipeline, each review round's findings must be submitted to the Watchdog for authoritative tally tracking. This prevents tally manipulation and provides an audit trail.
+
+### When to Submit
+
+Submit findings via `ralph_round_finding` **after** the Main Agent Critical Evaluation (Step 2) and **after** fixes are applied (Step 3). The submission reflects the final verdict — what the tally actually is after ADOPT/REJECT/MODIFY decisions.
+
+### Submission Format
+
+```
+watchdog.observe('ralph_round_finding', {
+  phase: <number>,          // current TDD pipeline phase (1-5)
+  round: <number>,          // current review round number
+  findings: [
+    {
+      severity: 'C',        // C | H | M | L | I
+      description: '...',   // concise issue description
+    },
+    {
+      severity: 'M',
+      description: '...',
+      original: 'H',              // required when severity was downgraded
+      downgrade_reason: '...',    // required and non-empty when severity < original
+    },
+  ]
+})
+```
+
+### Validation Rules (enforced by Watchdog)
+
+- `findings` must be an array of objects with `severity` (C/H/M/L/I) and `description` (non-empty string)
+- `phase` must match the current pipeline phase
+- `round` must be > current `ralph.round` (incrementing — no retroactive edits)
+- `downgrade_reason` must be non-empty when `original` is set and severity < original
+- Duplicate submissions for the same round are rejected
+
+### What GPAV Tracks
+
+The Watchdog records authoritative counts per round in `roundRecords`. These counts are the **ground truth** for stop/gate decisions — not the orchestrator's local tally. The Watchdog's `ralph_terminate` validates:
+
+- **early_stop**: `roundRecords` shows ≥ 2 consecutive rounds with C=H=M=L=0
+- **gate_pass**: ≥ `MIN_GATE_ROUNDS` completed rounds, final round C=H=M=0
+- **max_rounds**: ≥ `MAX_RALPH_ROUNDS` completed rounds
+
+### RPS (Review Prompt Scanner)
+
+The Watchdog also includes a **Review Prompt Scanner** that detects prohibited content in reviewer prompts. When spawning reviewer subagents:
+
+- **DO NOT** include review round counts, cumulative tallies, or stop-condition state in the reviewer's prompt
+- **DO NOT** include prior-round fix lists or findings summaries
+- **DO NOT** mention "this is round N of max 10" or "consecutive zeros = 1"
+
+The RPS scans both `args.prompt` and `args.description` fields of `Task` tool calls during ralph_loop phase. Detection produces a WARN audit entry but does NOT block the review — it is an informational safeguard.
+
+### GPAV Fallback (Legacy Compatibility)
+
+When `autoValidated=true` (GPAV has been used) but `roundRecords` is empty (legacy rounds before GPAV activation), the Watchdog falls back to legacy `tallyHistory`-based validation. This path is unreachable once all rounds use `ralph_round_finding` from round 1.
+
 ## Rounds & Stop Conditions
 
 The Ralph loop has **three exit paths**:
