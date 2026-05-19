@@ -56,30 +56,7 @@ After completing each phase deliverable (Phases 1–5), run the ralph-review-loo
 
 ### GPAV (Guarded Pipeline Authority Verification)
 
-When the **Watchdog** package is active, each review round's findings MUST be submitted via `ralph_round_finding` to the Watchdog observer. This gives the pipeline authoritative, tamper-proof tally tracking.
-
-**After each review round**, the orchestrator submits:
-
-```
-watchdog.observe('ralph_round_finding', {
-  phase: <current phase>,
-  round: <round number>,
-  findings: [
-    { severity: 'H', description: '<issue description>' },
-    { severity: 'M', description: '<issue description>', original: 'H', downgrade_reason: '<why>' },
-    // ... one entry per C/H/M/L/I finding
-  ]
-})
-```
-
-**Rules:**
-- `findings` is a flat array — every C/H/M/L/I issue from the reviewer's report becomes one entry
-- When the main agent downgrades a severity (e.g., H→M), include `original` and `downgrade_reason`
-- `downgrade_reason` must be non-empty when severity < original
-- Submit AFTER the main agent critical evaluation (ADOPT/REJECT/MODIFY decisions), so the tally reflects the final verdict
-- The Watchdog records authoritative counts; its tally is the ground truth for stop/gate decisions
-
-See `ralph-review-loop.md` §GPAV Submission Protocol for full details.
+When the **Watchdog** is active, each review round's findings MUST be submitted via `ralph_round_finding` for authoritative tally tracking. See `ralph-gpav.md` for the full protocol (format, validation, RPS scanner).
 
 
 
@@ -99,6 +76,10 @@ See `ralph-review-loop.md` §GPAV Submission Protocol for full details.
   - Design review (Phase 1–3) → `review-design.md`
   - Code review (Phase 4–5) → `review-code.md`
   - Precision filter (dual-pass mode) → `review-precision-filter.md`
+- **Ralph loop support files** (loaded on demand):
+  - GPAV protocol (Watchdog active) → `ralph-gpav.md`
+  - Worked examples (contested issues, stop scenarios) → `ralph-examples.md`
+  - Review log template → `ralph-log-template.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns

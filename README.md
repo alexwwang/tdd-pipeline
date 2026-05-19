@@ -84,6 +84,9 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 |------|---------|
 | `SKILL.md` | Overview, triggers, gate rules, split decision |
 | `ralph-review-loop.md` | Shared review protocol with decision flowchart |
+| `ralph-gpav.md` | GPAV submission protocol, RPS scanner (loaded when Watchdog active) |
+| `ralph-examples.md` | Worked examples: stop conditions, contested issues (loaded on demand) |
+| `ralph-log-template.md` | Review log format template (loaded at loop start) |
 | `review-design.md` | Design review checklist + Recall prompt (Phase 1–3) |
 | `review-code.md` | Code review checklist + Recall prompt (Phase 4–5) |
 | `review-precision-filter.md` | Dual-pass Precision Filter prompt + aggregation (shared) |
@@ -195,6 +198,9 @@ No build step or dependency installation required — skills are loaded on deman
 tdd-pipeline/
 ├── SKILL.md                        ← entry point (progressive disclosure hub)
 ├── ralph-review-loop.md            ← shared review protocol (Phases 1–5 only)
+├── ralph-gpav.md                   ← GPAV submission protocol (Watchdog active)
+├── ralph-examples.md               ← worked examples (contested issues, stop scenarios)
+├── ralph-log-template.md           ← review log format template
 ├── review-design.md                ← design review checklist + Recall prompt (Phase 1–3)
 ├── review-code.md                  ← code review checklist + Recall prompt (Phase 4–5)
 ├── review-precision-filter.md      ← dual-pass Precision Filter prompt (shared)
@@ -291,6 +297,9 @@ Phase 3: 测试深度由上游分类驱动
 |------|------|
 | `SKILL.md` | 概览、触发词、关卡规则、拆分判定 |
 | `ralph-review-loop.md` | 共享审核协议（含决策流程图） |
+| `ralph-gpav.md` | GPAV 提交协议、RPS 扫描器（Watchdog 激活时加载） |
+| `ralph-examples.md` | 示例集：停止条件、争议问题（按需加载） |
+| `ralph-log-template.md` | 审查日志格式模板（循环启动时加载） |
 | `review-design.md` | 方案审查清单 + Recall 提示词（阶段 1–3） |
 | `review-code.md` | 代码审查清单 + Recall 提示词（阶段 4–5） |
 | `review-precision-filter.md` | 双轮 Precision Filter 提示词 + 聚合逻辑（共用） |
@@ -391,6 +400,9 @@ git clone <仓库地址> ~/.claude/skills/tdd-pipeline
 tdd-pipeline/
 ├── SKILL.md                        ← 入口文件（渐进式披露中心）
 ├── ralph-review-loop.md            ← 共享审核协议（仅阶段 1–5）
+├── ralph-gpav.md                   ← GPAV 提交协议（Watchdog 激活时）
+├── ralph-examples.md               ← 示例集（争议问题、停止条件）
+├── ralph-log-template.md           ← 审查日志格式模板
 ├── review-design.md                ← 方案审查清单 + Recall 提示词（阶段 1–3）
 ├── review-code.md                  ← 代码审查清单 + Recall 提示词（阶段 4–5）
 ├── review-precision-filter.md      ← 双轮 Precision Filter 提示词（共用）
