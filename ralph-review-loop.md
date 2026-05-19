@@ -69,7 +69,12 @@ for round N:
   # Step 3: Apply fixes
   fix: all ADOPTed and MODIFYed C + H + M (L + I + ADOPTed opinions optional)
 
-  log: { round: N, tally, contested, evaluation_decisions, fixes_applied }
+  # Step 4: GPAV submission (when Watchdog is active — see §GPAV Submission Protocol)
+  #   Submit ALL items in the gate tally (including contested C/H/M that remain in tally)
+  #   In dual-pass mode: submit confirmed_findings (post-precision filter), not raw recall findings
+  gpav_submit(round: N, tally_after_evaluation)
+
+  log: { round: N, tally, contested, evaluation_decisions, fixes_applied, gpav_submitted: bool }
 ```
 
 ## Dual-Pass Review Mode
@@ -209,7 +214,14 @@ When the **Watchdog** observer is active in the pipeline, each review round's fi
 
 ### When to Submit
 
-Submit findings via `ralph_round_finding` **after** the Main Agent Critical Evaluation (Step 2) and **after** fixes are applied (Step 3). The submission reflects the final verdict — what the tally actually is after ADOPT/REJECT/MODIFY decisions.
+Submit findings via `ralph_round_finding` **after** the Main Agent Critical Evaluation (Step 2) and **after** fixes are applied (Step 3). The submission reflects the gate tally — the state that determines stop/gate decisions.
+
+### What to Include
+
+- **ADOPTed and MODIFYed items**: Include with their post-evaluation severity (use `original` + `downgrade_reason` when the main agent downgraded)
+- **REJECTED (contested) items**: MUST be included — contested C/H/M remain in the gate tally until the reviewer explicitly drops them. Omitting them would make GPAV's tally diverge from the actual gate tally
+- **L and I items**: Include as-is
+- **In dual-pass mode**: Submit the Precision-filtered confirmed findings only, not the raw Recall output. The Precision Filter's CONFIRM/DOWNGRADE verdicts are the equivalent of single-pass reviewer findings
 
 ### Submission Format
 
@@ -258,6 +270,8 @@ The Watchdog also includes a **Review Prompt Scanner** that detects prohibited c
 
 The RPS scans both `args.prompt` and `args.description` fields of `Task` tool calls during ralph_loop phase. Detection produces a WARN audit entry but does NOT block the review — it is an informational safeguard.
 
+**In dual-pass mode**: RPS scans BOTH the Recall subagent prompt AND the Precision subagent prompt. The same prohibited-content rules apply to both — neither pass should receive round counts, tallies, or fix lists.
+
 ### GPAV Fallback (Legacy Compatibility)
 
 When `autoValidated=true` (GPAV has been used) but `roundRecords` is empty (legacy rounds before GPAV activation), the Watchdog falls back to legacy `tallyHistory`-based validation. This path is unreachable once all rounds use `ralph_round_finding` from round 1.
@@ -300,13 +314,16 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
-4. Count non-I issues (C+H+M+L) in the tally (after contested resolution from THIS round)
-5. If any C/H/M remain in tally → Reset consecutive-zero counter to 0 → Go to round N+1
-6. If only L found (no C/H/M):
+4. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
+   - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
+   - In dual-pass mode: submit confirmed findings only (not raw recall output)
+5. Count non-I issues (C+H+M+L) in the tally (after contested resolution from THIS round)
+6. If any C/H/M remain in tally → Reset consecutive-zero counter to 0 → Go to round N+1
+7. If only L found (no C/H/M):
    → L fix is optional → Reset consecutive-zero counter to 0
    → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue to round N+1 pursuing stop)
    → If N < 5 → Go to round N+1
-7. If zero issues (only I or nothing):
+8. If zero issues (only I or nothing):
    → Increment consecutive-zero counter by 1
    → Counter = 2:
      → 🔒 **必须完成停止前 Why Articulation**（见下方 §Pre-Stop Why Articulation）
@@ -314,8 +331,8 @@ Evaluate after each round N, in this order (before starting round N+1):
      → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
      → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing stop)
-     → Go to round N+1 (or stop if gate-pass is acceptable)
-8. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
+      → Go to round N+1 (or stop if gate-pass is acceptable)
+9. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
 
 ### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
@@ -516,6 +533,7 @@ Review checklists are loaded per-phase from dedicated files:
   | [M-2] | REJECT | ... | No change (contested — see next round) |
 
 - Fixes applied: ...
+- GPAV submitted: yes/no (round N → {C:0, H:1, M:2, L:2, I:1})
 - Contested issues forwarded to next round:
 
   | Issue | First contested | Dispute round | Reviewer action needed |
@@ -540,6 +558,7 @@ Review checklists are loaded per-phase from dedicated files:
   | [M-1] | ADOPT | ... | Fixed: ... |
 
 - Fixes applied: ...
+- GPAV submitted: yes (round N → {C:0, H:0, M:1, L:1, I:0})
 - Contested issues forwarded to next round: (none)
 
 ... (continue until stop or 5 rounds minimum) ...
