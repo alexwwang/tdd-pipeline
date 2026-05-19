@@ -2,10 +2,9 @@
 name: system-quality-audit
 description: >
   System-level quality audit with 16 bug patterns (grep-powered), integration
-  pair discovery, and execution-order analysis. Loaded during Phase 6 sub-phase
-  1.6 (Gap Detection), when 5-Why gets stuck (depth 3+ no conclusion), or when
-  a pattern match from Phase 6 root cause investigation needs grep commands and
-  test scaffolding. NOT loaded during all-pass Phase 6 execution.
+  pair discovery, and execution-order analysis. Loaded after Phase 6 completes
+  as an incremental second pass. Receives Phase 6 results and finds issues
+  missed by the Phase 6 single-pass audit.
 ---
 
 # System Quality Audit — Pattern Catalog & Integration Analysis
@@ -13,9 +12,9 @@ description: >
 **Core Principle**: Systematic coverage over intuition. Grep commands find what reading misses.
 
 **When loaded:**
-- Phase 6 sub-phase 1.6 (Gap Detection)
-- Phase 6 root cause investigation: 5-Why stuck at depth 3+ (need fresh angle)
-- Phase 6 root cause investigation: pattern classified → need grep commands for verification
+- After Phase 6 completes (triggered by SKILL.md progressive disclosure)
+- Runs as an independent second-pass audit against the same source code
+- Receives Phase 6 results to avoid duplicating findings
 
 ---
 

@@ -8,18 +8,18 @@
 
 ## Overview
 
-A rigorous 6-phase TDD development workflow for AI-assisted coding. Phases 1–5 enforce **Red-Green-Refactor** at the pipeline level with mandatory Ralph-loop review. Phase 6 is the pipeline's **validation closure** — systematic pre-release testing with bug root cause analysis (追问), rollback paths, and user go/no-go decision.
+A rigorous 7-phase TDD development workflow for AI-assisted coding. Phases 1–5 enforce **Red-Green-Refactor** at the pipeline level with mandatory Ralph-loop review. Phase 6 is the pipeline's **validation closure** — systematic pre-release testing with bug root cause analysis (追问), rollback paths, and user go/no-go decision. Phase 7 is an **incremental system audit** — a second-pass quality review with 16-pattern catalog, integration pair discovery, and execution-order analysis.
 
 ```
-Product Design → Technical Solution → Test Plan → Test Code → Business Code → Pre-Release Testing
-    产品设计    →     技术方案      →   测试方案  →  测试代码  →  业务代码   →    预发布测试
+Product Design → Technical Solution → Test Plan → Test Code → Business Code → Pre-Release Testing → System Quality Audit
+    产品设计    →     技术方案      →   测试方案  →  测试代码  →  业务代码   →    预发布测试      →     系统质量审计
 ```
 
 > **Core Principle**: If you cannot write a failing test for it, you do not understand it well enough to build it.
 
-## The 6 Phases
+## The 7 Phases
 
-Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **validation closure** with its own quality mechanisms.
+Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **validation closure** with its own quality mechanisms. Phase 7 is an **incremental system audit** that runs after Phase 6 completes, finding issues missed by single-pass analysis.
 
 | Phase | Deliverable | Quality Mechanism |
 |-------|-------------|-------------------|
@@ -29,6 +29,7 @@ Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **va
 | 4. Test Code | Test Files (all failing) | Ralph code review |
 | 5. Business Code | Working Business Code | Ralph code review |
 | 6. Pre-Release Testing | Release Gate Checklist (with evidence) | Testing flow + 追问 + user go/no-go |
+| 7. System Quality Audit | Incremental audit report (issues Phase 6 missed) | 16-pattern catalog + pair discovery + execution-order analysis |
 
 ## Ralph Loop Review (Phases 1–5)
 
@@ -41,7 +42,7 @@ Phases 1–5 each end with a mandatory review loop:
 - **Escalation**: if C/H/M persist after 10 rounds → halt and escalate to user (NOT a pass path)
 - **Independent reviewer** subagent for each round
 
-Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates, 追问 protocol, and user go/no-go.
+Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates, 追问 protocol, and user go/no-go. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details.
 
 ## Priority Classification System
 
@@ -91,6 +92,7 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 | `phase-5-business-code.md` | Implement minimum code to pass tests, then refactor |
 | `phase-6-pre-release-testing.md` | Pre-release testing, 追问 protocol, rollback paths, release gate verification (pipeline validation closure) |
 | `phase-6-root-cause-investigation.md` | Bug root cause investigation (Layer Isolation, 5-Why, Fix Verification) + common bug patterns. Loaded only when a Phase 6 sub-phase fails. |
+| `phase-7-system-quality-audit.md` | Incremental system audit: 16-pattern catalog, integration pair discovery, execution-order analysis. Loaded after Phase 6 completes. |
 
 ## Usage
 
@@ -113,6 +115,7 @@ Use natural language triggers in your AI coding tool:
 - **TDD is non-negotiable**: no business code until tests exist and fail
 - **Phases 1–5: Ralph loop gate** — zero M+ (C/H/M) issues to pass
 - **Phase 6: validation closure** — sub-phase gates + 追问 protocol + user go/no-go (not Ralph loop)
+- **Phase 7: system audit** — incremental second pass after Phase 6, 16-pattern catalog + pair discovery + execution-order analysis
 - **Tests define the contract** — business code is just the implementation
 - **Priority drives depth**: core/key items get comprehensive testing; secondary/peripheral get basic coverage
 - **Cross-phase consistency**: priority classifications must be traceable and justified across all phases
@@ -152,6 +155,7 @@ tdd-pipeline/
 ├── phase-5-business-code.md
 ├── phase-6-pre-release-testing.md  ← always loaded for Phase 6
 ├── phase-6-root-cause-investigation.md  ← loaded only on sub-phase failure
+├── phase-7-system-quality-audit.md ← loaded after Phase 6 completes
 └── README.md
 ```
 
@@ -165,13 +169,13 @@ MIT
 
 ## 概述
 
-一个严格的 6 阶段 TDD 开发工作流，专为 AI 辅助编程设计。阶段 1–5 在管线级别强制执行 **Red-Green-Refactor**，每个阶段结束后有 Ralph 循环审核。阶段 6 是管线的**验证闭环** —— 系统化预发布测试、缺陷根因追问（追问方法）、回滚路径和用户 go/no-go 决策。
+一个严格的 7 阶段 TDD 开发工作流，专为 AI 辅助编程设计。阶段 1–5 在管线级别强制执行 **Red-Green-Refactor**，每个阶段结束后有 Ralph 循环审核。阶段 6 是管线的**验证闭环** —— 系统化预发布测试、缺陷根因追问（追问方法）、回滚路径和用户 go/no-go 决策。阶段 7 是**增量系统审计** —— 第二轮质量审核，包含 16 模式目录、集成对发现和执行顺序分析。
 
 > **核心原则**：如果你无法为某个功能写出一个失败的测试，说明你对它的理解还不够深入。
 
-## 6 个阶段
+## 7 个阶段
 
-阶段 1–5 是**创作阶段**，使用 Ralph 循环审核。阶段 6 是**验证闭环**，使用独立的质量机制。
+阶段 1–5 是**创作阶段**，使用 Ralph 循环审核。阶段 6 是**验证闭环**，使用独立的质量机制。阶段 7 是**增量系统审计**，在阶段 6 完成后运行，发现单次审核遗漏的问题。
 
 | 阶段 | 交付物 | 质量机制 |
 |------|--------|----------|
@@ -181,6 +185,7 @@ MIT
 | 4. 测试代码 | 测试文件（全部失败） | Ralph 代码审核 |
 | 5. 业务代码 | 可工作的实现代码 | Ralph 代码审核 |
 | 6. 预发布测试 | 发布关卡检查清单（含证据） | 测试流程 + 追问 + 用户 go/no-go |
+| 7. 系统质量审计 | 增量审计报告（阶段 6 遗漏的问题） | 16 模式目录 + 对发现 + 执行顺序分析 |
 
 ## Ralph 循环审核（阶段 1–5）
 
@@ -193,7 +198,7 @@ MIT
 - **升级**：10 轮后 C/H/M 仍未解决则中止并升级给用户（不是通过路径）
 - 每轮由**独立审核 subagent** 执行
 
-阶段 6 **不使用** Ralph 循环。详见上方阶段 6 行及 `phase-6-pre-release-testing.md` Part 5。
+阶段 6 **不使用** Ralph 循环。详见上方阶段 6 行及 `phase-6-pre-release-testing.md` Part 5。阶段 7 在阶段 6 完成后运行，详见 `phase-7-system-quality-audit.md`。
 
 ## 优先级分类体系
 
@@ -243,6 +248,7 @@ Phase 3: 测试深度由上游分类驱动
 | `phase-5-business-code.md` | 实现最小代码使测试通过，然后重构 |
 | `phase-6-pre-release-testing.md` | 预发布测试、追问协议、回滚路径、发布关卡验证（管线验证闭环） |
 | `phase-6-root-cause-investigation.md` | 缺陷根因调查（分层定位、5-Why、修复验证）+ 常见 bug 模式。仅在阶段 6 子阶段失败时加载。 |
+| `phase-7-system-quality-audit.md` | 增量系统审计：16 模式目录、集成对发现、执行顺序分析。阶段 6 完成后加载。 |
 
 ## 触发方式
 
@@ -294,6 +300,7 @@ tdd-pipeline/
 ├── phase-5-business-code.md
 ├── phase-6-pre-release-testing.md  ← 阶段 6 始终加载
 ├── phase-6-root-cause-investigation.md  ← 仅在子阶段失败时加载
+├── phase-7-system-quality-audit.md ← 阶段 6 完成后加载
 └── README.md
 ```
 
@@ -302,6 +309,7 @@ tdd-pipeline/
 - **TDD 不可妥协**：测试代码不存在且未失败时，禁止编写业务代码
 - **阶段 1–5：Ralph 循环关卡** — 零 M 级及以上（C/H/M）问题方可通过
 - **阶段 6：验证闭环** — 子阶段 gate + 追问协议 + 用户 go/no-go（非 Ralph 循环）
+- **阶段 7：系统审计** — 阶段 6 完成后的增量第二轮审核，16 模式目录 + 对发现 + 执行顺序分析
 - **测试即契约** — 业务代码只是让测试通过的实现细节
 - **优先级驱动深度**：core/key 全面测试；secondary/peripheral 基本覆盖
 - **跨阶段一致性**：优先级分类必须可追溯、有理由地贯穿所有阶段

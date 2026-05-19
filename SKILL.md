@@ -1,12 +1,14 @@
 ---
 name: tdd-pipeline
 description: >
-  A rigorous 6-phase TDD development workflow enforcing Red-Green-Refactor
-  at the pipeline level: Product Design → Technical Solution → Test Plan →
-  Test Code → Business Code → Pre-Release Testing. Phases 1–5 are creation
-  phases with mandatory Ralph-loop review. Phase 6 is the pipeline's
-  validation closure — systematic pre-release testing with bug root cause
-  analysis, rollback paths to earlier phases, and user go/no-go decision.
+  A rigorous TDD development workflow enforcing Red-Green-Refactor at the
+  pipeline level: Product Design → Technical Solution → Test Plan → Test
+  Code → Business Code → Pre-Release Testing → System Quality Audit.
+  Phases 1–5 are creation phases with mandatory Ralph-loop review.
+  Phase 6 is the pipeline's validation closure — systematic pre-release
+  testing with bug root cause analysis, rollback paths, and user go/no-go.
+  Phase 7 is an incremental system-level audit (16-pattern catalog, pair
+  discovery, execution-order analysis) that runs after Phase 6 completes.
   No business code is written until tests exist and fail.
 triggers:
   - tdd
@@ -41,9 +43,9 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 >
 > **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
-## The 6 Phases
+## The 7 Phases
 
-Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop).
+Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop). Phase 7 is an **incremental system audit** — it runs after Phase 6 completes, applying a broader 16-pattern catalog, integration pair discovery, and execution-order analysis to find issues Phase 6 missed.
 
 
 ## Ralph Loop Review (Phases 1–5)
