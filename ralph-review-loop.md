@@ -72,6 +72,47 @@ for round N:
   log: { round: N, tally, contested, evaluation_decisions, fixes_applied }
 ```
 
+## Dual-Pass Review Mode
+
+The single-pass reviewer can be replaced with a **two-pass Recall/Precision pipeline** for higher quality. See dedicated files for review-specific prompts:
+
+| Phase | Load this file | Contains |
+|-------|---------------|----------|
+| **1–3** (Design) | `review-design.md` | Checklist + Recall prompt + fact-gather guide |
+| **4–5** (Code) | `review-code.md` | Checklist + Recall prompt + fact-gather guide |
+| **Precision** (shared) | `review-precision-filter.md` | Precision Filter prompt + aggregation logic |
+
+### When to Use
+
+| Mode | When | Cost |
+|------|------|------|
+| **Single-pass** (default) | Simple deliverables, low risk, already-converged rounds | 1× LLM call |
+| **Dual-pass** (recommended) | First 2 rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls, but fewer total rounds |
+
+### Review Process (Dual-Pass Mode)
+
+Replace Step 1 in the standard Review Process with:
+
+```
+  # Step 1a: Recall Pass
+  spawn_recall_subagent(deliverable, prior_phase_outputs, contested_issues)
+    → prompt template from review-design.md (Phase 1-3) or review-code.md (Phase 4-5)
+  → raw_findings
+
+  # Step 1b: Gather facts from codebase
+  facts = gather_verifiable_facts(raw_findings)
+    → fact-gather guide from review-design.md or review-code.md
+
+  # Step 1c: Precision Filter Pass
+  spawn_precision_subagent(raw_findings, facts)
+    → prompt template from review-precision-filter.md
+  → confirmed_findings with CONFIRM/DOWNGRADE/REJECT verdicts
+  → aggregation logic from review-precision-filter.md
+
+  tally: from aggregated confirmed findings
+  # Step 2–3: Unchanged (main agent critical evaluation + fixes)
+```
+
 ### Reviewer Output Requirements
 
 The reviewer produces **three output categories** per round. Their relationship is:
@@ -377,39 +418,32 @@ gate_proceed = ALL:
   final_round.C + .H + .M == 0                  # L/I acceptable, carried forward
 ```
 
-## Design Review Checklist (Phases 1–3)
+## Review Checklists (Progressive Disclosure)
 
-The reviewer must verify each item below. When defects are found, provide constructive suggestions per §Reviewer Output Requirements. When substantive strategic concerns exist, provide critical opinions.
+Review checklists are loaded per-phase from dedicated files:
 
-- [ ] Completeness: Does the deliverable cover all requirements from prior phases?
-- [ ] Consistency: No contradictions with prior phase outputs
-- [ ] Clarity: Unambiguous, explicit, no hand-waving
-- [ ] Edge cases: Error paths, boundaries, and failure modes considered
-- [ ] Feasibility: Can this actually be built and tested?
-- [ ] Traceability: Every acceptance criterion maps to a test or design element
-
-## Code Review Checklist (Phases 4–5)
-
-The reviewer must verify each item below. When defects are found, provide constructive suggestions per §Reviewer Output Requirements. When substantive strategic concerns exist, provide critical opinions.
-
-- [ ] **Test quality**: Completeness, edge cases, descriptive names, one assertion per test where practical
-- [ ] **Code quality**: Clean code, no duplication, proper abstractions, follows language idioms
-- [ ] **TDD compliance**: No untested code; no code exists without a failing test justifying it
-- [ ] **Phase 4 specific**: Are ALL tests genuinely failing? No premature implementation? No stubs that accidentally pass?
-- [ ] **Phase 5 specific**: Is refactoring clean? Any regressions introduced? Is the minimum code principle respected?
-- [ ] **Integration**: Do tests correctly import/reference the intended interfaces?
+| Phase | Load this file | Contains |
+|-------|---------------|----------|
+| **1–3** (Design) | `review-design.md` | Design review checklist + Recall prompt |
+| **4–5** (Code) | `review-code.md` | Code review checklist + Recall prompt |
 
 ## Review Log Template
 
 ```
 ## Ralph Loop Review Log: Phase <N> — <Phase Name>
 
-### Round 1
+### Round 1 [dual-pass]
+- Review mode: dual-pass (Recall → Precision)
+- Recall Pass: {N} raw findings
+- Precision Pass: {M} confirmed, {K} rejected
 - C: 0 | H: 1 | M: 2 | L: 2 | I: 1
-- Issues:
-  - [H-1] ...
-  - [M-1] ...
-  - [M-2] ...
+- Issues (after precision filter):
+  - [H-1] ...  (Recall F-03 → CONFIRM)
+  - [M-1] ...  (Recall F-07 → DOWNGRADE from H)
+  - [M-2] ...  (Recall F-01 → CONFIRM)
+- Rejected by Precision Filter:
+  - Recall F-12 → REJECT: score() uses .get(), no KeyError possible
+  - Recall F-17 → REJECT: no self._baseline reference in codebase
 - Constructive Suggestions:
   - <paired with C/H/M issues; optional for L; not required for I>
 - Critical Opinions (if any):

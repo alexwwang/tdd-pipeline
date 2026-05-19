@@ -68,6 +68,10 @@ After completing each phase deliverable (Phases 1–5), run the ralph-review-loo
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
   - **After Phase 6 completes** → load `phase-7-system-quality-audit.md` (system-level quality audit: 16-pattern catalog with grep commands, integration pair discovery, execution order analysis)
+- **Review files** (loaded at each phase's review step, see `ralph-review-loop.md` §Review Checklists):
+  - Design review (Phase 1–3) → `review-design.md`
+  - Code review (Phase 4–5) → `review-code.md`
+  - Precision filter (dual-pass mode) → `review-precision-filter.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns

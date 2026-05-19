@@ -84,6 +84,9 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 |------|---------|
 | `SKILL.md` | Overview, triggers, gate rules, split decision |
 | `ralph-review-loop.md` | Shared review protocol with decision flowchart |
+| `review-design.md` | Design review checklist + Recall prompt (Phase 1–3) |
+| `review-code.md` | Code review checklist + Recall prompt (Phase 4–5) |
+| `review-precision-filter.md` | Dual-pass Precision Filter prompt + aggregation (shared) |
 | `task-tree.md` | Task decomposition, context management, versioning (loaded only when SPLIT=true) |
 | `phase-1-product-design.md` | Requirements gathering via deep-interview, core/secondary classification |
 | `phase-2-technical-solution.md` | Architecture via Planner→Architect→Critic consensus, key/peripheral classification |
@@ -121,6 +124,51 @@ Use natural language triggers in your AI coding tool:
 - **Cross-phase consistency**: priority classifications must be traceable and justified across all phases
 - **Phase 6 failure → rollback**: root cause determines rollback target; full Phase 6 rerun after any fix
 
+## Dual-Pass Review Mode
+
+The Ralph loop supports an optional **two-pass Recall/Precision review** that replaces the default single-pass reviewer for higher quality. This mode is based on the key insight that **splitting recall and precision into separate prompts outperforms a single complex prompt** ([G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)).
+
+### How it works
+
+| Pass | Goal | Subagent | Output |
+|------|------|----------|--------|
+| **1 — Recall** | Maximize coverage — report everything suspicious, even if uncertain | Independent reviewer (宽松 prompt) | `raw_findings` (may include false positives) |
+| **2 — Precision** | Verify each finding against codebase facts | Precision filter (严格 prompt + verifiable facts) | `CONFIRM` / `DOWNGRADE` / `REJECT` per finding |
+
+Between passes, the main agent **gathers verifiable facts** from the codebase (grep for residual references, read suspect implementations, check exports) to inject into the Precision prompt. This fact-gathering step is critical — without it, the filter relies solely on LLM judgment.
+
+### When to use
+
+| Mode | When | Cost |
+|------|------|------|
+| **Single-pass** (default) | Simple deliverables, low risk, already-converged rounds | 1× LLM call |
+| **Dual-pass** (recommended) | First 2 rounds of any phase; complex deliverables; code review (Phase 4–5); previous round produced ≥ 3 false positives | 2× LLM calls per round, but fewer total rounds |
+
+### Verified results
+
+The dual-pass mode was validated against a real code review (quant-dog Phase 7, 16-file diff, KI-3/KI-19 baseline/graham removal):
+
+| Metric | Single-pass | Dual-pass | Change |
+|--------|-------------|-----------|--------|
+| Raw findings per round | 16 | 25 → 12 (after filter) | +56% recall, −52% after filter |
+| True H-level findings | 2 | 2 | Same, found with higher confidence |
+| H-level false positives | 1 | 0 | −100% |
+| Effective finding rate | ~75% | ~92% | +17% |
+| LLM calls per round | 1 | 2 | +100% |
+| Expected Ralph loop rounds | 5–7 | 3–5 | −30–40% |
+
+The dual-pass also discovered an additional real bug that single-pass missed: residual `baseline_score`/`graham_score` column references in `screening_repo.py` and `schema.py` after the migration to 3-dimension scoring.
+
+**Key takeaway**: The value is not cost reduction but quality improvement — preventing H-level false positives from triggering wasted fix rounds. One wasted round costs the same as an entire dual-pass round.
+
+### File reference
+
+| Phase | Load | Contains |
+|-------|------|----------|
+| 1–3 (Design) | `review-design.md` | Checklist + Recall prompt + fact-gather guide |
+| 4–5 (Code) | `review-code.md` | Checklist + Recall prompt + fact-gather guide |
+| Precision (shared) | `review-precision-filter.md` | Precision Filter prompt + aggregation logic |
+
 ## Installation
 
 Copy all files to your Claude Code skills directory:
@@ -147,6 +195,9 @@ No build step or dependency installation required — skills are loaded on deman
 tdd-pipeline/
 ├── SKILL.md                        ← entry point (progressive disclosure hub)
 ├── ralph-review-loop.md            ← shared review protocol (Phases 1–5 only)
+├── review-design.md                ← design review checklist + Recall prompt (Phase 1–3)
+├── review-code.md                  ← code review checklist + Recall prompt (Phase 4–5)
+├── review-precision-filter.md      ← dual-pass Precision Filter prompt (shared)
 ├── task-tree.md                    ← loaded only for complex tasks
 ├── phase-1-product-design.md
 ├── phase-2-technical-solution.md
@@ -240,6 +291,9 @@ Phase 3: 测试深度由上游分类驱动
 |------|------|
 | `SKILL.md` | 概览、触发词、关卡规则、拆分判定 |
 | `ralph-review-loop.md` | 共享审核协议（含决策流程图） |
+| `review-design.md` | 方案审查清单 + Recall 提示词（阶段 1–3） |
+| `review-code.md` | 代码审查清单 + Recall 提示词（阶段 4–5） |
+| `review-precision-filter.md` | 双轮 Precision Filter 提示词 + 聚合逻辑（共用） |
 | `task-tree.md` | 任务拆解、上下文管理、版本管理（仅在 SPLIT=true 时加载） |
 | `phase-1-product-design.md` | 深度访谈收集需求、core/secondary 分类 |
 | `phase-2-technical-solution.md` | Planner→Architect→Critic 共识架构、key/peripheral 分类 |
@@ -265,6 +319,51 @@ Phase 3: 测试深度由上游分类驱动
 - `ship it`
 - `上线前测试` / `发版前检查` / `回归测试`
 - `产品设计` / `技术方案` / `测试方案` / `测试驱动`
+
+## 双轮审查模式
+
+Ralph 循环支持可选的**双轮 Recall/Precision 审查**，替代默认的单轮审查以获得更高质量。该方法的核心洞见：**将召回率和精确率拆分到两个独立的 prompt 中，效果优于单个复杂 prompt**（[G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)）。
+
+### 工作原理
+
+| 轮次 | 目标 | 子代理 | 输出 |
+|------|------|--------|------|
+| **1 — Recall** | 最大化覆盖 — 报告所有可疑之处，即使不确定 | 独立审查员（宽松 prompt） | `raw_findings`（可能包含误报） |
+| **2 — Precision** | 对照代码库事实验证每个发现 | 精确率过滤器（严格 prompt + 可验证事实） | 每个发现给出 `CONFIRM` / `DOWNGRADE` / `REJECT` |
+
+两轮之间，主代理从代码库中**收集可验证事实**（grep 残留引用、读取可疑实现、检查导出），注入 Precision prompt。这一步至关重要——没有事实支撑，过滤器仅凭 LLM 判断不可靠。
+
+### 使用场景
+
+| 模式 | 适用场景 | 开销 |
+|------|----------|------|
+| **单轮**（默认） | 简单交付物、低风险、已收敛的轮次 | 每轮 1 次 LLM 调用 |
+| **双轮**（推荐） | 每个阶段的前 2 轮；复杂交付物；代码审查（阶段 4–5）；前一轮产生 ≥ 3 个误报 | 每轮 2 次 LLM 调用，但总轮数更少 |
+
+### 验证结果
+
+双轮模式经真实代码审查验证（quant-dog 阶段 7，16 文件 diff，KI-3/KI-19 baseline/graham 移除）：
+
+| 指标 | 单轮 | 双轮 | 变化 |
+|------|------|------|------|
+| 每轮原始发现数 | 16 | 25 → 12（过滤后） | 召回率 +56%，过滤后 −52% |
+| 真实 H 级发现 | 2 | 2 | 相同，但置信度更高 |
+| H 级误报 | 1 | 0 | −100% |
+| 有效发现率 | ~75% | ~92% | +17% |
+| 每轮 LLM 调用 | 1 | 2 | +100% |
+| 预期 Ralph 循环轮数 | 5–7 | 3–5 | −30–40% |
+
+双轮还发现了单轮遗漏的一个真实 bug：迁移到三维评分后，`screening_repo.py` 和 `schema.py` 中残留的 `baseline_score`/`graham_score` 列引用。
+
+**核心结论**：价值不在降低成本，而在提升质量——防止 H 级误报触发浪费的修复轮次。一轮浪费的成本等于一整个双轮的开销。
+
+### 文件索引
+
+| 阶段 | 加载文件 | 内容 |
+|------|----------|------|
+| 1–3（方案审查） | `review-design.md` | 审查清单 + Recall 提示词 + 事实收集指南 |
+| 4–5（代码审查） | `review-code.md` | 审查清单 + Recall 提示词 + 事实收集指南 |
+| Precision（共用） | `review-precision-filter.md` | Precision Filter 提示词 + 聚合逻辑 |
 
 ## 安装方法
 
@@ -292,6 +391,9 @@ git clone <仓库地址> ~/.claude/skills/tdd-pipeline
 tdd-pipeline/
 ├── SKILL.md                        ← 入口文件（渐进式披露中心）
 ├── ralph-review-loop.md            ← 共享审核协议（仅阶段 1–5）
+├── review-design.md                ← 方案审查清单 + Recall 提示词（阶段 1–3）
+├── review-code.md                  ← 代码审查清单 + Recall 提示词（阶段 4–5）
+├── review-precision-filter.md      ← 双轮 Precision Filter 提示词（共用）
 ├── task-tree.md                    ← 仅在复杂任务时加载
 ├── phase-1-product-design.md
 ├── phase-2-technical-solution.md
