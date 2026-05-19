@@ -120,8 +120,6 @@ Replace Step 1 in the standard Review Process with:
 
 ### Reviewer Output Requirements
 
-The reviewer produces **three output categories** per round. Their relationship is:
-
 | Category | Describes | Maps to Severity Issues |
 |----------|-----------|------------------------|
 | **Severity-tagged Issues** | *Defects* — what is wrong | Each classified C/H/M/L/I |
@@ -130,68 +128,36 @@ The reviewer produces **three output categories** per round. Their relationship 
 
 **In rounds with zero C/H/M issues**: Constructive Suggestions and Critical Opinions are both **optional**. Exempt rounds from mandatory output to avoid degenerate/performative content.
 
-#### 1. Constructive Suggestions (建设性建议)
+⛔ Suggestions must be directly actionable (what/where/why + concrete example when applicable). No vague advice like "consider improving X".
 
-Actionable, specific recommendations for improving the deliverable. Required for every C/H/M issue; optional for L; not required for I.
-
-Each suggestion MUST include:
-   - What to change and where
-   - Why the change improves the deliverable
-   - A concrete example or reference implementation when applicable
-   - No vague advice like "consider improving X" — every suggestion must be directly actionable
-
-#### 2. Critical Opinions (批判性意见)
-
-Substantive critique that challenges assumptions, identifies risks, or questions design decisions. **Provide only when the reviewer has genuine, substantive concerns** — do not manufacture critique to fill a template.
-
-When provided, Critical Opinions MUST:
-   - Challenge the reasoning behind choices, not just surface-level symptoms
-   - Identify potential failure modes, edge cases, or blind spots the author may have missed
-   - Question whether the current approach is the RIGHT approach (not just whether it works)
-   - Highlight trade-offs being made and whether they are acceptable given project constraints
-   - Be evidence-based — cite specific sections, requirements, or prior-phase outputs that conflict
+⛔ Critical Opinions must challenge reasoning, not surface symptoms. Provide only when genuine substantive concerns exist — do not manufacture critique to fill a template.
 
 ### Main Agent Critical Evaluation (主代理批判性审视)
 
-Upon receiving the reviewer's report (issues, constructive suggestions, and critical opinions), the **main agent MUST NOT blindly adopt all suggestions**. Instead, apply a structured critical evaluation:
+⛔ **MUST NOT blindly adopt all suggestions.** Evaluate each against project context, then make an explicit decision:
 
-1. **Read the full reviewer report** — understand the reasoning behind each suggestion and opinion, not just the surface-level recommendation.
-
-2. **Evaluate against project context** — consider:
-   - Project's actual constraints (timeline, tech stack, team skills, existing architecture)
-   - Whether the suggestion addresses a real problem or a theoretical one
-   - Whether the "improvement" introduces new complexity or risks that outweigh the benefit
-   - Whether the reviewer's assumptions about the project are correct
-
-3. **Make an explicit ADOPT/REJECT/MODIFY decision** for each review item:
-
-   | Decision | Applicable To | Conditions |
-   |----------|--------------|------------|
-   | **ADOPT** | All items | Default for C/H/M — apply the fix |
-   | **MODIFY** | All items | Suggestion has merit but needs adaptation — apply modified version, document deviation |
-   | **REJECT** | L/I items + Critical Opinions | Full discretion, just document rationale |
-   | **REJECT** | C/H/M items | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See §Contested Issue Protocol below. |
-
-4. **Document the evaluation** — for each non-trivial suggestion/opinion, record in the evaluation table (see Review Log Template).
+| Decision | Applicable To | Conditions |
+|----------|--------------|------------|
+| **ADOPT** | All items | Default for C/H/M — apply the fix |
+| **MODIFY** | All items | Suggestion has merit but needs adaptation — apply modified version, document deviation |
+| **REJECT** | L/I items + Critical Opinions | Full discretion, just document rationale |
+| **REJECT** | C/H/M items | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See §Contested Issue Protocol below. |
 
 #### REJECT Rules for C/H/M Issues
 
-The severity system is the quality gate: C/H/M means **must fix**. REJECT of a C/H/M is an **exception**, not a routine action. It is only valid when:
+C/H/M means **must fix**. REJECT is an **exception**, valid only when:
+- Reviewer's assumption about requirements, constraints, or prior-phase outputs is factually wrong
+- Reviewer identified a "defect" that is actually intended behavior documented elsewhere
 
-- The reviewer's assumption about the project requirements, constraints, or prior-phase outputs is factually wrong
-- The reviewer identified a "defect" that is actually intended behavior documented elsewhere
-
-**Invalid REJECT reasons** (these will not pass gate):
-- "We don't have time" → not a valid reason to skip a must-fix issue
-- "I disagree with the priority" → severity is the reviewer's call, not the author's
-- "It works in practice" → if the reviewer identified a risk, it needs addressing
+**Invalid REJECT reasons** (will not pass gate):
+- "We don't have time" / "I disagree with the priority" / "It works in practice"
 
 #### ❌ What wrong evaluation looks like
 
-- **Mechanical adoption**: applying all reviewer suggestions without independent judgment — every suggestion must be evaluated against project context
-- **Dismissive rejection**: characterizing H/M issues as "known design deviations" or "intentional simplifications" without specific evidence — this is severity manipulation, not critical evaluation
-- **Fix-and-declare**: fixing issues then immediately declaring gate PASS without another review round — fixes may introduce regressions
-- **Deferred escaping**: pushing C/H/M issues to "handle in a later phase" — each phase gate must close on its own
+- **Mechanical adoption**: applying all suggestions without independent judgment
+- **Dismissive rejection**: characterizing H/M issues as "known design deviations" without evidence — severity manipulation
+- **Fix-and-declare**: declaring gate PASS after fixing without another review round — fixes may introduce regressions
+- **Deferred escaping**: pushing C/H/M to "handle in a later phase" — each gate must close on its own
 
 #### Contested Issue Protocol
 
@@ -273,18 +239,10 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 ### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
 
-Before confirming stop, articulate your reasoning.
-Do not confirm stop until you have produced this reasoning.
+Before confirming stop, articulate: rounds completed, dimensions covered per round, task complexity justification, and what issue type is most likely to be missed. If you cannot clearly articulate this, continue to the next round.
 
-After articulating, check: did you address how many rounds were completed
-and whether each covered different dimensions, whether the task's complexity
-justifies stopping now, and what type of issue is most likely to be missed?
-If not, supplement before confirming. If you cannot clearly articulate this,
-the review may not be thorough enough — continue to the next round.
-
-> ⚠️ Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Complex tasks may warrant additional rounds at the model's discretion.
-> Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
-> If articulation reveals concerns 2 times in a row, treat the review as not yet converged: reset counter to 0 (not 1).
+> ⚠️ Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
+> If articulation reveals concerns 2 times in a row, reset counter to 0 (not 1).
 
 **❌ What superficial pre-early-stop articulation looks like**
 - "Two rounds with zero issues, safe to stop" (no analysis of why zero issues implies safety)
