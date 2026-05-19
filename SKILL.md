@@ -65,8 +65,7 @@ After completing each phase deliverable (Phases 1–5), run the ralph-review-loo
 - Phase 5 → `phase-5-business-code.md` (Business Code)
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
-  - On pattern match or 5-Why stuck → additionally load `phase-7-system-quality-audit.md`
-  - Sub-phase 1.6 (Gap Detection) → load `phase-7-system-quality-audit.md`
+  - **After Phase 6 completes** → load `phase-7-system-quality-audit.md` (system-level quality audit: 16-pattern catalog with grep commands, integration pair discovery, execution order analysis)
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns

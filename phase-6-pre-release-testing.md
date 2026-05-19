@@ -129,17 +129,13 @@ Catches bugs requiring subjective judgment (comprehensibility of messages, appro
 
 ## Part 2: Bug Root Cause Investigation
 
-> **Extracted for progressive disclosure.** Load **`phase-6-root-cause-investigation.md`** when a sub-phase fails. Contains: Layer Isolation (Q1–Q4), Evidence Collection (Q5–Q7), 5-Why Drill, Fix Verification (V1–V5), and 12 common bug patterns. When a pattern is matched, 5-Why is stuck at depth 3+, or for Sub-phase 1.6 Gap Detection, additionally load **`phase-7-system-quality-audit.md`** for 16-pattern grep commands, integration pair discovery, and execution order analysis.
+> **Extracted for progressive disclosure.** Load **`phase-6-root-cause-investigation.md`** when a sub-phase fails. Contains: Layer Isolation (Q1–Q4), Evidence Collection (Q5–Q7), 5-Why Drill, Fix Verification (V1–V5), and 12 common bug patterns.
 
 ---
 
 ## Part 3: Integration Gap Detection Checklist
 
 For each pair of interacting components, walk through every row. If any cell is "we don't know," that's your gap.
-
-**Pair discovery** — check each type: direct neighbors (A calls B), indirect data flow (A writes → intermediary → B reads), lifecycle coupling (A manages resource B depends on), test↔production parity (test harness vs real activation path). If a component pair exists but is NOT in your list, that's an undetected gap.
-
-> Full pair types and dimension checklist in **`phase-7-system-quality-audit.md`** Part 1.
 
 | Gap | Question | Evidence to collect |
 |-----|----------|-------------------|
