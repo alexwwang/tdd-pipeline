@@ -10,7 +10,7 @@ Submit findings via `ralph_round_finding` **after** the Main Agent Critical Eval
 
 - **ADOPTed and MODIFYed items**: Include with their post-evaluation severity (use `original` + `downgrade_reason` when the main agent downgraded)
 - **REJECTED (contested) items**: MUST be included — contested C/H/M remain in the gate tally until the reviewer explicitly drops them. Omitting them would make GPAV's tally diverge from the actual gate tally
-- **L and I items**: Include as-is
+- **L and I items**: Include as-is. For deferred (unfixed) L/I items, see `ralph-continuation.md` step 3b for documentation requirements.
 - **In dual-pass mode**: Submit the Precision-filtered confirmed findings only, not the raw Recall output. The Precision Filter's CONFIRM/DOWNGRADE verdicts are the equivalent of single-pass reviewer findings
 
 ## Submission Format
@@ -36,7 +36,8 @@ watchdog.observe('ralph_round_finding', {
 
 ## Validation Rules (enforced by Watchdog)
 
-- `findings` must be an array of objects with `severity` (C/H/M/L/I) and `description` (non-empty string)
+- `findings` must be an array of objects with `severity` (C/H/M/L/I) and `description` (non-empty string, max 2000 chars)
+- `findings` array size limited to 50 entries per submission
 - `phase` must match the current pipeline phase
 - `round` must be > current `ralph.round` (incrementing — no retroactive edits)
 - `downgrade_reason` must be non-empty when `original` is set and severity < original

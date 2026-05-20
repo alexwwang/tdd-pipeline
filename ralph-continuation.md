@@ -67,6 +67,7 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
+3b. **Document deferred findings**: For each L/I item and REJECTed L/I that is NOT fixed this round, record in the project's Known Issues document (e.g., `KnownIssues.md`). Each entry must include: raised-in round, severity, file location, description, why deferred, and plan. This ensures deferred observations are not lost across rounds and survive session boundaries.
 4. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
