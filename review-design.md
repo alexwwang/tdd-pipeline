@@ -14,6 +14,9 @@ The reviewer must verify each item below. When defects are found, provide constr
 - [ ] **Traceability**: Every acceptance criterion maps to a test or design element
 - [ ] **Backward compatibility**: API changes won't break callers
 - [ ] **Security**: Data exposure, injection risks, missing validation
+- [ ] **Axiom 1 — Independence** (Phase 2): FR-DP uncoupled (or decoupled with adjustment order documented)
+- [ ] **Axiom 2 — Information** (Phase 2, if alternatives): Coupled designs eliminated, simplest remaining selected
+- [ ] **FR Purity**: ACs describe WHAT not HOW (no implementation leakage)
 
 ## Single-Pass Review
 
@@ -46,6 +49,9 @@ If using dual-pass mode, inject this as the Recall subagent prompt:
 9. 安全深度审查：跟踪所有外部输入的数据流 — 哪些入口接受外部输入？数据在哪里跨越信任域？敏感数据是否可能暴露给不该看到的人？认证/授权是否在每个入口点执行？是否存在绕过验证的路径？
 10. 正确性深度审查：每个验收标准是否有对应的可测试验证条件？是否有 AC 被遗漏或模糊到无法测试？边界条件和错误情况是否被 AC 覆盖？是否存在非确定性行为（如无 tiebreaker 的排序、无唯一排序键的 LIMIT 查询）？
 11. 资源/性能审查：数据量增长时行为如何？打开的连接/句柄是否在所有路径（含错误路径）上正确关闭？是否有潜在的内存增长或资源耗尽路径？检查每个 WHERE/JOIN 列是否有索引覆盖（注意 composite PK prefix scan 限制：PK(a,b) 对 WHERE b=? 无效）
+12. 独立性公理（Phase 2 only）：FR-DP 设计矩阵是否已构造？是否存在耦合（同一 FR 受多个 DP 影响，同一 DP 影响多个 FR）？准耦合是否有调整顺序？
+13. 信息公理（Phase 2 only，多方案时）：耦合方案是否已被淘汰？剩余方案是否按简洁度（耦合点最少）选优？
+14. FR 纯度（Phase 1/2）：AC 是否描述"做什么"（功能域）而非"怎么做"（物理域）？是否混入了实现细节（如特定技术选型）？
 
 ## 交付物
 {DELIVERABLE}
