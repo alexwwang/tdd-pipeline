@@ -36,7 +36,7 @@ The Ralph loop has **two exit paths**:
 1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M/L issues (only I or nothing new). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
 2. **Max Rounds Escalation**: If new C/H/M findings persist after 10 rounds, halt and escalate to the user with a summary.
 
-**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round produces zero **new** C/H/M/L findings. Reset to 0 on any round with new C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Stop Why Articulation → 确认安全后 stop。
+**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M/L findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M/L > 0.
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
@@ -47,7 +47,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 | Stopping after round 3 because round 3 = 0 new findings | 1 zero round does NOT satisfy stop condition. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 both have 0 new findings. |
 | Claiming stop at round 5 because rounds 3 and 5 both have 0 new findings | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N both have 0 new findings. |
 | Stopping after round 2 with 0 new findings because "looks clean" (and round 1 had new findings) | Lacks consecutive confirmation — need both round 1 AND round 2 to have 0 new findings. | Need round N-1 to also have 0 new findings. |
-| Declaring stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 new findings, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 new → round 6 reviews → if still 0 new → stop. |
+| Declaring stop immediately after fixing issues | Fix round ≠ zero round. Next round reviews the fix — only if THAT round is also zero does the counter increment. | Fix → review fixed deliverable → evaluate counter on the review round. |
 | Counting re-discovered KI entries as "new findings" | Issues already in the Known Issues document have been triaged — they are known, not new. | Only findings NOT already in the KI document count as new. |
 | Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both with 0 new findings. |
 | Counting new L findings as "effectively zero" | New L findings are still new findings. Zero new means zero new C/H/M/L. | Only I (info), re-discovered KIs, or truly empty = zero-new round. |
@@ -65,19 +65,11 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
 3b. **Document deferred findings**: For each L/I item and REJECTed L/I that is NOT fixed this round, record in the project's Known Issues document (e.g., `KnownIssues.md`). Each entry must include: raised-in round, severity, file location, description, why deferred, and plan. This ensures deferred observations are not lost across rounds and survive session boundaries.
-4. **KI Re-evaluation** (Rounds 3+): Before spawning the next reviewer, review the Known Issues document. For each KI, make an independent judgment:
-   - **Still valid**: The issue remains real and unresolved. Keep as-is.
-   - **Already fixed**: The issue was incidentally resolved by other changes. Remove from KI list.
-   - **Severity change**: New evidence suggests the issue is more/less severe than originally assessed. Update severity and rationale.
-   - **False positive**: On reflection, the original finding was incorrect. Remove and document why.
-   Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
+4. **KI Re-evaluation** (Rounds 3+): Before spawning the next reviewer, re-evaluate each KI independently: is it still real? has it been incidentally fixed? should severity change? Remove false positives and document why. Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
 5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
-6. Separate reviewer findings into **new** vs **known**:
-   - **New**: not present in the Known Issues document from prior rounds
-   - **Known**: matches an entry already in Known Issues (same location + same root cause)
-   - **Note**: contested C/H/M items re-raised by the reviewer are NOT in the KI document and are always classified as new. Known findings are excluded from the stop-condition counter — they have already been triaged.
+6. Classify findings: **new** (not in KI document) vs **known** (already in KI). Known findings excluded from counter. Contested C/H/M re-raises are always new.
 7. Count new C/H/M/L findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
 8. If only new L found (no new C/H/M):
    → L fix is optional → Reset consecutive-zero counter to 0 → Go to round N+1

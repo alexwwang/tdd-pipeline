@@ -68,7 +68,7 @@ for round N:
 
 ## Dual-Pass Review Mode
 
-The single-pass reviewer can be replaced with a **two-pass Recall/Precision pipeline** for higher quality. See dedicated files for review-specific prompts:
+The default review mode is a **two-pass Recall/Precision pipeline**. A lighter single-pass mode is available for already-converged rounds. See dedicated files for review-specific prompts:
 
 | Phase | Load this file | Contains |
 |-------|---------------|----------|
