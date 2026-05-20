@@ -125,6 +125,22 @@ Catches bugs requiring subjective judgment (comprehensibility of messages, appro
 - [ ] Error handler coverage (every catch block tested)
 - [ ] No retry amplification (retry budget bounded under failure injection)
 
+### ⛔ N/A Evidence Rule
+
+Marking any checklist item as N/A **requires negative evidence** — proof that the condition does not exist in this codebase. The evidence column must contain:
+
+1. **What the item checks** (the specific condition or pattern)
+2. **Why the condition is absent** (grep command with 0 matches, architectural argument, or code analysis)
+3. **The conclusion** (N/A because X was verified absent)
+
+N/A without evidence is the checklist equivalent of re-labeling H issues as "accepted design deviations" to bypass the gate — it lowers the bar to avoid doing the work.
+
+| ❌ WRONG N/A | Why It's Wrong | ✅ CORRECT |
+|-------------|----------------|-----------|
+| "Not a long-running process" → N/A for resource stability | In-memory caches, growing arrays, and Maps can leak in any process | Grep for all growable data structures, verify each has bounds or eviction |
+| "No retry logic" → N/A without checking | Assumption without evidence | `grep -rn 'retry\|reconnect\|backoff\|attempt' src/` → report 0-match evidence |
+| "Library, not a service" → N/A for multiple items | Being a library doesn't exempt it from checks | Each item's applicability must be independently assessed with evidence |
+
 ---
 
 ## Part 2: Bug Root Cause Investigation
