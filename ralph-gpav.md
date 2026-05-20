@@ -45,10 +45,9 @@ watchdog.observe('ralph_round_finding', {
 
 ## What GPAV Tracks
 
-The Watchdog records authoritative counts per round in `roundRecords`. These counts are the **ground truth** for stop/gate decisions — not the orchestrator's local tally. The Watchdog's `ralph_terminate` validates:
+The Watchdog records authoritative counts per round in `roundRecords`. These counts are the **ground truth** for stop decisions — not the orchestrator's local tally. The Watchdog's `ralph_terminate` validates:
 
-- **early_stop**: `roundRecords` shows ≥ 2 consecutive rounds with C=H=M=L=0
-- **gate_pass**: ≥ `MIN_GATE_ROUNDS` completed rounds, final round C=H=M=0
+- **stop**: `roundRecords` shows ≥ 2 consecutive rounds with zero new C/H/M/L findings (findings already in the Known Issues document are excluded)
 - **max_rounds**: ≥ `MAX_RALPH_ROUNDS` completed rounds
 
 ## RPS (Review Prompt Scanner)

@@ -31,15 +31,12 @@ C/H/M means **must fix**. REJECT is an **exception**, valid only when:
 
 ## Rounds & Stop Conditions
 
-The Ralph loop has **three exit paths**:
+The Ralph loop has **two exit paths**:
 
-1. **Stop**: 2 consecutive rounds with zero C/H/M/L issues (only I or nothing). Can trigger at any round N ≥ 2.
-2. **Gate Pass**: At round N ≥ 5 with zero C/H/M in the current round (L acceptable). You MAY stop here; continuing to pursue stop is optional.
-3. **Max Rounds Escalation**: If C/H/M persist after 10 rounds, halt and escalate to the user with a summary.
+1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M/L issues (only I or nothing new). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
+2. **Max Rounds Escalation**: If new C/H/M findings persist after 10 rounds, halt and escalate to the user with a summary.
 
-**If stop does NOT trigger**: you MUST complete at least 5 rounds before evaluating gate pass.
-
-**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round has zero C/H/M/L. Reset to 0 on any round with C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Stop Why Articulation → 确认安全后 stop。
+**Consecutive-zero counter**: Initialize at 0. Increment by 1 when a round produces zero **new** C/H/M/L findings. Reset to 0 on any round with new C/H/M/L > 0. When counter = 2 → 必须完成 Pre-Stop Why Articulation → 确认安全后 stop。
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
@@ -47,13 +44,13 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 
 | ❌ WRONG | Why It's Wrong | ✅ CORRECT |
 |----------|---------------|-----------|
-| Stopping after round 3 because round 3 = 0 issues | 1 zero round does NOT satisfy stop condition. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 are both 0. |
-| Claiming stop at round 5 because rounds 3 and 5 are both 0 | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N are both 0. Note: at N ≥ 5 with zero C/H/M, gate-pass is also available as an alternative to continuing. |
-| Stopping after round 2 with 0 issues because "looks clean" (and round 1 was NOT 0) | Lacks consecutive confirmation — need both round 1 AND round 2 to be 0. (Early stop at round 2 IS valid if round 1 was also 0.) | Need round N-1 to also be 0. |
-| Declaring stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 issues, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 → round 6 reviews → if still 0 → stop. |
-| Counting L issues as "zero" | L issues are still issues. Zero means zero C/H/M/L. | Only I (info) or truly empty counts as a zero round. |
-| Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both zero. |
-| Counting 0C/0H as "zero" while L>0 exists | Stop condition requires zero C/H/M/L, not zero C/H only. L still resets the counter. | L issues count. Only I or truly empty = zero round. |
+| Stopping after round 3 because round 3 = 0 new findings | 1 zero round does NOT satisfy stop condition. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 both have 0 new findings. |
+| Claiming stop at round 5 because rounds 3 and 5 both have 0 new findings | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N both have 0 new findings. |
+| Stopping after round 2 with 0 new findings because "looks clean" (and round 1 had new findings) | Lacks consecutive confirmation — need both round 1 AND round 2 to have 0 new findings. | Need round N-1 to also have 0 new findings. |
+| Declaring stop after fixing issues from round 4 | Round 5 reviews the fixed deliverable — if 0 new findings, counter = 1 (round 4 was not zero). Need one more zero round. | Fix after round 4 → round 5 reviews → if 0 new → round 6 reviews → if still 0 new → stop. |
+| Counting re-discovered KI entries as "new findings" | Issues already in the Known Issues document have been triaged — they are known, not new. | Only findings NOT already in the KI document count as new. |
+| Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both with 0 new findings. |
+| Counting new L findings as "effectively zero" | New L findings are still new findings. Zero new means zero new C/H/M/L. | Only I (info), re-discovered KIs, or truly empty = zero-new round. |
 | Re-labeling H/M issues as "accepted design deviations" to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
 | Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
 
@@ -68,38 +65,45 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
 3b. **Document deferred findings**: For each L/I item and REJECTed L/I that is NOT fixed this round, record in the project's Known Issues document (e.g., `KnownIssues.md`). Each entry must include: raised-in round, severity, file location, description, why deferred, and plan. This ensures deferred observations are not lost across rounds and survive session boundaries.
-4. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
+4. **KI Re-evaluation** (Rounds 3+): Before spawning the next reviewer, review the Known Issues document. For each KI, make an independent judgment:
+   - **Still valid**: The issue remains real and unresolved. Keep as-is.
+   - **Already fixed**: The issue was incidentally resolved by other changes. Remove from KI list.
+   - **Severity change**: New evidence suggests the issue is more/less severe than originally assessed. Update severity and rationale.
+   - **False positive**: On reflection, the original finding was incorrect. Remove and document why.
+   Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
+5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
-5. Count non-I issues (C+H+M+L) in the tally (after contested resolution from THIS round)
-6. If any C/H/M remain in tally → Reset consecutive-zero counter to 0 → Go to round N+1
-7. If only L found (no C/H/M):
-   → L fix is optional → Reset consecutive-zero counter to 0
-   → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue to round N+1 pursuing stop)
-   → If N < 5 → Go to round N+1
-8. If zero issues (only I or nothing):
+6. Separate reviewer findings into **new** vs **known**:
+   - **New**: not present in the Known Issues document from prior rounds
+   - **Known**: matches an entry already in Known Issues (same location + same root cause)
+   - Known findings are excluded from the stop-condition counter — they have already been triaged
+7. Count new C/H/M/L findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
+8. If only new L found (no new C/H/M):
+   → L fix is optional → Reset consecutive-zero counter to 0 → Go to round N+1
+9. If zero new findings (only I, known re-findings, or nothing):
    → Increment consecutive-zero counter by 1
    → Counter = 2:
      → 🔒 **必须完成停止前 Why Articulation**（见下方 §Pre-Stop Why Articulation）
-     → If articulation confirms stopping is safe → ✅ EARLY STOP
+     → If articulation confirms stopping is safe → ✅ STOP
      → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
-     → If N ≥ 5 → ✅ GATE PASS available (you MAY stop here; or continue pursuing stop)
-      → Go to round N+1 (or stop if gate-pass is acceptable)
-9. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
+     → Go to round N+1
+10. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
 ```
 
 ### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
 
-Before confirming stop, articulate: rounds completed, dimensions covered per round, task complexity justification, and what issue type is most likely to be missed. If you cannot clearly articulate this, continue to the next round.
+Before confirming stop, articulate: rounds completed, dimensions covered per round, task complexity justification, what issue type is most likely to be missed, and how many known issues remain in the KI document. If you cannot clearly articulate this, continue to the next round.
 
-> ⚠️ Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
+> ⚠️ Two consecutive zero-new-finding rounds are the **minimum requirement**, not an upper bound. Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
 > If articulation reveals concerns 2 times in a row, reset counter to 0 (not 1).
 
-**❌ What superficial pre-early-stop articulation looks like**
-- "Two rounds with zero issues, safe to stop" (no analysis of why zero issues implies safety)
+**❌ What superficial pre-stop articulation looks like**
+- "Two rounds with zero issues, safe to stop" (no analysis of why zero new findings implies safety)
 - "Task is simple, two rounds is enough" (no specific justification for this judgment)
 - "Didn't find anything missing" (did not identify what type of issue could still be missed)
+- "All remaining issues are in the KI document" (KI presence alone is not a stop argument — are they correctly triaged?)
 
 ## Review Checklists (Progressive Disclosure)
 

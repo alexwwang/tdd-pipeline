@@ -36,10 +36,9 @@ Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **va
 Phases 1–5 each end with a mandatory review loop:
 
 - **Up to 10 rounds** total
-- **Early stop**: allowed at any round ≥ 2 when the previous 2 rounds were both zero-issue (zero C/H/M/L — stricter than gate pass, which tolerates L issues)
-- **Floor**: if early stop never triggers, run at least 5 rounds before evaluating gate pass
-- **Gate**: zero C/H/M issues to proceed (L and I are acceptable)
-- **Escalation**: if C/H/M persist after 10 rounds → halt and escalate to user (NOT a pass path)
+- **Stop condition**: 2 consecutive rounds with zero **new** C/H/M/L findings. Issues already listed in the Known Issues document do not count as new. Can trigger at any round ≥ 2
+- **Escalation**: if new C/H/M findings persist after 10 rounds → halt and escalate to user (NOT a pass path)
+- **Known Issues management**: deferred findings are recorded in a KI document; each subsequent round independently re-evaluates all KIs (valid, fixed, severity change, false positive)
 - **Independent reviewer** subagent for each round
 
 Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates, 追问 protocol, and user go/no-go. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details.
@@ -253,10 +252,10 @@ MIT
 阶段 1–5 每个结束后启动强制审核循环：
 
 - **最多 10 轮**
-- **早停**：任意 ≥ 2 轮处，前 2 轮均为零问题时可提前结束（零 C/H/M/L — 比关卡通过更严格，关卡允许 L 级问题）
-- **最低轮次**：未触发早停时，至少跑 5 轮才能评估关卡通过
-- **关卡条件**：零 C/H/M 问题方可进入下一阶段（L 和 I 可接受）
-- **升级**：10 轮后 C/H/M 仍未解决则中止并升级给用户（不是通过路径）
+- **唯一停止条件**：连续两轮零新发现（C/H/M/L 均无新增）。已知问题文档中已列示的问题不算新发现。可在任意 ≥ 2 轮时触发
+- **关卡条件**：连续两轮零新发现方可进入下一阶段
+- **升级**：10 轮后仍有新 C/H/M 发现则中止并升级给用户（不是通过路径）
+- **已知问题管理**：未当场修复的问题写入 Known Issues 文档；下一轮审核时对所有 KI 做独立评估（真实性、失效、升降级）
 - 每轮由**独立审核 subagent** 执行
 
 阶段 6 **不使用** Ralph 循环。详见上方阶段 6 行及 `phase-6-pre-release-testing.md` Part 5。阶段 7 在阶段 6 完成后运行，详见 `phase-7-system-quality-audit.md`。

@@ -8,28 +8,28 @@ Loaded on demand when encountering contested issues or ambiguous stop/gate scena
 ```
 Round 1: H=1, M=2 → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 issues → consecutive counter = 1 → continue (NOT stop — need 2 consecutive!)
+Round 3: 0 new findings → consecutive counter = 1 → continue (NOT stop — need 2 consecutive!)
 Round 4: M=1      → Fix → counter RESET to 0 → continue
-Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (may stop here, or continue)
-Round 6: 0 issues → counter = 2 → ✅ STOP (rounds 5 & 6 both 0)
+Round 5: 0 new findings → counter = 1 → continue
+Round 6: 0 new findings → counter = 2 → ✅ STOP (rounds 5 & 6 both 0 new findings)
 ```
 
-**Example B — Cannot stop (only 1 zero):**
+**Example B — Cannot stop (only 1 zero + L resets counter):**
 ```
 Round 1: H=1      → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 issues → counter = 1 → continue (NOT stop — need 2 consecutive!)
-Round 4: L=1      → Counter RESET to 0 (any non-I count resets; fixing L is optional) → continue
-Round 5: 0 issues → counter = 1 → ✅ GATE PASS available (accept gate-pass now, or continue to pursue stop)
-=== Choosing gate-pass === ✅ PASS GATE
+Round 3: 0 new findings → counter = 1 → continue (NOT stop — need 2 consecutive!)
+Round 4: L=1 (new) → Counter RESET to 0 (any new non-I finding resets; fixing L is optional) → continue
+Round 5: 0 new findings → counter = 1 → continue
+Round 6: 0 new findings → counter = 2 → ✅ STOP
 ```
 
 **Example C — Correct stop (at round 4):**
 ```
 Round 1: M=2      → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 issues → counter = 1 → continue
-Round 4: 0 issues → counter = 2 → ✅ STOP (rounds 3 & 4 both 0, consecutive)
+Round 3: 0 new findings → counter = 1 → continue
+Round 4: 0 new findings → counter = 2 → ✅ STOP (rounds 3 & 4 both 0 new findings, consecutive)
 ```
 
 **Example D — Escalation at max rounds:**

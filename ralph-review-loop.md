@@ -29,7 +29,7 @@ NEVER include any of the following in a reviewer's prompt — they bias the revi
 |----------|-----|
 | Fewer levels (C/M/m instead of C/H/M/L/I) | Loses distinction between significant gaps and minor improvements, breaks stop condition counting |
 | Re-label H as "accepted deviation" or "intentional simplification" | Bypasses the contested issue protocol — severity manipulation |
-| Count L as "effectively zero" | L still resets the consecutive-zero counter and must be counted |
+| Count L as "effectively zero" | New L findings still reset the consecutive-zero counter |
 Every issue MUST use exactly these 5 levels:
 | Severity | Name | Definition | Action |
 |----------|------|------------|--------|
@@ -80,8 +80,8 @@ The single-pass reviewer can be replaced with a **two-pass Recall/Precision pipe
 
 | Mode | When | Cost |
 |------|------|------|
-| **Single-pass** (default) | Simple deliverables, low risk, already-converged rounds | 1× LLM call |
-| **Dual-pass** (recommended) | First 2 rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls, but fewer total rounds |
+| **Dual-pass** (default) | All rounds except already-converged zero-finding rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls, but fewer total rounds |
+| **Single-pass** | Already-converged rounds (counter ≥ 1), simple deliverables, low risk | 1× LLM call |
 
 ### Review Process (Dual-Pass Mode)
 
@@ -126,8 +126,8 @@ When the **Watchdog** observer is active, load `ralph-gpav.md` for the full subm
 
 ```
 gate_proceed = ALL:
-  ralph_termination IN [early_stop, gate_pass]  # NOT max_rounds
-  final_round.C + .H + .M == 0                  # L/I acceptable, carried forward
+  ralph_termination = stop  # 2 consecutive rounds with zero new C/H/M/L findings
+  # NOT max_rounds — that requires user escalation
 ```
 
 ## Subsequent Round Loading
