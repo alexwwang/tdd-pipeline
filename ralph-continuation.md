@@ -77,7 +77,7 @@ Evaluate after each round N, in this order (before starting round N+1):
 6. Separate reviewer findings into **new** vs **known**:
    - **New**: not present in the Known Issues document from prior rounds
    - **Known**: matches an entry already in Known Issues (same location + same root cause)
-   - Known findings are excluded from the stop-condition counter — they have already been triaged
+   - **Note**: contested C/H/M items re-raised by the reviewer are NOT in the KI document and are always classified as new. Known findings are excluded from the stop-condition counter — they have already been triaged.
 7. Count new C/H/M/L findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
 8. If only new L found (no new C/H/M):
    → L fix is optional → Reset consecutive-zero counter to 0 → Go to round N+1
@@ -96,7 +96,7 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 Before confirming stop, articulate: rounds completed, dimensions covered per round, task complexity justification, what issue type is most likely to be missed, and how many known issues remain in the KI document. If you cannot clearly articulate this, continue to the next round.
 
-> ⚠️ Two consecutive zero-new-finding rounds are the **minimum requirement**, not an upper bound. Early stop is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
+> ⚠️ Two consecutive zero-new-finding rounds are the **minimum requirement**, not an upper bound. Stopping is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
 > If articulation reveals concerns 2 times in a row, reset counter to 0 (not 1).
 
 **❌ What superficial pre-stop articulation looks like**

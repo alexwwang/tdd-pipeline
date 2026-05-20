@@ -130,7 +130,7 @@ Use natural language triggers in your AI coding tool:
 
 ## Dual-Pass Review Mode
 
-The Ralph loop supports an optional **two-pass Recall/Precision review** that replaces the default single-pass reviewer for higher quality. This mode is based on the key insight that **splitting recall and precision into separate prompts outperforms a single complex prompt** ([G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)).
+The Ralph loop uses a **two-pass Recall/Precision pipeline** by default. Single-pass mode is available as a fallback for already-converged rounds. This mode is based on the key insight that **splitting recall and precision into separate prompts outperforms a single complex prompt** ([G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)).
 
 ### How it works
 
@@ -145,8 +145,8 @@ Between passes, the main agent **gathers verifiable facts** from the codebase (g
 
 | Mode | When | Cost |
 |------|------|------|
-| **Single-pass** (default) | Simple deliverables, low risk, already-converged rounds | 1× LLM call |
-| **Dual-pass** (recommended) | First 2 rounds of any phase; complex deliverables; code review (Phase 4–5); previous round produced ≥ 3 false positives | 2× LLM calls per round, but fewer total rounds |
+| **Dual-pass** (default) | All rounds except already-converged zero-finding rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls per round, but fewer total rounds |
+| **Single-pass** | Already-converged rounds (consecutive-zero counter ≥ 1), simple deliverables, low risk | 1× LLM call |
 
 ### Verified results
 
@@ -336,7 +336,7 @@ Phase 3: 测试深度由上游分类驱动
 
 ## 双轮审查模式
 
-Ralph 循环支持可选的**双轮 Recall/Precision 审查**，替代默认的单轮审查以获得更高质量。该方法的核心洞见：**将召回率和精确率拆分到两个独立的 prompt 中，效果优于单个复杂 prompt**（[G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)）。
+Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在已收敛轮次（连续零发现计数器 ≥ 1）时使用。该方法的核心洞见：**将召回率和精确率拆分到两个独立的 prompt 中，效果优于单个复杂 prompt**（[G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)）。
 
 ### 工作原理
 
@@ -351,8 +351,8 @@ Ralph 循环支持可选的**双轮 Recall/Precision 审查**，替代默认的�
 
 | 模式 | 适用场景 | 开销 |
 |------|----------|------|
-| **单轮**（默认） | 简单交付物、低风险、已收敛的轮次 | 每轮 1 次 LLM 调用 |
-| **双轮**（推荐） | 每个阶段的前 2 轮；复杂交付物；代码审查（阶段 4–5）；前一轮产生 ≥ 3 个误报 | 每轮 2 次 LLM 调用，但总轮数更少 |
+| **双轮**（默认） | 除已收敛轮次外的所有轮次；复杂交付物；代码审查（阶段 4–5）；前一轮产生 ≥ 3 个误报 | 每轮 2 次 LLM 调用，但总轮数更少 |
+| **单轮** | 已收敛轮次（连续零发现计数器 ≥ 1）、简单交付物、低风险 | 每轮 1 次 LLM 调用 |
 
 ### 验证结果
 

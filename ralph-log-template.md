@@ -58,7 +58,7 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
 - GPAV submitted: yes (round N → {C:0, H:0, M:1, L:1, I:0})
 - Contested issues forwarded to next round: (none)
 
-... (continue until stop or 5 rounds minimum) ...
+... (continue until consecutive-zero counter reaches 2) ...
 
 ### Final Gate
 - Final round C/H/M count (after contested resolution): 0
