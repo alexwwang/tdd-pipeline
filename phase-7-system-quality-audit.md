@@ -303,3 +303,76 @@ grep -rn 'return\|raise\|break' src/ --include='*.py' --include='*.ts' | grep -B
 ```
 
 **Why this matters:** A median sanity check that nullifies all fields and returns early prevents a per-stock check from distinguishing "this one stock has garbage data" from "all stocks are fine." The result: all stocks lose data, not just the bad one.
+
+---
+
+## Part 4: Verification Audit
+
+Phase 7 output must pass an independent verification pass before acceptance. This is NOT a Ralph loop — it is a single-pass precision check on the Phase 7 findings themselves.
+
+### When to Run
+
+After the main agent completes Parts 1–3 and produces a findings report.
+
+### Who Runs It
+
+An independent subagent (oracle or dedicated verifier) that was NOT involved in producing the Phase 7 findings.
+
+### What to Verify
+
+The verifier receives the Phase 7 findings report and the source code. For each item, verify:
+
+#### Finding Validity (per finding)
+
+| Check | Question | Evidence Required |
+|-------|----------|-------------------|
+| **Real** | Is the reported issue actually present in the code? | Verifier reads the cited code location and confirms the grep hit is not a false positive |
+| **Not duplicate** | Is this finding distinct from Phase 6 results and other Phase 7 findings? | Cross-reference with Phase 6 report + other Phase 7 findings |
+| **Severity accurate** | Is the assigned severity appropriate? | Justify why C/H/M/L rather than adjacent level |
+| **Actionable** | Does the finding suggest a concrete fix or next step? | Vague observations like "consider reviewing X" fail this check |
+
+#### Coverage Completeness (whole-report level)
+
+| Check | Question |
+|-------|----------|
+| **All 16 patterns scanned** | Does the report show evidence (grep output or "no matches found") for every pattern in Part 2? |
+| **All pairs analyzed** | Does Part 1 list every component pair, and does every pair have dimension-check results? |
+| **Execution order checked** | Does Part 3 address every validation chain in the codebase? |
+| **Evidence present** | Each finding cites specific file:line or grep output — not just descriptions |
+
+### Verifier Output Format
+
+```
+## Phase 7 Verification Report
+
+### Finding Verification
+| Finding | Verdict | Rationale |
+|---------|---------|-----------|
+| P1-01 | CONFIRM | Hardcoded path at src/config.ts:42 — verified present |
+| P3-01 | DOWNGRADE | Startup timing is tested in test/init.test.ts — severity L, not M |
+| P6-02 | REJECT | Grep hit is in a comment, not executable code — false positive |
+| ... | ... | ... |
+
+### Coverage Verification
+| Check | Result |
+|-------|--------|
+| All 16 patterns | ✅ 16/16 (P8: no matches found — explicitly stated) |
+| All pairs | ⚠️ 5/6 pairs analyzed — missing adapter→cache pair |
+| Execution order | ✅ Complete |
+
+### Summary
+- Total findings: {N}
+- Confirmed: {C}
+- Downgraded: {D} (list original → new severity)
+- Rejected (false positives): {R}
+- Coverage gaps: {G}
+```
+
+### Gate Condition
+
+Phase 7 passes when:
+- All coverage checks show complete (or gaps are explicitly acknowledged and justified)
+- Zero findings remain at C/H that are unaddressed
+- False positive rate is documented
+
+**⛔ Findings rejected by the verifier are removed from the report. They do NOT need to be fixed. Downgraded findings retain their new severity.**
