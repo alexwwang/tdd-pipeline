@@ -17,7 +17,7 @@ NEVER include any of the following in a reviewer's prompt — they bias the revi
 |---|---|---|
 | Stop condition rules or cumulative tallies: "consecutive zero = 1, one more and we stop" | Creates confirmation bias and anchoring — reviewer looks for reasons to confirm stop | Provide ONLY the deliverable and prior phase outputs |
 | Prior round findings or fix lists: "R1 found X and Y, fixed as Z" | Destroys independent judgment — reviewer evaluates against known fixes, not the deliverable itself | Present the current deliverable as-is |
-| Hints about progress or remaining rounds: "This is round 4 of max 10" | Signals that stopping is near, discourages thorough review | Do not mention round counts or loop state |
+| Hints about progress or remaining rounds: "this has been going on for a while" | Signals that stopping is near, discourages thorough review | Do not mention round counts or loop state |
 | Narrow scope limiting: "Please verify the fix for [M-1] is correct" | Reduces full review to fix-checking — other issues may be missed | Request FULL review of the complete deliverable |
 | Using generic subagent instead of dedicated reviewer | Lacks specialization; may share context with fix agent | Use independent, specialized reviewer subagent |
 
@@ -127,7 +127,7 @@ When the **Watchdog** observer is active, load `ralph-gpav.md` for the full subm
 ```
 gate_proceed = ALL:
   ralph_termination = stop  # 2 consecutive rounds with zero new C/H/M/L findings
-  # NOT max_rounds — that requires user escalation
+  # escalation/rollback = model-determined, not a pass path
 ```
 
 ## Subsequent Round Loading

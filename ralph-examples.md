@@ -32,12 +32,20 @@ Round 3: 0 new findings → counter = 1 → continue
 Round 4: 0 new findings → counter = 2 → ✅ STOP (rounds 3 & 4 both 0 new findings, consecutive)
 ```
 
-**Example D — Escalation at max rounds:**
+**Example D — Persistent issues escalation (model-driven, no round cap):**
 ```
-Round 1-7: persistent M issues, fixed and re-found → continue
-Round 8: H=1 → Fix → continue
-Round 9: M=1 → Fix → continue
-Round 10: M=1 → ⛔ MAX ROUNDS → HALT → Escalate to user with issue summary
+Round 1-4: different M issues found and fixed each round → continue (genuine progress)
+Round 5-7: same M finding keeps recurring despite 3 fix attempts
+  → Assessment: the issue stems from an unclear requirement in Phase 1
+  → ⛔ ESCALATE to user: "FR3 scope is ambiguous — does v2.0 need fine filtering or not?
+     3 rounds of fixes keep regressing. Please clarify the requirement."
+```
+```
+Alternative outcome:
+Round 5-7: same H finding about API contract mismatch keeps recurring
+  → Root cause: Phase 2 design specified interface A, but implementation needs interface B
+  → ⛔ ROLLBACK to Phase 2: "API contract mismatch between Screener and DataProvider
+     is a design-level issue, not an implementation bug. Recommend revisiting Phase 2 §Component Interfaces."
 ```
 
 ## Contested Issue Examples

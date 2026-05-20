@@ -34,7 +34,9 @@ C/H/M means **must fix**. REJECT is an **exception**, valid only when:
 The Ralph loop has **two exit paths**:
 
 1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M/L issues (only I or nothing new). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
-2. **Max Rounds Escalation**: If new C/H/M findings persist after 10 rounds, halt and escalate to the user with a summary.
+2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, this signals a prior-phase problem. Evaluate and choose:
+   - **Escalate to user**: The issue requires clarification of requirements, constraints, or design intent that only the user can provide. Present a structured summary: what keeps recurring, what fixes were attempted, what information is missing.
+   - **Rollback to prior phase**: The root cause is in a prior phase (requirements gap, design flaw, test gap). Follow the rollback protocol in `ralph-review-loop.md` §Cross-Phase Escalation.
 
 **Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M/L findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M/L > 0.
 
@@ -81,7 +83,11 @@ Evaluate after each round N, in this order (before starting round N+1):
      → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
      → Go to round N+1
-10. If round N+1 would exceed 10 → ⛔ MAX ROUNDS → Escalate to user
+10. Before starting round N+1, assess: are the same C/H/M findings recurring despite fixes?
+    → If yes, this indicates a prior-phase root cause:
+      → If the issue requires user clarification (ambiguous requirements, conflicting constraints) → ⛔ ESCALATE to user with structured summary
+      → If the root cause is in a prior phase (missing requirement, design flaw, test gap) → ⛔ ROLLBACK to that phase per `ralph-review-loop.md` §Cross-Phase Escalation
+    → If findings are genuinely new each round (different issues, not recurrence) → Go to round N+1
 ```
 
 ### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
@@ -106,4 +112,4 @@ Review checklists are loaded per-phase from dedicated files:
 | **1–3** (Design) | `review-design.md` | Design review checklist + Recall prompt |
 | **4–5** (Code) | `review-code.md` | Code review checklist + Recall prompt |
 
-See `ralph-examples.md` for worked examples covering: intermittent zeros (A), single zero (B), correct stop (C), max rounds escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).
+See `ralph-examples.md` for worked examples covering: intermittent zeros (A), single zero (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).

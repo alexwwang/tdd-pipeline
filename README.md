@@ -35,9 +35,8 @@ Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **va
 
 Phases 1–5 each end with a mandatory review loop:
 
-- **Up to 10 rounds** total
-- **Stop condition**: 2 consecutive rounds with zero **new** C/H/M/L findings. Issues already listed in the Known Issues document do not count as new. Can trigger at any round ≥ 2
-- **Escalation**: if new C/H/M findings persist after 10 rounds → halt and escalate to user (NOT a pass path)
+- **Stop condition**: 2 consecutive rounds with zero **new** C/H/M/L findings. Issues already listed in the Known Issues document do not count as new. Can trigger at any round ≥ 2. No round cap.
+- **Persistent issues escalation**: if the same C/H/M findings recur despite fixes → model evaluates root cause → escalate to user for clarification OR rollback to prior phase
 - **Known Issues management**: deferred findings are recorded in a KI document; each subsequent round independently re-evaluates all KIs (valid, fixed, severity change, false positive)
 - **Independent reviewer** subagent for each round
 
@@ -251,10 +250,8 @@ MIT
 
 阶段 1–5 每个结束后启动强制审核循环：
 
-- **最多 10 轮**
-- **唯一停止条件**：连续两轮零新发现（C/H/M/L 均无新增）。已知问题文档中已列示的问题不算新发现。可在任意 ≥ 2 轮时触发
-- **关卡条件**：连续两轮零新发现方可进入下一阶段
-- **升级**：10 轮后仍有新 C/H/M 发现则中止并升级给用户（不是通过路径）
+- **唯一停止条件**：连续两轮零新发现（C/H/M/L 均无新增）。已知问题文档中已列示的问题不算新发现。可在任意 ≥ 2 轮时触发。无轮次上限。
+- **持续问题升级**：同类 C/H/M 问题反复出现且修复无效时 → 模型评估根因 → 向用户确认关键信息或回退到上一阶段排查
 - **已知问题管理**：未当场修复的问题写入 Known Issues 文档；下一轮审核时对所有 KI 做独立评估（真实性、失效、升降级）
 - 每轮由**独立审核 subagent** 执行
 

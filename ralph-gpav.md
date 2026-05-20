@@ -48,7 +48,8 @@ watchdog.observe('ralph_round_finding', {
 The Watchdog records authoritative counts per round in `roundRecords`. These counts are the **ground truth** for stop decisions — not the orchestrator's local tally. The Watchdog's `ralph_terminate` validates:
 
 - **stop**: `roundRecords` shows ≥ 2 consecutive rounds with zero new C/H/M/L findings (findings already in the Known Issues document are excluded)
-- **max_rounds**: ≥ `MAX_RALPH_ROUNDS` completed rounds
+- **escalation**: model-determined — same C/H/M findings recurring despite fixes (no round cap)
+- **rollback**: root cause traced to prior phase per cross-phase escalation protocol
 
 ## RPS (Review Prompt Scanner)
 
@@ -56,7 +57,7 @@ The Watchdog also includes a **Review Prompt Scanner** that detects prohibited c
 
 - **DO NOT** include review round counts, cumulative tallies, or stop-condition state in the reviewer's prompt
 - **DO NOT** include prior-round fix lists or findings summaries
-- **DO NOT** mention "this is round N of max 10" or "consecutive zeros = 1"
+- **DO NOT** mention "this is round N" or "consecutive zeros = 1"
 
 The RPS scans both `args.prompt` and `args.description` fields of `Task` tool calls during ralph_loop phase. Detection produces a WARN audit entry but does NOT block the review — it is an informational safeguard.
 
