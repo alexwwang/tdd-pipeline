@@ -33,10 +33,10 @@ C/H/M means **must fix**. REJECT is an **exception**, valid only when:
 
 The Ralph loop has **two exit paths**:
 
-1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M/L issues (only I or nothing new). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
+1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M issues (L findings do not reset the counter, but must still be ADOPTed/REJECTed by the main agent). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
 2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
 
-**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M/L findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M/L > 0.
+**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M > 0. L findings do not reset the counter, but the main agent must still make an explicit ADOPT/REJECT decision for each.
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
@@ -50,7 +50,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 | Declaring stop immediately after fixing issues | Fix round ≠ zero round. Next round reviews the fix — only if THAT round is also zero does the counter increment. | Fix → review fixed deliverable → evaluate counter on the review round. |
 | Counting re-discovered KI entries as "new findings" | Issues already in the Known Issues document have been triaged — they are known, not new. | Only findings NOT already in the KI document count as new. |
 | Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both with 0 new findings. |
-| Counting new L findings as "effectively zero" | New L findings are still new findings. Zero new means zero new C/H/M/L. | Only I (info), re-discovered KIs, or truly empty = zero-new round. |
+| Counting new L findings as blocking the counter | L findings are still reviewed and triaged, but do not reset the consecutive-zero counter. Only new C/H/M reset the counter. | Zero new C/H/M (with any number of L, after main agent ADOPT/REJECT/MODIFY) → counter increments. I, re-discovered KIs, or empty → counter increments. |
 | Re-labeling H/M issues as "accepted design deviations" to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
 | Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
 
@@ -70,9 +70,9 @@ Evaluate after each round N, in this order (before starting round N+1):
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
 6. Classify findings: **new** (not in KI document) vs **known** (already in KI). Known findings excluded from counter. Contested C/H/M re-raises are always new.
-7. Count new C/H/M/L findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
-8. If only new L found (no new C/H/M):
-   → L fix is optional → Reset consecutive-zero counter to 0 → Go to round N+1
+7. Count new C/H/M findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
+8. If zero new C/H/M but new L found:
+   → L fix is optional; main agent ADOPT/REJECT/MODIFY → Increment consecutive-zero counter by 1 → Go to round N+1
 9. If zero new findings (only I, known re-findings, or nothing):
    → Increment consecutive-zero counter by 1
    → Counter = 2:
