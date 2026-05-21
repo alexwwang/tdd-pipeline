@@ -34,9 +34,7 @@ C/H/M means **must fix**. REJECT is an **exception**, valid only when:
 The Ralph loop has **two exit paths**:
 
 1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M/L issues (only I or nothing new). Can trigger at any round N ≥ 2. Previously deferred Known Issues do not count as new findings.
-2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, this signals a prior-phase problem. Evaluate and choose:
-   - **Escalate to user**: The issue requires clarification of requirements, constraints, or design intent that only the user can provide. Present a structured summary: what keeps recurring, what fixes were attempted, what information is missing.
-   - **Rollback to prior phase**: The root cause is in a prior phase (requirements gap, design flaw, test gap). Follow the rollback protocol in `ralph-review-loop.md` §Cross-Phase Escalation.
+2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
 
 **Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M/L findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M/L > 0.
 
@@ -84,10 +82,8 @@ Evaluate after each round N, in this order (before starting round N+1):
    → Counter = 1:
      → Go to round N+1
 10. Before starting round N+1, assess: are the same C/H/M findings recurring despite fixes?
-    → If yes, this indicates a prior-phase root cause:
-      → If the issue requires user clarification (ambiguous requirements, conflicting constraints) → ⛔ ESCALATE to user with structured summary
-      → If the root cause is in a prior phase (missing requirement, design flaw, test gap) → ⛔ ROLLBACK to that phase per `ralph-review-loop.md` §Cross-Phase Escalation
-    → If findings are genuinely new each round (different issues, not recurrence) → Go to round N+1
+    → If yes: evaluate root cause → ⛔ ESCALATE to user or ROLLBACK to prior phase
+    → If findings are genuinely new each round → Go to round N+1
 ```
 
 ### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
