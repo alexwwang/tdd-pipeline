@@ -62,7 +62,7 @@ for finding in precision_results:
 
 ## Cost-Benefit Reference
 
-Based on empirical testing (PoC on quant-dog Phase 7 code review):
+Based on empirical testing (PoC on a Phase 7 code review):
 
 | Metric | Single-pass | Dual-pass | Change |
 |--------|-------------|-----------|--------|

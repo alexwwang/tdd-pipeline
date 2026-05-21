@@ -149,7 +149,7 @@ Between passes, the main agent **gathers verifiable facts** from the codebase (g
 
 ### Verified results
 
-The dual-pass mode was validated against a real code review (quant-dog Phase 7, 16-file diff, KI-3/KI-19 baseline/graham removal):
+The dual-pass mode was validated against a real Phase 7 code review (16-file diff, multi-component refactoring):
 
 | Metric | Single-pass | Dual-pass | Change |
 |--------|-------------|-----------|--------|
@@ -360,7 +360,7 @@ Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在�
 
 ### 验证结果
 
-双轮模式经真实代码审查验证（quant-dog 阶段 7，16 文件 diff，KI-3/KI-19 baseline/graham 移除）：
+双轮模式经真实阶段 7 代码审查验证（16 文件 diff，多组件重构）：
 
 | 指标 | 单轮 | 双轮 | 变化 |
 |------|------|------|------|
