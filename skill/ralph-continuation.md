@@ -35,7 +35,9 @@ KI management is a **lifecycle concern** spanning the entire Ralph loop — not 
 
 ### Recording
 
-Every finding NOT adopted this round (unadopted M₂, L/I, REJECTed M₂/L/I) MUST be recorded in the project's Known Issues document (e.g., `KnownIssues.md`). Each entry: raised-in round, severity (with M₂/L tier), file location, description, why deferred, plan.
+Before writing a new KI entry, **deduplicate** against existing KI entries: if a substantially similar finding already exists in the KI document, do NOT create a duplicate entry. Instead, update the existing entry's `re-raised-in` field with the current round number. Substantially similar = same location, same issue description (wording may differ but the underlying problem is the same).
+
+Every finding NOT adopted this round (unadopted M₂, L/I, REJECTed M₂/L/I) MUST be recorded or deduplicated in the project's Known Issues document (e.g., `KnownIssues.md`). Each new entry: raised-in round, severity (with M₂/L tier), file location, description, why deferred, plan. Each deduplicated entry: append re-raised-in round number.
 
 ### Periodic Re-evaluation
 
@@ -94,7 +96,7 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECT of C/H/M₁ → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M₁ remain in tally until reviewer explicitly drops them
  3. Apply all ADOPTed and MODIFYed C/H/M₁ fixes
- 3b. Record unadopted findings to KI document (see §Known Issues Lifecycle)
+ 3b. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle)
  4. If round ≡ 0 (mod 3): perform KI re-evaluation (see §Known Issues Lifecycle)
 5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
