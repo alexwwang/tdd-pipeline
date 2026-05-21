@@ -168,7 +168,7 @@ gate_pass = ALL:
   quality:      operability + observability + data + performance + maintainability ✓
   nfr:          non-functional constraints documented
   decisions:    alternatives + trade-offs recorded
-  ralph:        zero C/H/M issues
+  ralph:        zero C/H/M₁ issues
 ```
 
 ## User Approval

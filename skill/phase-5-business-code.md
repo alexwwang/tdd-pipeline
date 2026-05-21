@@ -60,7 +60,7 @@ gate_pass = ALL:
   refactor:       complete + tests green
   lean:           minimum implementation (no over-engineering)
   deviations:     documented + justified
-  ralph:          zero C/H/M issues
+  ralph:          zero C/H/M₁ issues
 ```
 
 ## User Approval

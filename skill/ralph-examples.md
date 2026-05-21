@@ -33,7 +33,7 @@ Round 4: 0 new findings → counter = 2 → ✅ STOP (rounds 3 & 4 both 0 new fi
 ```
 
 **Example D — Persistent issues escalation (model-driven, no round cap):**
-When the same C/H/M finding recurs across ≥ 3 rounds despite fix attempts, the model must assess whether this is a prior-phase root cause (unclear requirement, design flaw, test gap) rather than an implementation issue. If so, either escalate to the user for clarification or rollback to the prior phase.
+When the same C/H/M₁ finding recurs across ≥ 3 rounds despite fix attempts, the model must assess whether this is a prior-phase root cause (unclear requirement, design flaw, test gap) rather than an implementation issue. If so, either escalate to the user for clarification or rollback to the prior phase.
 
 ## Contested Issue Examples
 
@@ -47,7 +47,7 @@ Round 3: reviewer finds [M-3] Missing timeout handling in API client
 Round 4: reviewer receives contested [M-3] in context
   → reviewer checks Phase 2 Gateway component → confirms timeout IS handled there
   → reviewer ACCEPTS rejection → [M-3] dropped from tally
-  → No new C/H/M issues → tally = 0
+  → No new C/H/M₁ issues → tally = 0
   → Consecutive-zero counter = 1 → continue
 ```
 > **Key lesson**: The reviewer is not obligated to fight every rejection. When the main agent

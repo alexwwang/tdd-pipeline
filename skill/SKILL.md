@@ -81,7 +81,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 - **Ralph loop support files** (loaded on demand):
   - GPAV protocol (Watchdog active) → `ralph-gpav.md`
   - Continuation protocol (Rounds 2+) → `ralph-continuation.md`
-  - Contested issue protocol → `ralph-contested.md` (loaded when C/H/M is REJECTed)
+  - Contested issue protocol → `ralph-contested.md` (loaded when C/H/M₁ is REJECTed)
   - Worked examples (contested issues, stop scenarios) → `ralph-examples.md`
   - Review log template → `ralph-log-template.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
