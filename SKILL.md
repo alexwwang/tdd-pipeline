@@ -69,6 +69,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 - Phase 2 → `phase-2-technical-solution.md` (Technical Design Document)
 - Phase 3 → `phase-3-test-plan.md` (Test Plan Document)
 - Phase 4 → `phase-4-test-code.md` (Test Files)
+  - **After test code, before Ralph review** → `phase-4-test-infrastructure-checklist.md` (structural test infrastructure audit: 9-item checklist + verification gate)
 - Phase 5 → `phase-5-business-code.md` (Business Code)
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
