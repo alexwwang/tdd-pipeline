@@ -192,6 +192,22 @@ mkdir -p ~/.claude/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.claude/skills/tdd-pipeline/
 ```
 
+### Double-Blind Experiment Skill
+
+The `experiment/` directory contains a separate skill for rigorous A/B comparison of prompt/skill variants. Install independently:
+
+```bash
+cp experiment/*.md ~/.claude/skills/double-blind-experiment/
+
+# Verify
+ls ~/.claude/skills/double-blind-experiment/
+```
+
+Usage: `double-blind experiment` or `compare variants A/B`. The skill auto-selects a tier based on stakes:
+- **Tier 1 (Quick Screen)**: internal sanity check, ≥3 scenarios, 1 scorer
+- **Tier 2 (Standard)**: adoption decision, ≥4 scenarios, full checklist
+- **Tier 3 (Decision Grade)**: external claim, ≥5 scenarios, ≥2 scorers, pre-registration
+
 No build step or dependency installation required — skills are loaded on demand by the Claude Code skill system.
 
 ## File Structure
@@ -406,6 +422,22 @@ git clone <仓库地址> ~/tdd-pipeline
 mkdir -p ~/.claude/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.claude/skills/tdd-pipeline/
 ```
+
+### 双盲实验技能
+
+`experiment/` 目录包含独立技能，用于严格对比 prompt/skill 变体。需独立安装：
+
+```bash
+cp experiment/*.md ~/.claude/skills/double-blind-experiment/
+
+# 验证
+ls ~/.claude/skills/double-blind-experiment/
+```
+
+使用：`double-blind experiment` 或 `compare variants A/B`。技能根据利害程度自动选择层级：
+- **Tier 1（快速筛选）**：内部验证，≥3 场景，1 评分者
+- **Tier 2（标准）**：采纳决策，≥4 场景，完整检查清单
+- **Tier 3（决策级）**：外部声明，≥5 场景，≥2 评分者，预注册
 
 无需构建步骤或依赖安装 —— skills 由 Claude Code skill 系统按需加载。
 
