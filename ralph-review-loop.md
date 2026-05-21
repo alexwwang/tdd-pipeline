@@ -85,6 +85,8 @@ The default review mode is a **two-pass Recall/Precision pipeline**. A lighter s
 
 ### Review Process (Dual-Pass Mode)
 
+⚠️ **The three steps below MUST execute in strict sequence: Recall → fact-gather → Precision. No step may be skipped, merged, or reordered.** Precision requires raw_findings from Recall; Recall must not be contaminated by Precision concerns.
+
 Replace Step 1 in the standard Review Process with:
 
 ```
