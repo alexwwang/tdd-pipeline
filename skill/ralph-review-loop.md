@@ -27,19 +27,44 @@ NEVER include any of the following in a reviewer's prompt — they bias the revi
 
 | ⛔ WRONG | Why |
 |----------|-----|
-| Fewer levels (C/M/m instead of C/H/M₁/M₂/L/I) | Loses distinction between defects and improvements, breaks stop condition counting |
+| Fewer levels or flat list without tier structure | Loses distinction between defects and improvements, breaks stop condition counting |
 | Re-label H as "accepted deviation" or "intentional simplification" | Bypasses the contested issue protocol — severity manipulation |
 | Label a refactoring suggestion as M₁ to ensure it gets fixed | Gaming the classification — M₁ is for behavioral defects only |
 | Label a real defect as M₂ to avoid resetting the counter | Gaming the classification — conceals a defect as improvement |
-Every issue MUST use exactly these 6 levels:
-| Severity | Name | Definition | Counted in Stop Condition |
-|----------|------|------------|---------------------------|
-| **C** | Critical | Fundamental flaw; deliverable is wrong, dangerous, or useless | ✅ Yes |
-| **H** | High | Significant gap or serious risk | ✅ Yes |
-| **M₁** | Major-Defect | Behavioral defect: code does something different from what its interface/documentation promises. Classification heuristic: "If I fix this, will the code do something differently at runtime?" → Yes → M₁ | ✅ Yes |
-| **M₂** | Major-Improvement | Organizational improvement: code works correctly but could be structured better. Classification heuristic: "If I fix this, will the code just be organized differently?" → Yes → M₂ | ❌ No |
-| **L** | Low | Minor improvement, style issue | ❌ No |
-| **I** | Info | Observation, question, or suggestion with no defect | ❌ No |
+Every issue MUST use exactly these 3 tiers with 6 severity levels:
+
+### Defect Tier (缺陷层) — finite, exhaustible, counted in stop condition
+
+Behavioral problems: the deliverable does something wrong or different from what it promises.
+
+| Severity | Name | Definition |
+|----------|------|------------|
+| **C** | Critical | Fundamental flaw; deliverable is wrong, dangerous, or useless |
+| **H** | High | Significant gap or serious risk |
+| **M₁** | Major-Defect | Behavioral defect: code does something different from what its interface/documentation promises |
+
+Classification heuristic: **"If I fix this, will the code do something differently at runtime?"** → Yes → Defect Tier.
+
+### Quality Tier (质量层) — infinite (always improvable), NOT counted in stop condition
+
+Organizational improvements: code works correctly but could be structured better.
+
+| Severity | Name | Definition |
+|----------|------|------------|
+| **M₂** | Major-Improvement | Architectural-level restructuring: extract constant, reduce coupling, consolidate logic across files |
+| **L** | Low | Local improvement: rename for clarity, add comment, minor style normalization |
+
+M₂ vs L distinction is **scope only** (cross-file/architectural vs single-location), not nature — both are "code works but could be better."
+
+### Observation Tier (观察层) — informational, no action required
+
+| Severity | Name | Definition |
+|----------|------|------------|
+| **I** | Info | Observation, question, or suggestion with no defect |
+
+### Cross-tier mapping (legacy compatibility)
+
+See `severity-migration.md` for the full mapping between pre-v0.13 flat 5-level (C/H/M/L/I) and current 3-tier 6-level system.
 
 ## Review Process (Per Round)
 

@@ -1,6 +1,6 @@
 ---
 name: tdd-pipeline
-version: 0.12.0
+version: 0.13.0
 description: >
   A rigorous TDD development workflow enforcing Red-Green-Refactor at the
   pipeline level: Product Design → Technical Solution → Test Plan → Test
@@ -84,6 +84,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
   - Contested issue protocol → `ralph-contested.md` (loaded when C/H/M₁ is REJECTed)
   - Worked examples (contested issues, stop scenarios) → `ralph-examples.md`
   - Review log template → `ralph-log-template.md`
+  - Severity migration guide (pre-v0.13 → v0.13) → `severity-migration.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
 
 ## Anti-Patterns
