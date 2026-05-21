@@ -221,6 +221,10 @@ tdd-pipeline/
 │   ├── phase-6-root-cause-investigation.md  ← loaded only on sub-phase failure
 │   └── phase-7-system-quality-audit.md   ← loaded after Phase 6 completes
 ├── experiment/                           ← separate skill (double-blind experiment)
+│   ├── SKILL.md                          ← entry point (progressive disclosure)
+│   ├── tier-1.md                         ← Tier 1: quick screen
+│   ├── tier-2.md                         ← Tier 2: standard (3-scenario + magnitude filter)
+│   └── tier-3.md                         ← Tier 3: full (multi-scenario + regression)
 ├── README.md
 └── LICENSE
 ```
@@ -432,6 +436,10 @@ tdd-pipeline/
 │   ├── phase-6-root-cause-investigation.md  ← 仅在子阶段失败时加载
 │   └── phase-7-system-quality-audit.md   ← 阶段 6 完成后加载
 ├── experiment/                           ← 独立 skill（双盲实验）
+│   ├── SKILL.md                          ← 入口文件（渐进式披露）
+│   ├── tier-1.md                         ← Tier 1：快速筛选
+│   ├── tier-2.md                         ← Tier 2：标准（3 场景+幅度筛选）
+│   └── tier-3.md                         ← Tier 3：完整（多场景+回归分析）
 ├── README.md
 └── LICENSE
 ```
