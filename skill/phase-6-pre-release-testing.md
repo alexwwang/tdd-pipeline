@@ -4,7 +4,7 @@ description: >
   Pre-release testing and bug root cause analysis for the TDD pipeline's
   validation closure (Phase 6). Covers: sub-phase testing (Phase 0–3,
   with conditional Phase 1.5 Soak Test and Phase 1.6 Contract Verification),
-  追问 protocol with termination guarantees, rollback paths, and user
+  追问 (root cause investigation) protocol with termination guarantees, rollback paths, and user
   go/no-go decision. On sub-phase failure, additionally load
   phase-6-root-cause-investigation.md.
 ---
@@ -191,7 +191,7 @@ Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 o
 3. **Any failure** → load `phase-6-root-cause-investigation.md`, run 追问 protocol → determine rollback target.
 4. **All pass** → fill Release Gate Checklist with evidence → submit to user.
 
-### 追问 Protocol Summary
+### 追问 (Root Cause Investigation) Protocol Summary
 
 ```
 Sub-phase fails

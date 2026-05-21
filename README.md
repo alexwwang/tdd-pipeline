@@ -8,7 +8,7 @@
 
 ## Overview
 
-A rigorous 7-phase TDD development workflow for AI-assisted coding. Phases 1–5 enforce **Red-Green-Refactor** at the pipeline level with mandatory Ralph-loop review. Phase 6 is the pipeline's **validation closure** — systematic pre-release testing with bug root cause analysis (追问), rollback paths, and user go/no-go decision. Phase 7 is an **incremental system audit** — a second-pass quality review with 16-pattern catalog, integration pair discovery, and execution-order analysis.
+A rigorous 7-phase TDD development workflow for AI-assisted coding. Phases 1–5 enforce **Red-Green-Refactor** at the pipeline level with mandatory Ralph-loop review. Phase 6 is the pipeline's **validation closure** — systematic pre-release testing with bug root cause investigation (追问), rollback paths, and user go/no-go decision. Phase 7 is an **incremental system audit** — a second-pass quality review with 16-pattern catalog, integration pair discovery, and execution-order analysis.
 
 ```
 Product Design → Technical Solution → Test Plan → Test Code → Business Code → Pre-Release Testing → System Quality Audit
@@ -28,7 +28,7 @@ Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **va
 | 3. Test Plan | Test Plan Document (with coverage matrices + consistency checks) | Ralph design review |
 | 4. Test Code | Test Files (all failing) | Ralph code review |
 | 5. Business Code | Working Business Code | Ralph code review |
-| 6. Pre-Release Testing | Release Gate Checklist (with evidence) | Testing flow + 追问 + user go/no-go |
+| 6. Pre-Release Testing | Release Gate Checklist (with evidence) | Testing flow + 追问 (root cause investigation) + user go/no-go |
 | 7. System Quality Audit | Incremental audit report (issues Phase 6 missed) | 16-pattern catalog + pair discovery + execution-order analysis |
 
 ## Ralph Loop Review (Phases 1–5)
@@ -40,7 +40,7 @@ Phases 1–5 each end with a mandatory review loop:
 - **Known Issues management**: deferred findings are recorded in a KI document; re-evaluated every 3 rounds and at loop end (valid, fixed, severity change, false positive)
 - **Independent reviewer** subagent for each round
 
-Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates, 追问 protocol, and user go/no-go. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details.
+Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates, 追问 (root cause investigation) protocol, and user go/no-go. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details.
 
 ## Priority Classification System
 
@@ -96,7 +96,7 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 | `phase-3-test-plan.md` | Test strategy with coverage matrices and priority consistency validation |
 | `phase-4-test-code.md` | Write all tests first (must compile, must fail at runtime) |
 | `phase-5-business-code.md` | Implement minimum code to pass tests, then refactor |
-| `phase-6-pre-release-testing.md` | Pre-release testing, 追问 protocol, rollback paths, release gate verification (pipeline validation closure) |
+| `phase-6-pre-release-testing.md` | Pre-release testing, 追问 (root cause investigation) protocol, rollback paths, release gate verification |
 | `phase-6-root-cause-investigation.md` | Bug root cause investigation (Layer Isolation, 5-Why, Fix Verification) + common bug patterns. Loaded only when a Phase 6 sub-phase fails. |
 | `phase-7-system-quality-audit.md` | Incremental system audit: 16-pattern catalog, integration pair discovery, execution-order analysis. Loaded after Phase 6 completes. |
 
@@ -120,7 +120,7 @@ Use natural language triggers in your AI coding tool:
 
 - **TDD is non-negotiable**: no business code until tests exist and fail
 - **Phases 1–5: Ralph loop gate** — zero defect-layer (C/H/M₁) issues to pass
-- **Phase 6: validation closure** — sub-phase gates + 追问 protocol + user go/no-go (not Ralph loop)
+- **Phase 6: validation closure** — sub-phase gates + 追问 (root cause investigation) + user go/no-go (not Ralph loop)
 - **Phase 7: system audit** — incremental second pass after Phase 6, 16-pattern catalog + pair discovery + execution-order analysis
 - **Tests define the contract** — business code is just the implementation
 - **Priority drives depth**: core/key items get comprehensive testing; secondary/peripheral get basic coverage
@@ -160,7 +160,7 @@ The dual-pass mode was validated against a real Phase 7 code review (16-file dif
 | LLM calls per round | 1 | 2 | +100% |
 | Expected Ralph loop rounds | 5–7 | 3–5 | −30–40% |
 
-The dual-pass also discovered an additional real bug that single-pass missed: residual `baseline_score`/`graham_score` column references in `screening_repo.py` and `schema.py` after the migration to 3-dimension scoring.
+The dual-pass also discovered an additional real bug that single-pass missed: residual column references from a prior schema migration.
 
 **Key takeaway**: The value is not cost reduction but quality improvement — preventing H-level false positives from triggering wasted fix rounds. One wasted round costs the same as an entire dual-pass round.
 
@@ -371,7 +371,7 @@ Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在�
 | 每轮 LLM 调用 | 1 | 2 | +100% |
 | 预期 Ralph 循环轮数 | 5–7 | 3–5 | −30–40% |
 
-双轮还发现了单轮遗漏的一个真实 bug：迁移到三维评分后，`screening_repo.py` 和 `schema.py` 中残留的 `baseline_score`/`graham_score` 列引用。
+双轮还发现了单轮遗漏的一个真实 bug：schema 迁移后残留的列引用。
 
 **核心结论**：价值不在降低成本，而在提升质量——防止 H 级误报触发浪费的修复轮次。一轮浪费的成本等于一整个双轮的开销。
 

@@ -99,7 +99,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 | One giant test file | Poor organization, hard to maintain | 1 file per component/module |
 | Only happy-path tests | Misses real-world failures | MUST test errors + boundaries |
 | Phase 6 partial re-run | Fixes may introduce regressions | Always full re-run from Phase 6 Phase 0 |
-| Skip 追问 when Phase 6 fails | Fixes symptom, not root cause | Run Layer Isolation + 5-Why + T1-T3 |
+| Skip 追问 (root cause investigation) when Phase 6 fails | Fixes symptom, not root cause | Run Layer Isolation + 5-Why + T1-T3 |
 
 ## Split Decision
 
@@ -141,6 +141,6 @@ When Phase 6 discovers issues, the 追问 (root cause investigation) determines 
 | Requirement misunderstanding | Phase 1 | Rerun full pipeline |
 | Config/environment only | Fix config | Rerun Phase 6 only (full rerun) |
 
-See `phase-6-pre-release-testing.md` for the complete 追问 protocol with termination criteria and rollback procedures.
+See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investigation) protocol with termination criteria and rollback procedures.
 
 

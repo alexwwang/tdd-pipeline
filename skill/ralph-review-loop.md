@@ -1,6 +1,6 @@
 # Ralph Loop Review Protocol
 
-This protocol governs **all reviews in Phases 1–5** of the TDD Pipeline. Phase 6 (Pre-Release Testing) uses a different quality mechanism — see `phase-6-pre-release-testing.md` Part 5 for the 追问 protocol, rollback paths, and user go/no-go decision.
+This protocol governs **all reviews in Phases 1–5** of the TDD Pipeline. Phase 6 (Pre-Release Testing) uses a different quality mechanism — see `phase-6-pre-release-testing.md` Part 5 for the 追问 (root cause investigation) protocol, rollback paths, and user go/no-go decision.
 
 ## When to Invoke
 
