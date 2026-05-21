@@ -33,20 +33,7 @@ Round 4: 0 new findings → counter = 2 → ✅ STOP (rounds 3 & 4 both 0 new fi
 ```
 
 **Example D — Persistent issues escalation (model-driven, no round cap):**
-```
-Round 1-4: different M issues found and fixed each round → continue (genuine progress)
-Round 5-7: same M finding keeps recurring despite 3 fix attempts
-  → Assessment: the issue stems from an unclear requirement in Phase 1
-  → ⛔ ESCALATE to user: "FR3 scope is ambiguous — does v2.0 need fine filtering or not?
-     3 rounds of fixes keep regressing. Please clarify the requirement."
-```
-```
-Alternative outcome:
-Round 5-7: same H finding about API contract mismatch keeps recurring
-  → Root cause: Phase 2 design specified interface A, but implementation needs interface B
-  → ⛔ ROLLBACK to Phase 2: "API contract mismatch between Screener and DataProvider
-     is a design-level issue, not an implementation bug. Recommend revisiting Phase 2 §Component Interfaces."
-```
+When the same C/H/M finding recurs across ≥ 3 rounds despite fix attempts, the model must assess whether this is a prior-phase root cause (unclear requirement, design flaw, test gap) rather than an implementation issue. If so, either escalate to the user for clarification or rollback to the prior phase.
 
 ## Contested Issue Examples
 
