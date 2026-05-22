@@ -78,7 +78,7 @@ If using dual-pass mode, inject this as the Recall subagent prompt:
 对每个发现，严格按以下 JSON 格式输出：
 {
   "id": "F-{序号}",
-  "severity": "C|H|M1|M2|L|I",
+  "severity": "C|H|M|P|L|I",
   "category": "{分类}",
   "location": "{文件:行号或描述}",
   "description": "{问题描述}",

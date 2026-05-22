@@ -71,7 +71,7 @@ gate_pass = ALL:
   ambiguity:      zero unresolved ambiguities
   edge_cases:     error scenarios + boundary conditions identified
   constraints:    assumptions + limitations explicit
-  ralph:          zero C/H/M1 issues
+  ralph:          zero C/H/M issues
 ```
 
 ## User Approval

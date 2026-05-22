@@ -9,7 +9,7 @@ Submit findings via `ralph_round_finding` **after** the Main Agent Critical Eval
 ## What to Include
 
 - **ADOPTed and MODIFYed items**: Include with their post-evaluation severity (use `original` + `downgrade_reason` when the main agent downgraded)
-- **REJECTED (contested) items**: MUST be included — contested C/H/M1 remain in the gate tally until the reviewer explicitly drops them. Omitting them would make GPAV's tally diverge from the actual gate tally
+- **REJECTED (contested) items**: MUST be included — contested C/H/M remain in the gate tally until the reviewer explicitly drops them. Omitting them would make GPAV's tally diverge from the actual gate tally
 - **L and I items**: Include as-is. For deferred (unfixed) L/I items, see `ralph-continuation.md` step 3b for documentation requirements.
 - **In dual-pass mode**: Submit the Precision-filtered confirmed findings only, not the raw Recall output. The Precision Filter's CONFIRM/DOWNGRADE verdicts are the equivalent of single-pass reviewer findings
 
@@ -21,11 +21,11 @@ watchdog.observe('ralph_round_finding', {
   round: <number>,          // current review round number
   findings: [
     {
-      severity: 'C',        // C | H | M1 | M2 | L | I
+      severity: 'C',        // C | H | M | P | L | I
       description: '...',   // concise issue description
     },
     {
-      severity: 'M1',
+      severity: 'M',
       description: '...',
       original: 'H',              // required when severity was downgraded
       downgrade_reason: '...',    // required and non-empty when severity < original
@@ -36,7 +36,7 @@ watchdog.observe('ralph_round_finding', {
 
 ## Validation Rules (enforced by Watchdog)
 
-- `findings` must be an array of objects with `severity` (C/H/M1/M2/L/I) and `description` (non-empty string, max 2000 chars)
+- `findings` must be an array of objects with `severity` (C/H/M/P/L/I) and `description` (non-empty string, max 2000 chars)
 - `findings` array size limited to 50 entries per submission
 - `phase` must match the current pipeline phase
 - `round` must be > current `ralph.round` (incrementing — no retroactive edits)
@@ -47,8 +47,8 @@ watchdog.observe('ralph_round_finding', {
 
 The Watchdog records authoritative counts per round in `roundRecords`. These counts are the **ground truth** for stop decisions — not the orchestrator's local tally. The Watchdog's `ralph_terminate` validates:
 
-- **stop**: `roundRecords` shows ≥ 2 consecutive rounds with zero new C/H/M1 findings (M2 and L do not reset the counter; findings already in the Known Issues document are excluded)
-- **escalation**: model-determined — same C/H/M1 findings recurring despite fixes (no round cap)
+- **stop**: `roundRecords` shows ≥ 2 consecutive rounds with zero new C/H/M findings (P and L do not reset the counter; findings already in the Known Issues document are excluded)
+- **escalation**: model-determined — same C/H/M findings recurring despite fixes (no round cap)
 - **rollback**: root cause traced to prior phase per cross-phase escalation protocol
 
 ## RPS (Review Prompt Scanner)

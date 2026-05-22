@@ -29,8 +29,8 @@ NEVER include any of the following in a reviewer's prompt — they bias the revi
 |----------|-----|
 | Fewer levels or flat list without tier structure | Loses distinction between defects and improvements, breaks stop condition counting |
 | Re-label H as "accepted deviation" or "intentional simplification" | Bypasses the contested issue protocol — severity manipulation |
-| Label a refactoring suggestion as M1 to ensure it gets fixed | Gaming the classification — M1 is for behavioral defects only |
-| Label a real defect as M2 to avoid resetting the counter | Gaming the classification — conceals a defect as improvement |
+| Label a refactoring suggestion as M to ensure it gets fixed | Gaming the classification — M is for behavioral defects only |
+| Label a real defect as P to avoid resetting the counter | Gaming the classification — conceals a defect as proposal |
 Every issue MUST use exactly these 3 tiers with 6 severity levels:
 
 ### Defect Tier (缺陷层) — finite, exhaustible, counted in stop condition
@@ -41,7 +41,7 @@ Behavioral problems: the deliverable does something wrong or different from what
 |----------|------|------------|
 | **C** | Critical | Fundamental flaw; deliverable is wrong, dangerous, or useless |
 | **H** | High | Significant gap or serious risk |
-| **M1** | Major-Defect | Behavioral defect: code does something different from what its interface/documentation promises |
+| **M** | Major-Defect | Behavioral defect: code does something different from what its interface/documentation promises |
 
 Classification heuristic: **"If I fix this, will the code do something differently at runtime?"** → Yes → Defect Tier.
 
@@ -51,10 +51,10 @@ Organizational improvements: code works correctly but could be structured better
 
 | Severity | Name | Definition |
 |----------|------|------------|
-| **M2** | Major-Improvement | Architectural-level restructuring: extract constant, reduce coupling, consolidate logic across files |
+| **P** | Proposal | Architectural-level restructuring: extract constant, reduce coupling, consolidate logic across files |
 | **L** | Low | Local improvement: rename for clarity, add comment, minor style normalization |
 
-M2 vs L distinction is **scope only** (cross-file/architectural vs single-location), not nature — both are "code works but could be better."
+P vs L distinction is **scope only** (cross-file/architectural vs single-location), not nature — both are "code works but could be better."
 
 ### Observation Tier (观察层) — informational, no action required
 
@@ -79,15 +79,15 @@ for round N:
     FORBIDDEN: fix prior-phase issues in current deliverable
   # Step 1: Reviewer produces three output categories
   report:
-    severity_issues: numbered with C/H/M1/M2/L/I labels
+    severity_issues: numbered with C/H/M/P/L/I labels
     constructive_suggestions: actionable fixes paired with severity issues
     critical_opinions: architectural/strategic critique (when substantive concerns exist)
-  tally: C=0, H=1, M1=2, M2=1, L=3, I=1
+  tally: C=0, H=1, M=2, P=1, L=3, I=1
   # Step 2: Main agent critical evaluation (see ralph-continuation.md)
   for each review item:
     evaluate_against(project_context) → ADOPT | REJECT | MODIFY
   # Step 3: Apply fixes
-  fix: all ADOPTed and MODIFYed C + H + M1 (M2 + L + I + ADOPTed opinions optional)
+  fix: all ADOPTed and MODIFYed C + H + M (P + L + I + ADOPTed opinions optional)
   # Step 4: GPAV submission (when Watchdog is active)
   gpav_submit(round: N, tally_after_evaluation)
   log: { round: N, tally, contested, evaluation_decisions, fixes_applied, gpav_submitted: bool }
@@ -137,11 +137,11 @@ Replace Step 1 in the standard Review Process with:
 
 | Category | Describes | Maps to Severity Issues |
 |----------|-----------|------------------------|
-| **Severity-tagged Issues** | *Defects* — what is wrong | Each classified C/H/M1/M2/L/I |
-| **Constructive Suggestions** | *Fixes* — how to resolve defects | Paired 1:1 with C/H/M1/M2 issues; optional for L; **not required for I** |
+| **Severity-tagged Issues** | *Defects* — what is wrong | Each classified C/H/M/P/L/I |
+| **Constructive Suggestions** | *Fixes* — how to resolve defects | Paired 1:1 with C/H/M/P issues; optional for L; **not required for I** |
 | **Critical Opinions** | *Strategic concerns* — whether the approach is right | Independent of specific defects; optional — provide only when substantive concerns exist |
 
-**In rounds with zero C/H/M1 issues**: Constructive Suggestions and Critical Opinions are both **optional**. Exempt rounds from mandatory output to avoid degenerate/performative content.
+**In rounds with zero C/H/M issues**: Constructive Suggestions and Critical Opinions are both **optional**. Exempt rounds from mandatory output to avoid degenerate/performative content.
 
 ⛔ Suggestions must be directly actionable (what/where/why + concrete example when applicable). No vague advice like "consider improving X".
 
@@ -155,10 +155,10 @@ When the **Watchdog** observer is active, load `ralph-gpav.md` for the full subm
 
 ```
 gate_proceed = ALL:
-  ralph_termination = stop  # 2 consecutive rounds with zero new C/H/M1 findings (M2 and L do not reset the counter)
+  ralph_termination = stop  # 2 consecutive rounds with zero new C/H/M findings (P and L do not reset the counter)
   # escalation/rollback = model-determined, not a pass path
 ```
 
 ## Subsequent Round Loading
 
-After Round 1, load `ralph-continuation.md` (evaluation, stop conditions, flowchart) and `ralph-contested.md` (only when a C/H/M1 issue is REJECTed). See `ralph-log-template.md` for the complete log format.
+After Round 1, load `ralph-continuation.md` (evaluation, stop conditions, flowchart) and `ralph-contested.md` (only when a C/H/M issue is REJECTed). See `ralph-log-template.md` for the complete log format.

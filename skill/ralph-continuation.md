@@ -8,14 +8,14 @@ Load this file after Round 1 completes. Contains: main agent evaluation rules, s
 
 | Decision | Applicable To | Conditions |
 |----------|--------------|------------|
-| **ADOPT** | All items | Default for C/H/M1 — apply the fix. M2 ADOPT is preferred but optional. |
+| **ADOPT** | All items | Default for C/H/M — apply the fix. P ADOPT is preferred but optional. |
 | **MODIFY** | All items | Suggestion has merit but needs adaptation — apply modified version, document deviation |
-| **REJECT** | M2/L/I items + Critical Opinions | Full discretion, just document rationale |
-| **REJECT** | C/H/M1 items | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See `ralph-contested.md` for the contested issue protocol. |
+| **REJECT** | P/L/I items + Critical Opinions | Full discretion, just document rationale |
+| **REJECT** | C/H/M items | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See `ralph-contested.md` for the contested issue protocol. |
 
-### REJECT Rules for C/H/M1 Issues
+### REJECT Rules for C/H/M Issues
 
-C/H/M1 means **must fix**. REJECT is an **exception**, valid only when:
+C/H/M means **must fix**. REJECT is an **exception**, valid only when:
 - Reviewer's assumption about requirements, constraints, or prior-phase outputs is factually wrong
 - Reviewer identified a "defect" that is actually intended behavior documented elsewhere
 
@@ -25,9 +25,9 @@ C/H/M1 means **must fix**. REJECT is an **exception**, valid only when:
 ### ❌ What wrong evaluation looks like
 
 - **Mechanical adoption**: applying all suggestions without independent judgment
-- **Dismissive rejection**: characterizing H/M1 issues as "known design deviations" without evidence — severity manipulation
+- **Dismissive rejection**: characterizing H/M issues as "known design deviations" without evidence — severity manipulation
 - **Fix-and-declare**: declaring gate PASS after fixing without another review round — fixes may introduce regressions
-- **Deferred escaping**: pushing C/H/M1 to "handle in a later phase" — each gate must close on its own
+- **Deferred escaping**: pushing C/H/M to "handle in a later phase" — each gate must close on its own
 
 ## Known Issues Lifecycle
 
@@ -37,7 +37,7 @@ KI management is a **lifecycle concern** spanning the entire Ralph loop — not 
 
 Before writing a new KI entry, **deduplicate** against existing KI entries: if a substantially similar finding already exists in the KI document, do NOT create a duplicate entry. Instead, update the existing entry's `re-raised-in` field with the current round number. Substantially similar = same location, same issue description (wording may differ but the underlying problem is the same).
 
-Every finding NOT adopted this round (unadopted M2, L/I, REJECTed M2/L/I) MUST be recorded or deduplicated in the project's Known Issues document (e.g., `KnownIssues.md`). Each new entry: raised-in round, severity (with M2/L tier), file location, description, why deferred, plan. Each deduplicated entry: append re-raised-in round number.
+Every finding NOT adopted this round (unadopted P, L/I, REJECTed P/L/I) MUST be recorded or deduplicated in the project's Known Issues document (e.g., `KnownIssues.md`). Each new entry: raised-in round, severity (with P/L tier), file location, description, why deferred, plan. Each deduplicated entry: append re-raised-in round number.
 
 ### Periodic Re-evaluation
 
@@ -45,7 +45,7 @@ Every 3 rounds (R3, R6, R9, …), re-evaluate each KI entry independently:
 
 - Is it still real?
 - Has it been incidentally fixed by subsequent changes?
-- Should severity or classification change (e.g., M2 → M1 if later evidence reveals behavioral impact)?
+- Should severity or classification change (e.g., P → M if later evidence reveals behavioral impact)?
 
 Remove false positives and document why. Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
 
@@ -59,16 +59,16 @@ At loop end (after STOP confirmed), perform a final KI evaluation:
 
 ### KI vs New Findings
 
-Findings already in the KI document are **known**, not **new**. Known findings excluded from the consecutive-zero counter. Contested C/H/M1 re-raises are always new.
+Findings already in the KI document are **known**, not **new**. Known findings excluded from the consecutive-zero counter. Contested C/H/M re-raises are always new.
 
 ## Rounds & Stop Conditions
 
 The Ralph loop has **two exit paths**:
 
-1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M1 issues (M2 and L findings do not reset the counter, but must still be triaged by the main agent). Can trigger at any round N ≥ 2. No maximum round cap. Previously deferred Known Issues do not count as new findings.
-2. **Persistent Issues Escalation**: If the same C/H/M1 findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
+1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M issues (P and L findings do not reset the counter, but must still be triaged by the main agent). Can trigger at any round N ≥ 2. No maximum round cap. Previously deferred Known Issues do not count as new findings.
+2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
 
-**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M1 findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M1 > 0. M2 and L findings do not reset the counter, but the main agent must still triage each (ADOPT/REJECT/MODIFY).
+**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M > 0. P and L findings do not reset the counter, but the main agent must still triage each (ADOPT/REJECT/MODIFY).
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
@@ -82,8 +82,8 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 | Declaring stop immediately after fixing issues | Fix round ≠ zero round. Next round reviews the fix — only if THAT round is also zero does the counter increment. | Fix → review fixed deliverable → evaluate counter on the review round. |
 | Counting re-discovered KI entries as "new findings" | Issues already in the Known Issues document have been triaged — they are known, not new. | Only findings NOT already in the KI document count as new. |
 | Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both with 0 new findings. |
-| Counting new M2 or L findings as blocking the counter | M2 and L are quality-layer findings — still triaged but do not reset the counter. Only new C/H/M1 (defect-layer) reset the counter. | Zero new C/H/M1 (with any number of M2/L, after triage) → counter increments. I, re-discovered KIs, or empty → counter increments. |
-| Re-labeling H/M1 issues as "accepted design deviations" or M2 to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M1 block the gate. |
+| Counting new P or L findings as blocking the counter | P and L are quality-layer findings — still triaged but do not reset the counter. Only new C/H/M (defect-layer) reset the counter. | Zero new C/H/M (with any number of P/L, after triage) → counter increments. I, re-discovered KIs, or empty → counter increments. |
+| Re-labeling H/M issues as "accepted design deviations" or P to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
 | Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
 
 ### Decision Flowchart
@@ -93,18 +93,18 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 1. Receive reviewer report (severity issues + constructive suggestions + critical opinions)
 2. Main agent critical evaluation: ADOPT/REJECT/MODIFY each item (see §Main Agent Critical Evaluation)
-   - REJECT of C/H/M1 → contested issue → include in next round's context for reviewer
-   - REJECTed C/H/M1 remain in tally until reviewer explicitly drops them
- 3. Apply all ADOPTed and MODIFYed C/H/M1 fixes
+   - REJECT of C/H/M → contested issue → include in next round's context for reviewer
+   - REJECTed C/H/M remain in tally until reviewer explicitly drops them
+ 3. Apply all ADOPTed and MODIFYed C/H/M fixes
  3b. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle)
  4. If round ≡ 0 (mod 3): perform KI re-evaluation (see §Known Issues Lifecycle)
 5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
-6. Classify findings: **new** (not in KI document) vs **known** (already in KI). Known findings excluded from counter. Contested C/H/M1 re-raises are always new.
-7. Count new C/H/M1 findings. If any new C/H/M1 remain → Reset consecutive-zero counter to 0 → Go to round N+1
-8. If zero new C/H/M1 but new M2 or L found:
-   → M2/L triage (ADOPT preferred but optional) → Increment consecutive-zero counter by 1 → Go to round N+1
+ 6. Classify findings: **new** (not in KI document) vs **known** (already in KI). Known findings excluded from counter. Contested C/H/M re-raises are always new.
+ 7. Count new C/H/M findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
+ 8. If zero new C/H/M but new P or L found:
+    → P/L triage (ADOPT preferred but optional) → Increment consecutive-zero counter by 1 → Go to round N+1
 9. If zero new findings (only I, known re-findings, or nothing):
    → Increment consecutive-zero counter by 1
    → Counter = 2:
@@ -113,7 +113,7 @@ Evaluate after each round N, in this order (before starting round N+1):
      → If articulation reveals concerns → reset counter to 1 → Go to round N+1
    → Counter = 1:
      → Go to round N+1
-10. Before starting round N+1, assess: are the same C/H/M1 findings recurring despite fixes?
+10. Before starting round N+1, assess: are the same C/H/M findings recurring despite fixes?
     → If yes: evaluate root cause → ⛔ ESCALATE to user or ROLLBACK to prior phase
     → If findings are genuinely new each round → Go to round N+1
 ```

@@ -81,7 +81,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 - **Ralph loop support files** (loaded on demand):
   - GPAV protocol (Watchdog active) → `ralph-gpav.md`
   - Continuation protocol (Rounds 2+) → `ralph-continuation.md`
-  - Contested issue protocol → `ralph-contested.md` (loaded when C/H/M1 is REJECTed)
+  - Contested issue protocol → `ralph-contested.md` (loaded when C/H/M is REJECTed)
   - Worked examples (contested issues, stop scenarios) → `ralph-examples.md`
   - Review log template → `ralph-log-template.md`
   - Severity migration guide (pre-v0.13 → v0.13) → `severity-migration.md`

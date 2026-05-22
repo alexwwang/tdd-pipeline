@@ -13,6 +13,14 @@ description: >
 
 **Core Principle**: Evidence over assumptions. Every claim must trace to a concrete observation.
 
+**Verification Diversity Principle**: No single verification method is sufficient. Different methods catch different bug classes:
+- **Runtime tests** catch behavior errors
+- **Compilation / type-system checks** catch contract mismatches and missing fields
+- **Static analysis** catches anti-patterns and unreachable code
+- **Expert review** catches design gaps, edge cases, and future risks that automated tools cannot see
+
+A verification plan that relies on only one of these is incomplete. Combine automated verification (fast, repeatable) with expert review (deep, contextual) for comprehensive coverage.
+
 **Scope**: Multi-component systems (stdio, HTTP, message queues). Monoliths: collapse Phase 0+1, retain Layer Isolation.
 
 ---

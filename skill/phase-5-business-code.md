@@ -48,6 +48,23 @@ Upon gate pass + user approval, proceed to Phase 6 → `phase-6-pre-release-test
 - Does every line of business code have test coverage?
 - Are abstractions justified by the tests?
 - Are there any design deviations that were not documented?
+- **Is compilation-time verification clean?** (Type errors, static analysis — not just runtime tests)
+
+## Implementation Discipline
+
+### Task Decomposition Principle
+When implementing changes across multiple files or logical areas, decompose into **small, independently verifiable units**. A single implementation task should not span more than 3 logical change areas (where one area = one file's cohesive set of edits). Benefits:
+- Easier to isolate faults when verification fails
+- Reduces cognitive load per review round
+- Prevents hidden coupling between unrelated changes
+
+### Verification Completeness Principle
+Runtime test passing is necessary but **not sufficient**. Verification must cover:
+1. **Runtime behavior** (tests pass)
+2. **Compilation-time constraints** (type system, static analysis, lint — whatever the tech stack provides)
+3. **Design consistency** (implementation matches the technical solution; no undocumented deviations)
+
+A green test suite with compilation warnings or type errors is **not a passing gate**.
 
 ## Gate: Reviewer Checklist
 
@@ -57,10 +74,11 @@ gate_pass = ALL:
   coverage:       no business code without test
   no_silent_test_modification: FORBIDDEN changing tests to make them easier to pass
   no_code_without_failing_test: every line of business code must have a failing test justifying it
+  compile_time:   zero type errors, zero static analysis violations
   refactor:       complete + tests green
   lean:           minimum implementation (no over-engineering)
   deviations:     documented + justified
-  ralph:          zero C/H/M1 issues
+  ralph:          zero C/H/M issues
 ```
 
 ## User Approval
