@@ -105,7 +105,9 @@ for round N:
 
 ### Review Process (Dual-Pass Mode)
 
-⚠️ **The three steps below MUST execute in strict sequence: Recall → fact-gather → Precision. No step may be skipped, merged, or reordered.** Precision requires raw_findings from Recall; Recall must not be contaminated by Precision concerns.
+⛔ **The three steps below MUST execute in strict sequence: Recall → fact-gather → Precision. No step may be skipped, merged, or reordered.**
+
+Skip fact-gather → Precision evaluates without verified facts → false positives pass the filter → wasted fix rounds → loop does not converge.
 
 Replace Step 1 in the standard Review Process with:
 

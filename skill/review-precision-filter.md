@@ -7,6 +7,8 @@ This file is loaded when dual-pass review mode is active. Used by both design re
 Inject this prompt into the Precision subagent. The `{VERIFIED_FACTS}` and `{RAW_FINDINGS}` placeholders are filled by the main agent after the Recall pass and fact-gathering step.
 
 ```
+⛔ If {VERIFIED_FACTS} is empty or missing, HALT and request facts from the main agent. Do NOT proceed with judgment based solely on LLM reasoning.
+
 你是一位资深审查质量审核员（Precision Filter Pass）。
 另一位审查员已完成初步扫描，发现了 {N} 个潜在问题。
 你的职责是：逐一验证每个发现的真实性和严重性，过滤掉误报。
