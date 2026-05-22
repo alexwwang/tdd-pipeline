@@ -85,6 +85,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 | Counting new P or L findings as blocking the counter | P and L are quality-layer findings — still triaged but do not reset the counter. Only new C/H/M (defect-layer) reset the counter. | Zero new C/H/M (with any number of P/L, after triage) → counter increments. I, re-discovered KIs, or empty → counter increments. |
 | Re-labeling H/M issues as "accepted design deviations" or P to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
 | Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
+| Skipping KI re-evaluation at rounds divisible by 3 | Stale KI entries accumulate. Reviewer wastes time re-discovering already-fixed issues. KI document becomes useless noise. | Counter does NOT increment if KI re-evaluation is skipped at rounds divisible by 3. |
 
 ### Decision Flowchart
 
@@ -97,7 +98,7 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
  3. Apply all ADOPTed and MODIFYed C/H/M fixes
  3b. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle)
- 4. If round ≡ 0 (mod 3): perform KI re-evaluation (see §Known Issues Lifecycle)
+  4. ⛔ KI Re-evaluation Gate (rounds divisible by 3): counter does NOT increment unless KI re-evaluation is performed this round.
 5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
    - In dual-pass mode: submit confirmed findings only (not raw recall output)
