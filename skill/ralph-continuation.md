@@ -41,13 +41,11 @@ Every finding NOT adopted this round (unadopted P, L/I, REJECTed P/L/I) MUST be 
 
 ### Periodic Re-evaluation
 
-Every 3 rounds (R3, R6, R9, …), re-evaluate each KI entry independently:
+Every 3 rounds (R3/R6/R9…), re-evaluate each KI entry: still real? fixed? severity changed?
 
-- Is it still real?
-- Has it been incidentally fixed by subsequent changes?
-- Should severity or classification change (e.g., P → M if later evidence reveals behavioral impact)?
+⛔ KI re-evaluation is NOT complete until every entry has been assessed. Skip → counter does NOT increment. Stale KI → reviewer re-discovers already-fixed issues → stop condition never converges.
 
-Remove false positives and document why. Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
+Inject surviving KIs into the next reviewer's context as `{KNOWN_ISSUES}` for independent assessment.
 
 ### Final Evaluation
 
