@@ -218,7 +218,7 @@ gate_pass = ALL:
     test_types: appropriate split (not over-E2E, not under-integration)
     test_data: explicitly specified in deliverable
     test_deps + ordering: documented
-    ralph: zero C/H/M₁ issues
+    ralph: zero C/H/M1 issues
 
   # Step 5 — Advanced risk coverage (if applicable)
   advanced_coverage:

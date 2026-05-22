@@ -9,7 +9,7 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
 - Review mode: dual-pass (Recall → Precision)
 - Recall Pass: {N} raw findings
 - Precision Pass: {M} confirmed, {K} rejected
-- C: 0 | H: 1 | M₁: 1 | M₂: 1 | L: 2 | I: 1
+- C: 0 | H: 1 | M1: 1 | M2: 1 | L: 2 | I: 1
 - Issues (after precision filter):
   - [H-1] ...  (Recall F-03 → CONFIRM)
   - [M-1] ...  (Recall F-07 → DOWNGRADE from H)
@@ -18,7 +18,7 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
   - Recall F-12 → REJECT: score() uses .get(), no KeyError possible
   - Recall F-17 → REJECT: no self._baseline reference in codebase
 - Constructive Suggestions:
-  - <paired with C/H/M₁/M₂ issues; optional for L; not required for I>
+  - <paired with C/H/M1/M2 issues; optional for L; not required for I>
 - Critical Opinions (if any):
   - <substantive critique, or omit if no genuine concerns>
 - Main Agent Critical Evaluation:
@@ -30,7 +30,7 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
   | [M-2] | REJECT | ... | No change (contested — see next round) |
 
 - Fixes applied: ...
-- GPAV submitted: yes/no (round N → {C:0, H:1, M₁:1, M₂:1, L:2, I:1})
+- GPAV submitted: yes/no (round N → {C:0, H:1, M1:1, M2:1, L:2, I:1})
 - Contested issues forwarded to next round:
 
   | Issue | First contested | Dispute round | Reviewer action needed |
@@ -41,7 +41,7 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
 - Contested from prior round:
   - [M-2] (disputed Round 1): Reviewer response → <ACCEPT rejection / RE-RAISE with evidence: ...>
   - Resolution: <dropped from tally / remains in tally>
-- C: 0 | H: 0 | M₁: 0 | M₂: 1 | L: 1 | I: 0
+- C: 0 | H: 0 | M1: 0 | M2: 1 | L: 1 | I: 0
 - Issues:
   - [M-1] ...
 - Constructive Suggestions:
@@ -55,12 +55,12 @@ Loaded once at the start of each Ralph loop. See `ralph-review-loop.md` for the 
   | [M-1] | ADOPT | ... | Fixed: ... |
 
 - Fixes applied: ...
-- GPAV submitted: yes (round N → {C:0, H:0, M₁:0, M₂:1, L:1, I:0})
+- GPAV submitted: yes (round N → {C:0, H:0, M1:0, M2:1, L:1, I:0})
 - Contested issues forwarded to next round: (none)
 
 ... (continue until consecutive-zero counter reaches 2) ...
 
 ### Final Gate
-- Final round C/H/M₁ count (after contested resolution): 0
+- Final round C/H/M1 count (after contested resolution): 0
 - Proceed to Phase <N+1>: YES / NO
 ```

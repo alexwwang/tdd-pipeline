@@ -85,7 +85,7 @@ gate_pass = ALL:
   coverage:         Test Plan fully mapped to written tests (no gaps)
   naming:           descriptive (should_<expected>_<context>), organized by component
   edge_cases:       error paths and boundary conditions covered
-  ralph:            zero C/H/M₁ issues
+  ralph:            zero C/H/M1 issues
 ```
 
 ## User Approval

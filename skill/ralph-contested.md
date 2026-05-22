@@ -1,11 +1,11 @@
 # Ralph Loop Contested Issues
 
-Load this file when a C/H/M₁ issue is REJECTed by the main agent.
+Load this file when a C/H/M1 issue is REJECTed by the main agent.
 Defines the contested issue protocol, escalation rules, and invariants.
 
 ## Contested Issue Protocol
 
-When the main agent REJECTs a C/H/M₁ issue, it becomes a **contested issue**:
+When the main agent REJECTs a C/H/M1 issue, it becomes a **contested issue**:
 
 1. The main agent documents the REJECTION rationale in the review log.
 2. The contested issue is included in the next round's context for the reviewer.
@@ -32,8 +32,8 @@ issues beyond 2 dispute rounds.
 
 ### Key Invariant
 
-REJECTed C/H/M₁ issues **remain in the gate tally** until the reviewer explicitly
-drops them. The gate condition `final_round.C + .H + .M₁ == 0` uses the tally after
+REJECTed C/H/M1 issues **remain in the gate tally** until the reviewer explicitly
+drops them. The gate condition `final_round.C + .H + .M1 == 0` uses the tally after
 contested-issue resolution, not before. Escalated issues are **suspended** from the
 gate tally (pending external resolution); the gate evaluates on remaining issues only.
 
