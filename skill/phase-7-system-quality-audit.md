@@ -4,7 +4,7 @@ description: >
   System-level quality audit with 16 bug patterns (grep-powered), integration
   pair discovery, and execution-order analysis. Loaded after Phase 6 completes
   as an incremental second pass. Receives Phase 6 results and finds issues
-  missed by the Phase 6 single-pass audit.
+  missed by the Phase 6 audit.
 ---
 
 # System Quality Audit — Pattern Catalog & Integration Analysis
@@ -308,7 +308,7 @@ grep -rn 'return\|raise\|break' src/ --include='*.py' --include='*.ts' | grep -B
 
 ## Part 4: Verification Audit
 
-Phase 7 output must pass an independent verification pass before acceptance. This is NOT a Ralph loop — it is a single-pass precision check on the Phase 7 findings themselves.
+Phase 7 output must pass an independent verification pass before acceptance. This is NOT a Ralph loop — it is a precision check on the Phase 7 findings themselves.
 
 ### When to Run
 

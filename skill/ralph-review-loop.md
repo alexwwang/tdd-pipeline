@@ -93,22 +93,15 @@ for round N:
   log: { round: N, tally, contested, evaluation_decisions, fixes_applied, gpav_submitted: bool }
 ```
 
-## Dual-Pass Review Mode
+## Dual-Pass Review Mode (Mandatory)
 
-The default review mode is a **two-pass Recall/Precision pipeline**. A lighter single-pass mode is available for already-converged rounds. See dedicated files for review-specific prompts:
+⛔ **Single-pass is forbidden.** All review rounds MUST use the two-pass Recall/Precision pipeline. No exceptions — not for "simple" deliverables, not for already-converged rounds, not for "low risk" assessments. Single-pass has been empirically shown to miss real bugs and produce false positives that waste fix rounds.
 
 | Phase | Load this file | Contains |
 |-------|---------------|----------|
 | **1–3** (Design) | `review-design.md` | Checklist + Recall prompt + fact-gather guide |
 | **4–5** (Code) | `review-code.md` | Checklist + Recall prompt + fact-gather guide |
 | **Precision** (shared) | `review-precision-filter.md` | Precision Filter prompt + aggregation logic |
-
-### When to Use
-
-| Mode | When | Cost |
-|------|------|------|
-| **Dual-pass** (default) | All rounds except already-converged zero-finding rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls, but fewer total rounds |
-| **Single-pass** | Already-converged rounds (counter ≥ 1), simple deliverables, low risk | 1× LLM call |
 
 ### Review Process (Dual-Pass Mode)
 

@@ -62,13 +62,14 @@ for finding in precision_results:
 
 ## Cost-Benefit Reference
 
-Based on empirical testing (PoC on a Phase 7 code review):
+Based on empirical testing:
 
-| Metric | Single-pass | Dual-pass | Change |
-|--------|-------------|-----------|--------|
-| Raw findings per round | 16 | 25→12 (filtered) | +56% recall, −52% after filter |
-| True H-level findings | 2 | 2 | Same, higher confidence |
-| H-level false positives | 1 | 0 | −100% |
-| Effective finding rate | ~75% | ~92% | +17% |
-| LLM calls per round | 1 | 2 | +100% |
-| Expected Ralph loop rounds | 5–7 | 3–5 | −30–40% |
+| Metric | Value |
+|--------|-------|
+| Raw findings per round | 25 → 12 (after Precision filter) |
+| True H-level findings | 2 (found with higher confidence) |
+| H-level false positives | 0 |
+| Effective finding rate | ~92% |
+| Expected Ralph loop rounds | 3–5 (vs 5–7 without Precision filter) |
+
+⛔ **Single-pass is forbidden.** The value is not cost reduction but quality improvement — preventing H-level false positives from triggering wasted fix rounds. One wasted round costs the same as an entire dual-pass round.
