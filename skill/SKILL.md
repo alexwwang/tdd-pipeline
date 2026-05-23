@@ -1,6 +1,6 @@
 ---
 name: tdd-pipeline
-version: 0.13.0
+version: 0.14.0
 description: >
   A rigorous TDD development workflow enforcing Red-Green-Refactor at the
   pipeline level: Product Design → Technical Solution → Test Plan → Test
