@@ -6,7 +6,7 @@ Phases 1–5 only. Phase 6 uses `phase-6-pre-release-testing.md` Part 5.
 
 Spawn an **independent subagent** not involved in creating the deliverable. Provide prior phase outputs for cross-phase consistency.
 
-**Reviewer prompt MUST NOT contain**: stop conditions, cumulative tallies, prior round findings, fix lists, round counts, loop state, or scope-limiting hints.
+**Reviewer prompt MUST NOT contain**: stop conditions, cumulative tallies, prior round findings, fix lists, round counts, loop state, or scope-limiting hints. Principle: reviewer evaluates only the current deliverable; past/future loop state creates anchoring bias.
 
 ## Severity Classification
 
@@ -21,6 +21,12 @@ Three tiers with six levels:
 | M | Major | Behavioral defect: code does something different from interface/documentation promise |
 
 **Heuristic**: "If I fix this, will runtime behavior change?" → Yes → Defect Tier.
+
+Failure-mode split: when one code fact creates multiple risks, report distinct lifecycle/resource, capacity/bounds, correctness/concurrency, security/isolation, and testability/design concerns separately with independent severities.
+
+Context boundary: distinguish current requirement violations from future scalability concerns; future-only risks are I/P unless they break stated requirements.
+
+Anti-patterns: labeling a refactoring suggestion as M; labeling a real defect as P; merging different severities because they share one location.
 
 ### Quality Tier (NOT counted)
 
@@ -62,6 +68,8 @@ for round N:
 
 Skip fact-gather → false positives pass filter → wasted fix rounds.
 
+Shared mutable state: report key-space collision/isolation and concurrency race/no-locking as separate findings. Do not treat container/key changes as race fixes. Race evidence includes unsynchronized read/write/clear, check-then-act, cache-miss loading, or clear/set interleaving; fixes require serialization, locking, single-flight/deduplication, atomic operations, transactions, or external coordination.
+
 ## Output Requirements
 
 | Category | Content | Required |
@@ -69,6 +77,10 @@ Skip fact-gather → false positives pass filter → wasted fix rounds.
 | Severity Issues | Defects with C/H/M/P/L/I labels | Always |
 | Constructive Suggestions | Actionable fixes paired 1:1 with C/H/M/P | When C/H/M/P exist |
 | Critical Opinions | Strategic concerns | Only when substantive |
+
+Suggestions must fix the same failure mode as their paired finding and specify what/where/why; isolation/container/rewrite fixes are not substitutes for lifecycle, capacity, or concurrency controls.
+
+Critical Opinions must challenge reasoning, assumptions, or system direction — not restate surface symptoms.
 
 Zero C/H/M rounds: Suggestions and Opinions optional.
 
