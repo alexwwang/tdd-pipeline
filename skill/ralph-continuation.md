@@ -114,11 +114,9 @@ Evaluate after each round N, in this order (before starting round N+1):
     → If yes: evaluate root cause → ⛔ ESCALATE to user or ROLLBACK to prior phase
      → If findings are genuinely new each round → Go to round N+1
  11. ⛔ User Approval Gate (only after ✅ STOP):
-     → Present deliverable to user for approval (see current phase file §User Approval)
-     → ⛔ DO NOT ask user about phase transition, "should we proceed", or "ready for next phase" at any point before ✅ STOP.
-        Mid-loop user questions are restricted to: persistent issues escalation (step 10) and contested issue escalation (ralph-contested.md §Escalation rule).
-     → If user rejects: revise deliverable → re-run Ralph loop from Round 1
-     → If user approves: load next phase file
+     ⛔ DO NOT ask user about phase transition, "should we proceed", or "ready for next phase" before ✅ STOP.
+     → User approves → load next phase file
+     → User rejects → see current phase file §User Approval
 ```
 
 ### 🔒 Pre-Stop Articulation — ❌ AVOID Superficial Articulation

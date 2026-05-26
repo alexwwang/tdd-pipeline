@@ -83,7 +83,7 @@ gate_pass = ALL:
 
 ## User Approval
 
-⛔ Prerequisite: Ralph loop has reached ✅ STOP (see `ralph-continuation.md` §Decision Flowchart step 9b). Do NOT present for approval before STOP.
+⛔ Prerequisite: Ralph loop has reached ✅ STOP. Do NOT present for approval before STOP.
 
 The user must review the final code and test suite:
 - All tests pass? ✅
