@@ -105,14 +105,16 @@ Evaluate after each round N, in this order (before starting round N+1):
  7. Count new C/H/M findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
  8. If zero new C/H/M but new P or L found:
     → P/L triage (ADOPT preferred but optional) → Increment consecutive-zero counter by 1 → Go to round N+1
-9. If zero new findings (only I, known re-findings, or nothing):
-   → Increment consecutive-zero counter by 1
-   → Counter = 2:
-     → 🔒 **必须完成停止前 Why Articulation**（见下方 §Pre-Stop Why Articulation）
-     → If articulation confirms stopping is safe → ✅ STOP
-     → If articulation reveals concerns → reset counter to 1 → Go to round N+1
-   → Counter = 1:
-     → Go to round N+1
+ 9. If zero new findings (only I, known re-findings, or nothing):
+    → Increment consecutive-zero counter by 1
+    → Counter = 1:
+      → Go to round N+1
+    → Counter = 2:
+      → Go to round N+1 (articulation runs at start of next round)
+ 9b. ⛔ Pre-Stop Articulation Gate (only when counter = 2 before proceeding):
+     Articulate: rounds completed, dimensions covered per round, task complexity justification, what issue type is most likely to be missed, remaining KI count and triage accuracy. If you cannot clearly articulate → reset counter to 1. If articulation reveals concerns 2× in a row → reset counter to 0.
+     → Articulation confirms safe → ✅ STOP
+     → Articulation reveals concerns → counter already reset → Go to round N+1
 10. Before starting round N+1, assess: are the same C/H/M findings recurring despite fixes?
     → If yes: evaluate root cause → ⛔ ESCALATE to user or ROLLBACK to prior phase
     → If findings are genuinely new each round → Go to round N+1

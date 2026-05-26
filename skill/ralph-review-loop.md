@@ -49,7 +49,8 @@ Legacy mapping: `severity-migration.md`
 for round N:
   deliverable + prior_phase_outputs + contested_issues → reviewer
   reviewer → severity_issues (C/H/M/P/L/I) + constructive_suggestions + critical_opinions
-  main_agent evaluates each item → ADOPT | REJECT | MODIFY
+  ⛔ gather codebase facts (see review-design.md / review-code.md §Fact-Gathering)
+  ⛔ main_agent evaluates each item → ADOPT | REJECT | MODIFY (see ralph-continuation.md §Main Agent Critical Evaluation)
   fix all ADOPTed/MODIFYed C/H/M (P/L/I/ADOPTed_opinions optional)
   log: { round, tally, contested, evaluation_decisions, fixes_applied }
 ```
@@ -67,6 +68,8 @@ for round N:
 **Sequence**: Recall Pass → Gather Facts → Precision Filter → confirmed_findings → tally
 
 Skip fact-gather → false positives pass filter → wasted fix rounds.
+
+❌ **Reviewer prompt contamination**: injecting round counts ("Round 2 of N"), prior-round results ("R1 found X"), cumulative tallies, or fix lists into the Recall/Precision prompt. Contaminated prompts create anchoring bias — the reviewer reproduces prior conclusions instead of independent assessment.
 
 Shared mutable state: report key-space collision/isolation and concurrency race/no-locking as separate findings. Do not treat container/key changes as race fixes. Race evidence includes unsynchronized read/write/clear, check-then-act, cache-miss loading, or clear/set interleaving; fixes require serialization, locking, single-flight/deduplication, atomic operations, transactions, or external coordination.
 
