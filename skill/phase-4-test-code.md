@@ -90,7 +90,7 @@ gate_pass = ALL:
 
 ## User Approval
 
-⛔ Prerequisite: Ralph loop has reached ✅ STOP. Do NOT present for approval before STOP.
+⛔ Prerequisite: Ralph loop has reached ✅ STOP.
 
 After the Ralph loop gate passes, present the Test Execution Report to the user for approval before proceeding to Phase 5. The user confirms:
 - All planned tests are written

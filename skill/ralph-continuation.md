@@ -115,7 +115,6 @@ Evaluate after each round N, in this order (before starting round N+1):
      → If findings are genuinely new each round → Go to round N+1
  11. ⛔ User Approval Gate (only after ✅ STOP):
      ⛔ DO NOT ask user about phase transition, "should we proceed", or "ready for next phase" before ✅ STOP.
-     → User approves → load next phase file
      → User rejects → see current phase file §User Approval
 ```
 
