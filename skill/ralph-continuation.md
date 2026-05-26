@@ -91,6 +91,7 @@ These are the most frequent errors LLMs make. **DO NOT do any of these:**
 Evaluate after each round N, in this order (before starting round N+1):
 
 1. Receive reviewer report (severity issues + constructive suggestions + critical opinions)
+1b. ⛔ Fact-gather gate: if {VERIFIED_FACTS} is empty, HALT — gather codebase facts before proceeding to Precision.
 2. Main agent critical evaluation: ADOPT/REJECT/MODIFY each item (see §Main Agent Critical Evaluation)
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
