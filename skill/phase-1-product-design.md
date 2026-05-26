@@ -76,6 +76,8 @@ gate_pass = ALL:
 
 ## User Approval
 
+⛔ Prerequisite: Ralph loop has reached ✅ STOP (see `ralph-continuation.md` §Decision Flowchart step 9b). Do NOT present for approval before STOP.
+
 After the Ralph loop gate passes, present the Requirements Document to the user for approval before proceeding to Phase 2. The user confirms:
 - All user stories accurately reflect their intent
 - Acceptance criteria are complete and correct

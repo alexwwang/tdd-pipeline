@@ -173,6 +173,8 @@ gate_pass = ALL:
 
 ## User Approval
 
+⛔ Prerequisite: Ralph loop has reached ✅ STOP (see `ralph-continuation.md` §Decision Flowchart step 9b). Do NOT present for approval before STOP.
+
 After the Ralph loop gate passes, present the Technical Design Document to the user for approval before proceeding to Phase 3. The user confirms:
 - Architecture and component breakdown are acceptable
 - Key decisions and trade-offs are understood and approved

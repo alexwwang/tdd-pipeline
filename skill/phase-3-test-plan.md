@@ -240,6 +240,8 @@ gate_pass = ALL:
 
 ## User Approval
 
+⛔ Prerequisite: Ralph loop has reached ✅ STOP (see `ralph-continuation.md` §Decision Flowchart step 9b). Do NOT present for approval before STOP.
+
 After the Ralph loop gate passes, present the Test Plan Document to the user for approval before proceeding to Phase 4. The user confirms:
 - Test coverage is adequate for all acceptance criteria
 - Edge cases and error paths are sufficiently covered
