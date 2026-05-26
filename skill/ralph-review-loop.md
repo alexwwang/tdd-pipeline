@@ -8,6 +8,8 @@ Spawn an **independent subagent** not involved in creating the deliverable. Prov
 
 **Reviewer prompt MUST NOT contain**: stop conditions, cumulative tallies, prior round findings, fix lists, round counts, loop state, or scope-limiting hints. Principle: reviewer evaluates only the current deliverable; past/future loop state creates anchoring bias.
 
+⛔ **Before dispatching reviewer, verify prompt contains NONE of**: round number ("Round N"), prior findings ("R1 found X"), cumulative totals ("total N issues"), fix status ("all issues resolved"), or comparison to prior rounds.
+
 ## Severity Classification
 
 Three tiers with six levels:
