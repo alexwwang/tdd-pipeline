@@ -2,9 +2,9 @@
 name: double-blind-experiment-tier-2
 description: |
   Standard tier of the double-blind experiment protocol. Use for internal
-  adoption/rejection decisions. ≥4 scenarios, 1 scorer, ≥8 GT items,
-  ~9–12 agent instances, 2–3 hours preparation. Conclusion: sufficient for
-  internal decision-making. P-values may be cited with post-hoc caveat.
+  adoption/rejection decisions. ≥4 scenarios, 1 scorer per scenario (N total), ≥8 GT items,
+  ~9–12+N scorer sessions, 2–3 hours preparation. Conclusion: sufficient for internal
+  decision-making. P-values may be cited with post-hoc caveat.
 version: 3.0.0
 date: 2026-05-21
 ---
@@ -17,9 +17,9 @@ date: 2026-05-21
 |-----------|-------|
 | Scenarios | ≥ 4 (prepare 5 to allow exclusions) |
 | Evaluators | 1 per variant per scenario (8 total) |
-| Scorers | 1 (independent instance required) |
+| Scorers | 1 per scenario (independent instances, no shared context) |
 | GT items | ≥ 8 |
-| Agent instances | ~9–12 |
+| Agent instances | ~9–12 + N scorer sessions |
 | Prep time | 2–3 hours |
 | Conclusion | Sufficient for internal decisions |
 
@@ -31,7 +31,7 @@ date: 2026-05-21
 | **Evaluator** | Receive prompts and produce reviews | Know which variant they received |
 | **Scorer** | Compare outputs against ground truth, score | Know which output is variant A or B |
 
-**No degraded configuration** — T2 requires a genuinely independent scorer instance.
+**No degraded configuration** — T2 requires genuinely independent scorer instances (1 per scenario, no shared context).
 
 ## Protocol Steps
 
@@ -92,17 +92,50 @@ done
 **De-identification checklist**:
 - [ ] Variant labels replaced with X/Y
 - [ ] Structural markers normalized
-- [ ] Length tells mitigated (if outputs differ > 20%)
+- [ ] Length normalization: truncate BOTH responses to min(len_X, len_Y) × 1.5 words,
+      cutting at the nearest sentence or paragraph boundary that stays within the limit.
+      No marker added. Floor: never truncate below 50% of original length (if min × 1.5
+      < 50% of longer response, use 50% of longer response as the limit instead).
 - [ ] Metadata stripped
 
-### Step 5: Blind Scoring
+### Step 5: Blind Scoring (Per-Scenario Independent Sessions)
 
-Run 1 independent scorer with: `response-x.md`, `response-y.md`, `ground-truth.md`,
+Deliver each scenario to a **separate scorer session** (fresh instance, no shared context).
+For each scenario, provide: `response-x.md`, `response-y.md`, `ground-truth.md`,
 `scoring-rubric.md`.
 
-**Scorer MUST NOT receive**: variant identity, description of differences, original prompts.
+X/Y assignment is **re-randomized per scenario** (global mapping recorded in mapping.md
+with per-scenario columns).
 
-If scorer produces invalid output, discard partial results and re-run (≤ 3 attempts).
+**Scorer prompt MUST include this constraint:**
+
+> Responses with identical behavior in identical states must receive identical scores.
+> Do not use structural patterns as quality proxies.
+
+**Scorer MUST NOT receive**: variant identity, description of differences, original prompts,
+or any output from other scorer sessions.
+
+If a scorer session produces invalid output, re-run that scenario only (≤ 3 attempts).
+If >1 scenario is dropped due to scorer failure, restart ALL scenarios with fresh instances.
+
+**Attrition guard**: if scorer failures cluster on one variant's responses (e.g., the
+variant produces harder-to-score outputs), flag as "selection-bias risk" in experiment log.
+
+### Step 5b: Cross-Scenario Consistency Check
+
+Designer identifies equivalent-state pairs BEFORE scoring (recorded in experiment plan).
+Scorer never sees this classification.
+
+After all scenarios are scored, verify scorer consistency:
+
+1. **Check equivalent-state pairs**: for scenarios where the correct behavior is the same,
+   verify that responses performing the same correct behavior received the same score
+   (±10% of per-item maximum, minimum ±0.5 points).
+2. **If no equivalent-state pairs exist** (all scenarios test distinct conditions):
+   document this explicitly. The consistency check is vacuous and cannot provide
+   evidence of scorer reliability. Note this as a limitation in the experiment report.
+3. **If inconsistency found in ≥1 pair and it accounts for >20% of all comparable pairs**:
+   re-score ALL scenarios with fresh scorer instances. Do not selectively re-score.
 
 ### Step 6: Interpret Results
 
@@ -149,6 +182,12 @@ Mixing ratio and interval in a single aggregation produces meaningless threshold
 - [ ] Results show consistent direction (unanimous n<5; ≥80% n≥5)
 - [ ] Magnitude screen passed per scenario
 - [ ] If p-values cited, post-hoc caveat included (or direction pre-registered)
+- [ ] Length normalization applied unconditionally to both responses in every scenario
+- [ ] Each scenario scored by a separate scorer session (fresh instance, no shared context)
+- [ ] X/Y assignment re-randomized per scenario (per-scenario columns in mapping.md)
+- [ ] Scorer prompt included signal-pure constraint (identical behavior = identical scores)
+- [ ] Cross-scenario consistency check performed (or vacuous-case documented)
+- [ ] Attrition guard checked: scorer failures not clustered on one variant
 
 ## Example
 
@@ -160,8 +199,9 @@ Designer:
   4. Copy assigned variants to evaluator-prompt.md
   5. Run 2 evaluators per scenario (1×A, 1×B), independent instances
   6. De-identify outputs (X/Y), record mapping
-  7. Run scorer (fresh independent instance) with rubric + GT + de-identified outputs
-  8. Map scores back to A/B; interpret with direction, magnitude, and post-hoc caveat
+  7. Run per-scenario scorer sessions (N fresh instances) with rubric + GT + de-identified outputs
+  8. Perform cross-scenario consistency check (Step 5b)
+  9. Map scores back to A/B; interpret with direction, magnitude, and post-hoc caveat
 ```
 
 ## Notes
