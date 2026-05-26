@@ -1,6 +1,9 @@
 # Ralph Loop Contested Issues
 
-Load this file when a C/H/M issue is REJECTed by the main agent.
+Load this file when either condition triggers:
+- A C/H/M issue is REJECTed by the main agent, OR
+- The main agent **downgrades** the same C/H/M issue for the 2nd time across rounds (see §Downgrade Trigger)
+
 Defines the contested issue protocol, escalation rules, and invariants.
 
 ## Contested Issue Protocol
@@ -29,6 +32,26 @@ the reviewer raises the issue and the main agent REJECTs it (the issue becomes
 contested at the end of this round). Each subsequent reviewer re-assessment of the
 contested issue = another dispute round. Do NOT silently drop or keep contested
 issues beyond 2 dispute rounds.
+
+### Downgrade Trigger (2nd downgrade of same issue)
+
+A **downgrade** = the main agent relabels a C/H/M finding as P/L/I, or MODIFYs it
+to a lower severity tier (C→H→M→P→L→I). Downgrading is a legitimate evaluation
+decision in isolation, but **repeated downgrade of the same issue** signals a
+disagreement that should enter the contested protocol.
+
+**Trigger condition**: When the reviewer raises an issue as C/H/M and the main
+agent has previously downgraded or rejected the **same substantive issue** in a
+prior round, the 2nd occurrence triggers the contested issue protocol:
+
+- Round N: reviewer finds [M-3] Missing timeout handling → main agent relabels as P
+  → **Record as first downgrade** in review log (not yet contested)
+- Round N+1: reviewer re-raises the same issue as [M-3] → main agent downgrades again
+  → **Contested issue triggered** → load this file → apply full contested protocol
+
+**Matching rule**: "Same substantive issue" = same location AND same underlying
+problem (wording may differ). The main agent must track downgraded C/H/M items
+across rounds to detect re-raises.
 
 ### Key Invariant
 

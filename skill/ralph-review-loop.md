@@ -94,10 +94,8 @@ When Watchdog is active: load `ralph-gpav.md` for submission protocol.
 ## Stop Condition
 
 ```
-gate_proceed = 2 consecutive rounds with zero new C/H/M findings
+gate_proceed = 2 consecutive rounds with zero new C/H/M findings (P/L do not reset counter; known issues excluded)
 ```
-
-P and L do not reset the counter.
 
 ## Next Round
 

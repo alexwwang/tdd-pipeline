@@ -14,14 +14,12 @@ Round 5: 0 new findings → counter = 1 → continue
 Round 6: 0 new findings → counter = 2 → ✅ STOP (rounds 5 & 6 both 0 new findings)
 ```
 
-**Example B — Cannot stop (only 1 zero + L resets counter):**
+**Example B — L does not reset counter (stop at round 4):**
 ```
 Round 1: H=1      → Fix → continue
 Round 2: M=1      → Fix → continue
-Round 3: 0 new findings → counter = 1 → continue (NOT stop — need 2 consecutive!)
-Round 4: L=1 (new) → Counter RESET to 0 (any new non-I finding resets; fixing L is optional) → continue
-Round 5: 0 new findings → counter = 1 → continue
-Round 6: 0 new findings → counter = 2 → ✅ STOP
+Round 3: 0 new C/H/M → counter = 1 → continue
+Round 4: L=1, 0 new C/H/M → counter = 2 (L does NOT reset) → triage L → ✅ STOP
 ```
 
 **Example C — Correct stop (at round 4):**

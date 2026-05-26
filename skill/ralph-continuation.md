@@ -63,27 +63,19 @@ Findings already in the KI document are **known**, not **new**. Known findings e
 
 The Ralph loop has **two exit paths**:
 
-1. **Stop**: 2 consecutive rounds where the reviewer finds zero **new** C/H/M issues (P and L findings do not reset the counter, but must still be triaged by the main agent). Can trigger at any round N ≥ 2. No maximum round cap. Previously deferred Known Issues do not count as new findings.
+1. **Stop**: 2 consecutive rounds with zero **new** C/H/M findings (P/L do not reset counter; known issues excluded). No round cap.
 2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
-
-**Stop triggers** when the consecutive-zero counter reaches 2 (zero new C/H/M findings for 2 rounds in a row). Counter resets to 0 on any round with new C/H/M > 0. P and L findings do not reset the counter, but the main agent must still triage each (ADOPT/REJECT/MODIFY).
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
-These are the most frequent errors LLMs make. **DO NOT do any of these:**
-
-| ❌ WRONG | Why It's Wrong | ✅ CORRECT |
-|----------|---------------|-----------|
-| Stopping after round 3 because round 3 = 0 new findings | 1 zero round does NOT satisfy stop condition. You need 2 consecutive. | Continue to round 4. Only stop if round 3 AND round 4 both have 0 new findings. |
-| Claiming stop at round 5 because rounds 3 and 5 both have 0 new findings | Rounds 3 and 5 are NOT consecutive — round 4 broke the streak. | Continue. Only stop when round N-1 and round N both have 0 new findings. |
-| Stopping after round 2 with 0 new findings because "looks clean" (and round 1 had new findings) | Lacks consecutive confirmation — need both round 1 AND round 2 to have 0 new findings. | Need round N-1 to also have 0 new findings. |
-| Declaring stop immediately after fixing issues | Fix round ≠ zero round. Next round reviews the fix — only if THAT round is also zero does the counter increment. | Fix → review fixed deliverable → evaluate counter on the review round. |
-| Counting re-discovered KI entries as "new findings" | Issues already in the Known Issues document have been triaged — they are known, not new. | Only findings NOT already in the KI document count as new. |
-| Declaring PASS after 1 zero round (not 2 consecutive) | Single zero does not satisfy stop condition. "PASS with conditions" is not PASS. | Continue. Stop requires round N-1 AND round N both with 0 new findings. |
-| Counting new P or L findings as blocking the counter | P and L are quality-layer findings — still triaged but do not reset the counter. Only new C/H/M (defect-layer) reset the counter. | Zero new C/H/M (with any number of P/L, after triage) → counter increments. I, re-discovered KIs, or empty → counter increments. |
-| Re-labeling H/M issues as "accepted design deviations" or P to avoid counting | Downgrading severity without the contested issue protocol is manipulation, not judgment. | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
-| Declaring PASS after fixing issues without another review round | Fix-and-declare is not review — fixes may introduce regressions. | Fix → next review round → reviewer confirms → then evaluate stop. |
-| Skipping KI re-evaluation at rounds divisible by 3 | Stale KI entries accumulate. Reviewer wastes time re-discovering already-fixed issues. KI document becomes useless noise. | Counter does NOT increment if KI re-evaluation is skipped at rounds divisible by 3. |
+| ❌ WRONG | ✅ CORRECT |
+|----------|-----------|
+| Stopping after 1 zero round (need 2 **consecutive**) | Continue. Stop requires round N-1 AND round N both with 0 new C/H/M findings. |
+| Declaring stop immediately after fixing issues (fix round ≠ zero round) | Fix → next review round → reviewer confirms → then evaluate counter. |
+| Counting new P or L findings as resetting the counter | P/L are quality-tier — triaged but do NOT reset. Only new C/H/M reset. Zero new C/H/M + any P/L → counter increments. |
+| Counting re-discovered KI entries as "new findings" | Only findings NOT already in the KI document count as new. Known = excluded from counter. |
+| Re-labeling H/M as "accepted design deviations" or P to avoid counting | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
+| Skipping KI re-evaluation at rounds divisible by 3 | Counter does NOT increment unless KI re-evaluation is performed this round. |
 
 ### Decision Flowchart
 
@@ -96,7 +88,10 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
  3. Apply all ADOPTed and MODIFYed C/H/M fixes
- 3b. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle)
+ 3b. ⛔ Contested issue check — load `ralph-contested.md` if EITHER condition is true:
+     a. Any C/H/M was REJECTed → include in next round's reviewer context
+     b. Same C/H/M issue was downgraded (relabel to P/L/I or severity lowered) for the 2nd time → contested issue triggered
+ 3c. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle). Track downgraded C/H/M items for cross-round matching.
   4. ⛔ KI Re-evaluation Gate (rounds divisible by 3): counter does NOT increment unless KI re-evaluation is performed this round.
 5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
@@ -120,16 +115,13 @@ Evaluate after each round N, in this order (before starting round N+1):
     → If findings are genuinely new each round → Go to round N+1
 ```
 
-### 🔒 Pre-Stop Why Articulation (MUST complete when consecutive-zero counter reaches 2)
+### 🔒 Pre-Stop Articulation — ❌ AVOID Superficial Articulation
 
-Before confirming stop, articulate: rounds completed, dimensions covered per round, task complexity justification, what issue type is most likely to be missed, and how many known issues remain in the KI document. If you cannot clearly articulate this, continue to the next round.
+> Two consecutive zero rounds are the **minimum requirement**, not an upper bound. Stopping is "confirm that stopping is the correct decision" — not "execute when conditions are met."
+> If articulation reveals concerns 2× in a row, reset counter to 0 (not 1).
 
-> ⚠️ Two consecutive zero-new-finding rounds are the **minimum requirement**, not an upper bound. Stopping is not "execute when conditions are met" — it is "confirm that stopping is the correct decision."
-> If articulation reveals concerns 2 times in a row, reset counter to 0 (not 1).
-
-**❌ What superficial pre-stop articulation looks like**
-- "Two rounds with zero issues, safe to stop" (no analysis of why zero new findings implies safety)
-- "Task is simple, two rounds is enough" (no specific justification for this judgment)
+- "Two rounds with zero issues, safe to stop" (no analysis of why zero implies safety)
+- "Task is simple, two rounds is enough" (no specific justification)
 - "Didn't find anything missing" (did not identify what type of issue could still be missed)
 - "All remaining issues are in the KI document" (KI presence alone is not a stop argument — are they correctly triaged?)
 
@@ -142,4 +134,4 @@ Review checklists are loaded per-phase from dedicated files:
 | **1–3** (Design) | `review-design.md` | Design review checklist + Recall prompt |
 | **4–5** (Code) | `review-code.md` | Code review checklist + Recall prompt |
 
-See `ralph-examples.md` for worked examples covering: intermittent zeros (A), single zero (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).
+See `ralph-examples.md` for worked examples covering: intermittent zeros (A), L does not reset counter (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).
