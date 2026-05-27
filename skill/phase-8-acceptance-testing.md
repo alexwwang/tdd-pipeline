@@ -34,7 +34,7 @@ From Phase 3's Requirements Coverage Matrix, extract `Test File` and `Test Name`
 
 Phase 3's Design Coverage Matrix provides component→test cross-validation: for each AC row, use Phase 2's AC→Component mapping to find components, then cross-check Phase 3 Design Coverage Matrix: the component should have ≥1 test case listed. If not, flag as potential coverage gap.
 
-Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status.
+Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status (L1 evidence). Sub-Phase 1 integration/E2E results provide L2 evidence — extract similarly.
 
 Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new implementation evidence — add to relevant AC rows.
 
@@ -89,7 +89,7 @@ Evaluate in order — first matching diagnosis wins:
 ### Secondary AC Rules
 
 `No Test Plan` / `No Test Code` / `No Impl` → warning (recorded in report, user decides)
-`Weak` → max 20% of secondary ACs may have only L4 evidence (heuristic: allows reasonable manual-only coverage for UI/UX ACs while preventing systematic test avoidance); excess → warning
+`Weak` → max 20% of secondary ACs may have only L3/L4 evidence (heuristic: allows reasonable manual-only coverage for UI/UX ACs while preventing systematic test avoidance); excess → warning
 ✅ `Covered` → PASS
 
 ---
@@ -123,13 +123,13 @@ Evaluate in order — first matching diagnosis wins:
 
 ## Part 4: Independent Verification
 
-An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + source code.
+An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + Phase 6 test results + source code.
 
 ### Verification Checklist
 
 - [ ] Matrix completeness: AC count matches Phase 1 (no ACs silently dropped or added)
 - [ ] Test existence: for BLOCKER-status ACs, verify ALL test cases exist (file + function name). For remaining ACs, verify ≥ 20% random sample (minimum 5)
-- [ ] Evidence accuracy: L1 claims trace to Phase 6 Sub-Phase 0 records; L2 to Sub-Phase 1
+- [ ] Evidence accuracy: L1 claims trace to Phase 6 Sub-Phase 0 records; L2 to Sub-Phase 1; L3 to Sub-Phase 3 manual records; L4 to documented human confirmation
 - [ ] Classification correctness: core/secondary labels match Phase 1
 - [ ] Rollback target correctness: each BLOCKER's root cause phase matches the actual gap
 - [ ] No Test Plan vs No Test Code: diagnosis correctly distinguishes the two
@@ -165,7 +165,7 @@ Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 Release
 | Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
 | Secondary gap | — | No rollback | Recorded in report, user decides |
 
-**Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full rerun from Phase 0. (4) Phase 7 full rerun after Phase 6 passes.
+**Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full re-run from its Sub-Phase 0. (4) Phase 7 full re-run after Phase 6 passes. (5) Phase 8 re-runs after Phase 7 passes (full traceability reconstruction).
 
 ---
 

@@ -229,7 +229,7 @@ Root cause directly determines rollback target (T1 guarantees actionability, no 
 | Code bug | Phase 5 | Phase 5 → 6 → 7 → 8 |
 | Design flaw | Phase 2 | Phase 2 → 3 → 4 → 5 → 6 → 7 → 8 |
 | Requirement error | Phase 1 | Full pipeline |
-| Config/environment only | Fix config | Phase 6 only (full re-run) |
+| Config/environment only | Fix config | Phase 6 only (full re-run), then 7 → 8 |
 
 **Rules:** (1) Phase 6 rerun is always full from Phase 0, never incremental. (2) Rollback to Phase 1–3 preserves existing code but requires new Ralph loops. (3) Config-only fixes need no code change.
 

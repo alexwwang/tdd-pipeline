@@ -41,7 +41,7 @@ Phases 1–5 each end with a mandatory review loop:
 - **Known Issues management**: deferred findings are recorded in a KI document; re-evaluated every 3 rounds and at loop end (valid, fixed, severity change, false positive)
 - **Independent reviewer** subagent for each round
 
-Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 5 for its quality mechanisms: sub-phase gates and 追问 (root cause investigation) protocol. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details. Phase 8 runs after Phase 7 completes — see `phase-8-acceptance-testing.md` for requirements traceability and release decision.
+Phase 6 does NOT use Ralph loop. See Phase 6 row above and `phase-6-pre-release-testing.md` Part 4 for its quality mechanisms: sub-phase gates and 追问 (root cause investigation) protocol. Phase 7 runs after Phase 6 completes — see `phase-7-system-quality-audit.md` for details. Phase 8 runs after Phase 7 completes — see `phase-8-acceptance-testing.md` for requirements traceability and release decision.
 
 ## Priority Classification System
 
@@ -128,7 +128,7 @@ Use natural language triggers in your AI coding tool:
 - **Tests define the contract** — business code is just the implementation
 - **Priority drives depth**: core/key items get comprehensive testing; secondary/peripheral get basic coverage
 - **Cross-phase consistency**: priority classifications must be traceable and justified across all phases
-- **Phase 6 failure → rollback**: root cause determines rollback target; full Phase 6 rerun after any fix
+- **Phase 6 failure → rollback**: root cause determines rollback target; full Phase 6 rerun after any fix, then continue through Phase 7→8
 
 ## Dual-Pass Review Mode
 
@@ -287,7 +287,7 @@ MIT
 - **已知问题管理**：未当场修复的问题写入 Known Issues 文档；每 3 轮及循环结束时对所有 KI 做评估（真实性、失效、升降级）
 - 每轮由**独立审核 subagent** 执行
 
-阶段 6 **不使用** Ralph 循环。详见上方阶段 6 行及 `phase-6-pre-release-testing.md` Part 5。阶段 7 在阶段 6 完成后运行，详见 `phase-7-system-quality-audit.md`。阶段 8 在阶段 7 完成后运行，详见 `phase-8-acceptance-testing.md`。
+阶段 6 **不使用** Ralph 循环。详见上方阶段 6 行及 `phase-6-pre-release-testing.md` Part 4。阶段 7 在阶段 6 完成后运行，详见 `phase-7-system-quality-audit.md`。阶段 8 在阶段 7 完成后运行，详见 `phase-8-acceptance-testing.md`。
 
 ## 优先级分类体系
 
@@ -495,7 +495,7 @@ tdd-pipeline/
 - **测试即契约** — 业务代码只是让测试通过的实现细节
 - **优先级驱动深度**：core/key 全面测试；secondary/peripheral 基本覆盖
 - **跨阶段一致性**：优先级分类必须可追溯、有理由地贯穿所有阶段
-- **阶段 6 失败 → 回滚**：根因决定回滚目标；修复后全量重跑阶段 6
+- **阶段 6 失败 → 回滚**：根因决定回滚目标；修复后全量重跑阶段 6，然后继续执行阶段 7→8
 
 ## 许可证
 
