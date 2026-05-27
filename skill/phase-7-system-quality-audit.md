@@ -335,3 +335,7 @@ Phase 7 passes when:
 - False positive rate is documented
 
 **⛔ Findings rejected by the verifier are removed from the report. They do NOT need to be fixed. Downgraded findings retain their new severity.**
+
+### Next Phase
+
+When Phase 7 passes, load **`phase-8-acceptance-testing.md`** for functional acceptance testing — requirements traceability, AC-level verification, and release decision. Phase 8 answers "did we build the right thing?" after Phases 6–7 answer "did we build it right?"

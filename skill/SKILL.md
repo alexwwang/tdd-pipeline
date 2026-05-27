@@ -1,16 +1,17 @@
 ---
 name: tdd-pipeline
-version: 0.16.0
+version: 0.17.0
 description: >
   A rigorous TDD development workflow enforcing Red-Green-Refactor at the
   pipeline level: Product Design → Technical Solution → Test Plan → Test
-  Code → Business Code → Pre-Release Testing → System Quality Audit.
-  Phases 1–5 are creation phases with mandatory Ralph-loop review.
-  Phase 6 is the pipeline's validation closure — systematic pre-release
-  testing with bug root cause analysis, rollback paths, and user go/no-go.
-  Phase 7 is an incremental system-level audit (16-pattern catalog, pair
-  discovery, execution-order analysis) that runs after Phase 6 completes.
-  No business code is written until tests exist and fail.
+  Code → Business Code → Pre-Release Testing → System Quality Audit →
+  Acceptance Testing. Phases 1–5 are creation phases with mandatory
+  Ralph-loop review. Phase 6 is the pipeline's validation closure —
+  systematic pre-release testing with bug root cause analysis and rollback
+  paths. Phase 7 is an incremental system-level audit (16-pattern catalog,
+  pair discovery, execution-order analysis). Phase 8 is functional
+  acceptance — requirements traceability, AC-level verification, and
+  release decision. No business code is written until tests exist and fail.
 triggers:
   - tdd
   - tdd pipeline
@@ -44,9 +45,9 @@ The TDD Pipeline enforces a **strict, phase-gated workflow** where tests are the
 >
 > **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
-## The 7 Phases
+## The 8 Phases
 
-Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop). Phase 7 is an **incremental system audit** — it runs after Phase 6 completes, applying a broader 16-pattern catalog, integration pair discovery, and execution-order analysis to find issues Phase 6 missed.
+Phases 1–5 are **creation phases** — they produce artifacts reviewed by Ralph loop. Phase 6 is the **validation closure** — it validates the entire pipeline's output through systematic testing, with its own quality mechanisms (not Ralph loop). Phase 7 is an **incremental system audit** — it runs after Phase 6 completes, applying a broader 16-pattern catalog, integration pair discovery, and execution-order analysis to find issues Phase 6 missed. Phase 8 is **functional acceptance** — it traces requirements to implementation, verifies every AC has evidence, and presents the release decision to the user.
 
 
 ## Ralph Loop Review (Phases 1–5)
@@ -74,6 +75,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
   - **After Phase 6 completes** → load `phase-7-system-quality-audit.md` (system-level quality audit: 16-pattern catalog with grep commands, integration pair discovery, execution order analysis)
+  - **After Phase 7 completes** → load `phase-8-acceptance-testing.md` (functional acceptance: requirements traceability, AC-level verification, independent check, release decision)
 - **Review files** (loaded at each phase's review step, see `ralph-review-loop.md` §Review Checklists):
   - Design review (Phase 1–3) → `review-design.md`
   - Code review (Phase 4–5) → `review-code.md`
@@ -142,5 +144,19 @@ When Phase 6 discovers issues, the 追问 (root cause investigation) determines 
 | Config/environment only | Fix config | Rerun Phase 6 only (full rerun) |
 
 See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investigation) protocol with termination criteria and rollback procedures.
+
+## Rollback from Phase 8
+
+When Phase 8 discovers uncovered requirements, the diagnosis determines which phase to roll back to:
+
+| Diagnosis | Root Cause | Rollback Target | Rerun Scope |
+|-----------|-----------|-----------------|-------------|
+| No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
+| No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
+| No Implementation | Phase 5 | Phase 5 | Phase 5→6→7→8 |
+| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
+| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
+
+See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures.
 
 

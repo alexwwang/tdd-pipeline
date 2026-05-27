@@ -233,6 +233,6 @@ Root cause directly determines rollback target (T1 guarantees actionability, no 
 
 **Rules:** (1) Phase 6 rerun is always full from Phase 0, never incremental. (2) Rollback to Phase 1–3 preserves existing code but requires new Ralph loops. (3) Config-only fixes need no code change.
 
-### User Go/No-Go
+### Next Phase
 
-When all sub-phases pass, submit the Release Gate Checklist with evidence. The user decides — go/no-go involves business factors (release window, user impact) beyond technical scope. The checklist provides evidence; the user adds judgment.
+When all sub-phases pass, load **`phase-7-system-quality-audit.md`** for incremental system-level quality review (16-pattern catalog, integration pair discovery, execution-order analysis). Phase 7 finds issues that Phase 6's testing-focused analysis may miss.
