@@ -74,8 +74,8 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 - Phase 5 → `phase-5-business-code.md` (Business Code)
 - Phase 6 → `phase-6-pre-release-testing.md`
   - On sub-phase failure → additionally load `phase-6-root-cause-investigation.md`
-  - **After Phase 6 completes** → load `phase-7-system-quality-audit.md` (system-level quality audit: 16-pattern catalog with grep commands, integration pair discovery, execution order analysis)
-  - **After Phase 7 completes** → load `phase-8-acceptance-testing.md` (functional acceptance: requirements traceability, AC-level verification, independent check, release decision)
+- Phase 7 → `phase-7-system-quality-audit.md` (loaded after Phase 6 completes; 16-pattern catalog with grep commands, integration pair discovery, execution order analysis)
+- Phase 8 → `phase-8-acceptance-testing.md` (loaded after Phase 7 completes; functional acceptance: requirements traceability, AC-level verification, independent check, release decision)
 - **Review files** (loaded at each phase's review step, see `ralph-review-loop.md` §Review Checklists):
   - Design review (Phase 1–3) → `review-design.md`
   - Code review (Phase 4–5) → `review-code.md`
@@ -151,12 +151,13 @@ When Phase 8 discovers uncovered requirements, the diagnosis determines which ph
 
 | Diagnosis | Root Cause | Rollback To | Re-run Scope |
 |-----------|-----------|-------------|-------------|
+| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
+| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
 | No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
 | No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
 | No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 |
-| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
-| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
-| Secondary gap | — | No rollback | Recorded in report, user decides |
+| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
+| Secondary warning | — | No rollback | Recorded in report, user decides |
 
 See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures.
 

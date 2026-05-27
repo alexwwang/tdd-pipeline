@@ -28,6 +28,8 @@ description: >
 | Phase 6 | Sub-phase pass records (test case name → pass/fail) |
 | Phase 7 | Bug fix records (fixed issues become new implementation evidence) |
 
+Note: Phase 4 (Test Code) and Phase 5 (Business Code) outputs are not listed separately — they are verified indirectly through Phase 6 test results (which run Phase 4 tests) and source code (which contains Phase 5 implementation).
+
 ### Merge Rules
 
 From Phase 3's Requirements Coverage Matrix, extract `Test File` and `Test Name` — merge into single `Test Case(s)` column: `test_file::test_name`.
@@ -72,18 +74,19 @@ Evaluate in order — first matching diagnosis wins:
 |-----------|-----------|--------|
 | ❓ Bad Requirement | Requirement is infeasible or self-contradictory | rollback to Phase 1 |
 | ❌ No Design | Phase 2 has no component mapping for this AC | rollback to Phase 2 |
-| ❌ No Impl | Phase 2 has component mapping but component has no code file | rollback to Phase 5 |
 | ❌ No Test Plan | Phase 3 Requirements Coverage Matrix has no row for this AC | rollback to Phase 3 |
 | ❌ No Test Code | Phase 3 has a row but no corresponding test file | rollback to Phase 4 |
-| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER; secondary→warning |
+| ❌ No Impl | Phase 2 has component mapping but component has no code file | rollback to Phase 5 |
+| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER; secondary→warning (see Rollback Paths for split) |
 | ✅ Covered | test case exists + Phase 6 pass + implementation exists | PASS |
 
 **Missing requirement detection**: Use Phase 2's AC→Component mapping to locate code files. Do not keyword-grep Phase 5 code.
 
 ### Core AC Rules
 
-⛔ `No Test Plan` / `No Test Code` / `No Impl` / `No Design` → BLOCKER
-⛔ `Weak` (only L3/L4) → BLOCKER, unless the AC is inherently non-automatable (document justification in report)
+⛔ `Bad Requirement` → BLOCKER (rollback to Phase 1)
+⛔ `No Test Plan` / `No Test Code` / `No Impl` / `No Design` → BLOCKER (each per Rollback Paths table below)
+⛔ `Weak` (only L3/L4) → BLOCKER, unless the AC is inherently non-automatable (document justification in report). Rollback to Phase 4 (write automated tests), then re-run Phase 4→5→6→7→8.
 ✅ `Covered` (L1 or L2) → PASS
 
 ### Secondary AC Rules
@@ -118,13 +121,16 @@ Evaluate in order — first matching diagnosis wins:
 
 ## Non-Automatable Core ACs (if any)
 [ACs with L3/L4 only, with justification]
+
+## Phase 7 Impact (if any)
+[ACs whose evidence changed due to Phase 7 fixes — summarize which ACs were affected and how. Also list ACs affected by unresolved Phase 7 M/L findings — note the finding and its potential impact on evidence validity.]
 ```
 
 ---
 
 ## Part 4: Independent Verification
 
-An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + Phase 6 test results + source code.
+An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + Phase 6 test results + Phase 7 audit report + source code.
 
 ### Verification Checklist
 
@@ -135,6 +141,7 @@ An independent subagent (oracle or dedicated verifier, not involved in Parts 1�
 - [ ] Rollback target correctness: each BLOCKER's root cause phase matches the actual gap
 - [ ] No Test Plan vs No Test Code: diagnosis correctly distinguishes the two
 - [ ] Non-automatable justification: each Core AC claiming L3/L4 only has specific, defensible justification (not generic "hard to test")
+- [ ] Phase 7 fix reflection: if Phase 7 found and fixed bugs, verify the fixes are reflected as implementation evidence in the relevant AC rows
 
 ### Gate
 
@@ -159,14 +166,15 @@ Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 Release
 
 | Diagnosis | Root Cause | Rollback To | Re-run Scope |
 |-----------|-----------|-------------|-------------|
+| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
+| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
 | No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
 | No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
 | No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 |
-| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
-| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
-| Secondary gap | — | No rollback | Recorded in report, user decides |
+| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
+| Secondary warning | — | No rollback | Recorded in report, user decides |
 
-**Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full re-run from its Sub-Phase 0. (4) Phase 7 full re-run after Phase 6 passes. (5) Phase 8 re-runs after Phase 7 passes (full traceability reconstruction).
+**Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full re-run from its Sub-Phase 0. (4) Phase 7 full re-run after Phase 6 passes. (5) Phase 8 re-runs after Phase 7 passes (full traceability reconstruction). (6) **Multiple BLOCKERs** targeting different phases → rollback to the earliest (lowest-numbered) target phase; this subsumes all later-phase rollbacks.
 
 ---
 
