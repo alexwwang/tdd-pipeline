@@ -88,7 +88,8 @@ Evaluate in order — first matching diagnosis wins:
 
 ### Secondary AC Rules
 
-`No Test Plan` / `No Test Code` / `No Impl` → warning (recorded in report, user decides)
+`No Test Plan` / `No Test Code` / `No Impl` / `No Design` → warning (recorded in report, user decides)
+`Bad Requirement` → warning (recorded in report, user decides whether to rollback to Phase 1)
 `Weak` → max 20% of secondary ACs may have only L3/L4 evidence (heuristic: allows reasonable manual-only coverage for UI/UX ACs while preventing systematic test avoidance); excess → warning
 ✅ `Covered` → PASS
 
@@ -128,7 +129,7 @@ An independent subagent (oracle or dedicated verifier, not involved in Parts 1�
 ### Verification Checklist
 
 - [ ] Matrix completeness: AC count matches Phase 1 (no ACs silently dropped or added)
-- [ ] Test existence: for BLOCKER-status ACs, verify ALL test cases exist (file + function name). For remaining ACs, verify ≥ 20% random sample (minimum 5)
+- [ ] Test existence: for BLOCKER-status ACs, verify ALL test cases exist (file + function name). For remaining ACs, verify ≥ 20% random sample (minimum 5, or all if fewer than 5)
 - [ ] Evidence accuracy: L1 claims trace to Phase 6 Sub-Phase 0 records; L2 to Sub-Phase 1; L3 to Sub-Phase 3 manual records; L4 to documented human confirmation
 - [ ] Classification correctness: core/secondary labels match Phase 1
 - [ ] Rollback target correctness: each BLOCKER's root cause phase matches the actual gap
