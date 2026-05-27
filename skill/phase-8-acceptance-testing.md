@@ -14,6 +14,8 @@ description: >
 
 **When loaded**: After Phase 7 verification audit passes.
 
+**Execution**: Parts 1–3 (matrix construction, coverage verification, report) are executed by the main agent or a dedicated acceptance subagent. Part 4 must be performed by a different agent to ensure independence.
+
 ---
 
 ## Part 1: Traceability Matrix Construction
@@ -23,7 +25,7 @@ description: >
 | Source | Extract |
 |--------|---------|
 | Phase 1 | All User Stories + Acceptance Criteria (core/secondary) |
-| Phase 2 | Component → code file mapping (AC→Component path) |
+| Phase 2 | Component → AC mapping (Serves Phase 1 ACs column from Component Table) |
 | Phase 3 | Requirements Coverage Matrix (AC→Test Case mapping) + Design Coverage Matrix (Component→Test Case) |
 | Phase 6 | Sub-phase pass records (test case name → pass/fail) |
 | Phase 7 | Bug fix records (fixed issues become new implementation evidence) |
@@ -36,7 +38,7 @@ From Phase 3's Requirements Coverage Matrix, extract `Test File` and `Test Name`
 
 Phase 3's Design Coverage Matrix provides component→test cross-validation: for each AC row, use Phase 2's AC→Component mapping to find components, then cross-check Phase 3 Design Coverage Matrix: the component should have ≥1 test case listed. If not, flag as potential coverage gap.
 
-Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status (L1 evidence). Sub-Phase 1 integration/E2E results provide L2 evidence — extract similarly.
+Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status (L1 evidence). If Phase 6 results are not in structured format, re-run with appropriate output flags (`--tb=no -q` for pytest, `--reporter=verbose` for vitest) to extract per-test-case pass/fail. Sub-Phase 1 integration/E2E results provide L2 evidence — extract similarly.
 
 Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new implementation evidence — add to relevant AC rows.
 
@@ -55,7 +57,7 @@ Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new impleme
 |-------|--------|
 | L1 | Phase 6 Sub-Phase 0 (unit test pass) |
 | L2 | Phase 6 Sub-Phase 1 (integration/E2E pass) |
-| L3 | Phase 6 Sub-Phase 3 (manual exploratory record) |
+| L3 | Phase 6 Sub-Phase 3 (manual exploratory checklist results) |
 | L4 | Phase 8 dedicated human confirmation |
 
 Note: Phase 6 Sub-Phase 1.5 (Soak), 1.6 (Contract), and 2 (Cross-Cutting) are system-level checks, not per-AC evidence — they don't map to individual AC rows.
@@ -77,10 +79,14 @@ Evaluate in order — first matching diagnosis wins:
 | ❌ No Test Plan | Phase 3 Requirements Coverage Matrix has no row for this AC | rollback to Phase 3 |
 | ❌ No Test Code | Phase 3 has a row but no corresponding test file | rollback to Phase 4 |
 | ❌ No Impl | Phase 2 has component mapping but component has no code file | rollback to Phase 5 |
-| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER; secondary→warning (see Rollback Paths for split) |
+| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER (unless non-automatable, document justification); secondary→warning (see Rollback Paths for split) |
 | ✅ Covered | test case exists + Phase 6 pass + implementation exists | PASS |
 
-**Missing requirement detection**: Use Phase 2's AC→Component mapping to locate code files. Do not keyword-grep Phase 5 code.
+**Missing requirement detection**: Use Phase 2's AC→Component mapping to identify which components serve each AC, then locate those components' code files through the project's source directory structure (Phase 5 output). Do not keyword-grep Phase 5 code for requirement text.
+
+**Unresolved Phase 7 findings**: ACs associated with unresolved Phase 7 M/L findings pass their diagnosis but must be listed in the Phase 7 Impact section with a risk assessment (finding ID, potential impact on evidence validity, recommended user attention level). These do NOT trigger BLOCKER status — they are advisory flags for the user's go/no-go decision.
+
+**Phase 7 findings → AC mapping**: For each Phase 7 finding, identify affected components via file:line references, then use Phase 2's AC→Component mapping to find associated ACs. Findings with no specific component reference are system-level and noted separately.
 
 ### Core AC Rules
 
@@ -104,6 +110,8 @@ Evaluate in order — first matching diagnosis wins:
 
 ```markdown
 # Acceptance Report
+
+**Report Status**: original | corrected (N factual errors fixed)
 
 ## Coverage Summary
 - Core ACs: X/X covered (Y blockers)

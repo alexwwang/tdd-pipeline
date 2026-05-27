@@ -156,7 +156,7 @@ When Phase 8 discovers uncovered requirements, the diagnosis determines which ph
 | No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
 | No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
 | No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 |
-| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
+| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 (unless non-automatable — documented justification required) |
 | Secondary warning | — | No rollback | Recorded in report, user decides |
 
 See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures.
