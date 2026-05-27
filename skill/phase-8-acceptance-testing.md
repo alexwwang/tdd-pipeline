@@ -2,9 +2,10 @@
 name: acceptance-testing
 description: >
   Functional acceptance testing with requirements traceability. Loaded after
-  Phase 7 completes. Traces Phase 1 requirements through Phase 2 components
-  and Phase 3 test cases to Phase 5 implementation. AC-level verification
-  with evidence hierarchy, independent check, and release decision.
+  Phase 7 completes. Traces Phase 1 requirements through Phase 2 components,
+  Phase 3-4 test cases, to Phase 5 implementation, with Phase 6-7 evidence.
+  AC-level verification with evidence hierarchy, independent check, and
+  release decision.
 ---
 
 # Acceptance Testing — Phase 8: Functional Verification
@@ -29,9 +30,9 @@ description: >
 
 ### Merge Rules
 
-Phase 3's Requirements Coverage Matrix has three columns (`Test Type | Test File | Test Name`) — merge into single `Test Case(s)` column: `test_file::test_name`.
+From Phase 3's Requirements Coverage Matrix, extract `Test File` and `Test Name` — merge into single `Test Case(s)` column: `test_file::test_name`.
 
-Phase 3's Design Coverage Matrix provides component→test cross-validation: every AC's corresponding component should have test coverage.
+Phase 3's Design Coverage Matrix provides component→test cross-validation: for each AC row, use Phase 2's AC→Component mapping to find components, then cross-check Phase 3 Design Coverage Matrix: the component should have ≥1 test case listed. If not, flag as potential coverage gap.
 
 Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status.
 
@@ -55,6 +56,8 @@ Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new impleme
 | L3 | Phase 6 Sub-Phase 3 (manual exploratory record) |
 | L4 | Phase 8 dedicated human confirmation |
 
+Note: Phase 6 Sub-Phase 1.5 (Soak), 1.6 (Contract), and 2 (Cross-Cutting) are system-level checks, not per-AC evidence — they don't map to individual AC rows.
+
 ---
 
 ## Part 2: Coverage Verification
@@ -63,15 +66,17 @@ For each AC in the traceability matrix, diagnose its coverage status:
 
 ### Diagnosis Table
 
+Evaluate in order — first matching diagnosis wins:
+
 | Diagnosis | Condition | Action |
 |-----------|-----------|--------|
-| ✅ Covered | test case exists + Phase 6 pass + implementation exists | PASS |
-| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER; secondary→warning |
+| ❓ Bad Requirement | Requirement is infeasible or self-contradictory | rollback to Phase 1 |
+| ❌ No Design | Phase 2 has no component mapping for this AC | rollback to Phase 2 |
+| ❌ No Impl | Phase 2 has component mapping but component has no code file | rollback to Phase 5 |
 | ❌ No Test Plan | Phase 3 Requirements Coverage Matrix has no row for this AC | rollback to Phase 3 |
 | ❌ No Test Code | Phase 3 has a row but no corresponding test file | rollback to Phase 4 |
-| ❌ No Impl | Phase 2 has no component, or component has no code file | rollback to Phase 5 |
-| ❌ No Design | Phase 2 has no component mapping for this AC | rollback to Phase 2 |
-| ❓ Bad Requirement | Requirement is infeasible or self-contradictory | rollback to Phase 1 |
+| ⚠️ Weak | implementation exists but only L3/L4 evidence | core→BLOCKER; secondary→warning |
+| ✅ Covered | test case exists + Phase 6 pass + implementation exists | PASS |
 
 **Missing requirement detection**: Use Phase 2's AC→Component mapping to locate code files. Do not keyword-grep Phase 5 code.
 
@@ -83,8 +88,8 @@ For each AC in the traceability matrix, diagnose its coverage status:
 
 ### Secondary AC Rules
 
-`No Test` / `No Impl` → warning (recorded in report, user decides)
-`Weak` → max 20% of secondary ACs may have only L4 evidence; excess → warning
+`No Test Plan` / `No Test Code` / `No Impl` → warning (recorded in report, user decides)
+`Weak` → max 20% of secondary ACs may have only L4 evidence (heuristic: allows reasonable manual-only coverage for UI/UX ACs while preventing systematic test avoidance); excess → warning
 ✅ `Covered` → PASS
 
 ---
@@ -118,16 +123,17 @@ For each AC in the traceability matrix, diagnose its coverage status:
 
 ## Part 4: Independent Verification
 
-An independent subagent (not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + source code.
+An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + source code.
 
 ### Verification Checklist
 
 - [ ] Matrix completeness: AC count matches Phase 1 (no ACs silently dropped or added)
-- [ ] Test existence: grep a sample of test cases — files and function names actually exist
+- [ ] Test existence: for BLOCKER-status ACs, verify ALL test cases exist (file + function name). For remaining ACs, verify ≥ 20% random sample (minimum 5)
 - [ ] Evidence accuracy: L1 claims trace to Phase 6 Sub-Phase 0 records; L2 to Sub-Phase 1
 - [ ] Classification correctness: core/secondary labels match Phase 1
 - [ ] Rollback target correctness: each BLOCKER's root cause phase matches the actual gap
 - [ ] No Test Plan vs No Test Code: diagnosis correctly distinguishes the two
+- [ ] Non-automatable justification: each Core AC claiming L3/L4 only has specific, defensible justification (not generic "hard to test")
 
 ### Gate
 
@@ -158,6 +164,8 @@ Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 technic
 | No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
 | Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
 | Secondary gap | — | No rollback | Recorded in report, user decides |
+
+**Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full rerun from Phase 0. (4) Phase 7 full rerun after Phase 6 passes.
 
 ---
 

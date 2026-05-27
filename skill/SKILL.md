@@ -149,13 +149,14 @@ See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investi
 
 When Phase 8 discovers uncovered requirements, the diagnosis determines which phase to roll back to:
 
-| Diagnosis | Root Cause | Rollback Target | Rerun Scope |
-|-----------|-----------|-----------------|-------------|
+| Diagnosis | Root Cause | Rollback To | Re-run Scope |
+|-----------|-----------|-------------|-------------|
 | No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
 | No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
-| No Implementation | Phase 5 | Phase 5 | Phase 5→6→7→8 |
+| No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 |
 | No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
 | Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
+| Secondary gap | — | No rollback | Recorded in report, user decides |
 
 See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures.
 
