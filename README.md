@@ -361,6 +361,8 @@ Phase 3: 测试深度由上游分类驱动
 - `pre-release`
 - `release test`
 - `ship it`
+- `go/no-go`
+- `ready to deploy`
 - `上线前测试` / `发版前检查` / `回归测试`
 - `产品设计` / `技术方案` / `测试方案` / `测试驱动`
 

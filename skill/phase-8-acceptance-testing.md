@@ -143,7 +143,7 @@ An independent subagent (oracle or dedicated verifier, not involved in Parts 1â€
 
 ## Part 5: User Go/No-Go
 
-Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 technical report + Phase 7 audit report.
+Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 Release Gate Checklist + Phase 7 audit report.
 
 | Condition | Action |
 |-----------|--------|

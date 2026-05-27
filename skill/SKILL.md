@@ -10,8 +10,8 @@ description: >
   systematic pre-release testing with bug root cause analysis and rollback
   paths. Phase 7 is an incremental system-level audit (16-pattern catalog,
   pair discovery, execution-order analysis). Phase 8 is functional
-  acceptance — requirements traceability, AC-level verification, and
-  release decision. No business code is written until tests exist and fail.
+  acceptance — requirements traceability, AC-level verification, independent
+  check, and release decision. No business code is written until tests exist and fail.
 triggers:
   - tdd
   - tdd pipeline
@@ -100,7 +100,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
 | Bypass Ralph gates (Phase 1–5) | Hidden flaws propagate downstream | Run until gate pass, enforce zero M+ |
 | One giant test file | Poor organization, hard to maintain | 1 file per component/module |
 | Only happy-path tests | Misses real-world failures | MUST test errors + boundaries |
-| Phase 6 partial re-run | Fixes may introduce regressions | Always full re-run from Phase 6 Phase 0 |
+| Phase 6 partial re-run | Fixes may introduce regressions | Always full re-run from Phase 6 Phase 0, then continue through Phase 7→8 |
 | Skip 追问 (root cause investigation) when Phase 6 fails | Fixes symptom, not root cause | Run Layer Isolation + 5-Why + T1-T3 |
 
 ## Split Decision
@@ -135,13 +135,13 @@ If `SPLIT = true`, load **`task-tree.md`** for the decomposition, execution, con
 
 When Phase 6 discovers issues, the 追问 (root cause investigation) determines which phase to roll back to:
 
-| Root Cause Layer | Rollback Target | Rerun Scope |
-|-----------------|-----------------|-------------|
-| Test gap (missing coverage) | Phase 4 | Rerun Phase 4 → 5 → 6 |
-| Code implementation bug | Phase 5 | Rerun Phase 5 → 6 |
-| Design/architecture flaw | Phase 2 | Rerun Phase 2 → 3 → 4 → 5 → 6 |
-| Requirement misunderstanding | Phase 1 | Rerun full pipeline |
-| Config/environment only | Fix config | Rerun Phase 6 only (full rerun) |
+| Root Cause Layer | Rollback To | Re-run Scope |
+|-----------------|-------------|-------------|
+| Test gap (missing coverage) | Phase 4 | Phase 4 → 5 → 6 → 7 → 8 |
+| Code implementation bug | Phase 5 | Phase 5 → 6 → 7 → 8 |
+| Design/architecture flaw | Phase 2 | Phase 2 → 3 → 4 → 5 → 6 → 7 → 8 |
+| Requirement misunderstanding | Phase 1 | Full pipeline |
+| Config/environment only | Fix config | Phase 6 only (full re-run), then 7 → 8 |
 
 See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investigation) protocol with termination criteria and rollback procedures.
 

@@ -4,8 +4,8 @@ description: >
   Pre-release testing and bug root cause analysis for the TDD pipeline's
   validation closure (Phase 6). Covers: sub-phase testing (Phase 0–3,
   with conditional Phase 1.5 Soak Test and Phase 1.6 Contract Verification),
-  追问 (root cause investigation) protocol with termination guarantees, rollback paths, and user
-  go/no-go decision. On sub-phase failure, additionally load
+  追问 (root cause investigation) protocol with termination guarantees, rollback paths, and Release
+  Gate Checklist. On sub-phase failure, additionally load
   phase-6-root-cause-investigation.md.
 ---
 
@@ -182,7 +182,7 @@ For each pair of interacting components, walk through every row. If any cell is 
 
 ## Part 4: Pipeline Integration
 
-Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 output through systematic testing. It does NOT use Ralph loop. No reviewer subagent for go/no-go — the release decision is the user's business decision, not a technical review.
+Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 output through systematic testing. It does NOT use Ralph loop. Phase 6 uses sub-phase gates and 追问 protocol instead of reviewer subagents.
 
 ### Quality Mechanisms
 
@@ -190,14 +190,14 @@ Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 o
 |-----------|------|---------|
 | **Sub-phase gates** | Phase 0–3 (0 → 1 → 1.5? → 1.6? → 2 → 3) | Objective pass/fail verification |
 | **追问 protocol** | Sub-phase failure | Root cause investigation with termination guarantees |
-| **User go/no-go** | All sub-phases pass | Final business decision |
+| **Release Gate Checklist** | All sub-phases pass | Evidence compilation for Phase 7→8→user decision |
 
 ### Sub-phase Execution Rules
 
 1. **Strict sequential**: Phase 0 → 1 → 1.5 (if applicable) → 1.6 (if applicable) → 2 → 3. No skipping.
 2. **Gate is pass/fail**: No severity classification. Green or red.
 3. **Any failure** → load `phase-6-root-cause-investigation.md`, run 追问 protocol → determine rollback target.
-4. **All pass** → fill Release Gate Checklist with evidence → submit to user.
+4. **All pass** → fill Release Gate Checklist with evidence → proceed to Phase 7.
 
 ### 追问 (Root Cause Investigation) Protocol Summary
 
@@ -223,13 +223,13 @@ Sub-phase fails
 
 Root cause directly determines rollback target (T1 guarantees actionability, no ambiguity):
 
-| Root Cause Layer | Rollback To | Rerun Scope |
+| Root Cause Layer | Rollback To | Re-run Scope |
 |-----------------|-------------|-------------|
-| Test gap | Phase 4 | Phase 4 → 5 → 6 |
-| Code bug | Phase 5 | Phase 5 → 6 |
-| Design flaw | Phase 2 | Phase 2 → 3 → 4 → 5 → 6 |
+| Test gap | Phase 4 | Phase 4 → 5 → 6 → 7 → 8 |
+| Code bug | Phase 5 | Phase 5 → 6 → 7 → 8 |
+| Design flaw | Phase 2 | Phase 2 → 3 → 4 → 5 → 6 → 7 → 8 |
 | Requirement error | Phase 1 | Full pipeline |
-| Config/environment only | Fix config | Phase 6 only (full rerun) |
+| Config/environment only | Fix config | Phase 6 only (full re-run) |
 
 **Rules:** (1) Phase 6 rerun is always full from Phase 0, never incremental. (2) Rollback to Phase 1–3 preserves existing code but requires new Ralph loops. (3) Config-only fixes need no code change.
 
