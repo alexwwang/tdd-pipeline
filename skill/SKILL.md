@@ -159,6 +159,6 @@ When Phase 8 discovers uncovered requirements, the diagnosis determines which ph
 | Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 (unless non-automatable — documented justification required) |
 | Secondary warning | — | No rollback | Recorded in report, user decides |
 
-See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures.
+See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures. When multiple BLOCKERs target different phases, rollback to the earliest phase (this subsumes all later-phase rollbacks).
 
 

@@ -3,7 +3,7 @@ name: acceptance-testing
 description: >
   Functional acceptance testing with requirements traceability. Loaded after
   Phase 7 completes. Traces Phase 1 requirements through Phase 2 components,
-  Phase 3-4 test cases, to Phase 5 implementation, with Phase 6-7 evidence.
+  Phase 3 test cases (Phase 4 test code verified indirectly through Phase 6), to Phase 5 implementation, with Phase 6-7 evidence.
   AC-level verification with evidence hierarchy, independent check, and
   release decision.
 ---
@@ -27,7 +27,7 @@ description: >
 | Phase 1 | All User Stories + Acceptance Criteria (core/secondary) |
 | Phase 2 | Component → AC mapping (Serves Phase 1 ACs column from Component Table) |
 | Phase 3 | Requirements Coverage Matrix (AC→Test Case mapping) + Design Coverage Matrix (Component→Test Case) |
-| Phase 6 | Sub-phase pass records (test case name → pass/fail) |
+| Phase 6 | Sub-phase pass records (test case name → pass/fail) + Release Gate Checklist (evidence compilation for release decision) |
 | Phase 7 | Bug fix records (fixed issues become new implementation evidence) |
 
 Note: Phase 4 (Test Code) and Phase 5 (Business Code) outputs are not listed separately — they are verified indirectly through Phase 6 test results (which run Phase 4 tests) and source code (which contains Phase 5 implementation).
@@ -40,7 +40,9 @@ Phase 3's Design Coverage Matrix provides component→test cross-validation: for
 
 Phase 6 Sub-Phase 0 output (pytest/vitest) maps test case names to pass/fail status (L1 evidence). If Phase 6 results are not in structured format, re-run with appropriate output flags (`--tb=no -q` for pytest, `--reporter=verbose` for vitest) to extract per-test-case pass/fail. Sub-Phase 1 integration/E2E results provide L2 evidence — extract similarly.
 
-Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new implementation evidence — add to relevant AC rows.
+Sub-Phase 3 manual exploratory checklist results provide L3 evidence. Map each checklist item to the relevant AC row via the component(s) column. If a manual check validates an AC with no automated test, set Evidence Level to L3.
+
+Phase 7 fixed issues: if Phase 7 found and fixed bugs, the fixes are new implementation evidence — update the relevant AC rows by upgrading Evidence Level (if re-run results now show L1/L2) and adding a note in the Phase 7 Impact section.
 
 ### Matrix Format
 
@@ -84,9 +86,11 @@ Evaluate in order — first matching diagnosis wins:
 
 **Missing requirement detection**: Use Phase 2's AC→Component mapping to identify which components serve each AC, then locate those components' code files through the project's source directory structure (Phase 5 output). Do not keyword-grep Phase 5 code for requirement text.
 
-**Unresolved Phase 7 findings**: ACs associated with unresolved Phase 7 M/L findings pass their diagnosis but must be listed in the Phase 7 Impact section with a risk assessment (finding ID, potential impact on evidence validity, recommended user attention level). These do NOT trigger BLOCKER status — they are advisory flags for the user's go/no-go decision.
+**Unresolved Phase 7 findings**: ACs associated with unresolved Phase 7 findings below C/H severity pass their diagnosis but must be listed in the Phase 7 Impact section with a risk assessment (finding ID, potential impact on evidence validity, recommended user attention level). These do NOT trigger BLOCKER status — they are advisory flags for the user's go/no-go decision. **Defensive check**: if any C/H findings remain unresolved (should not occur after Phase 7 gate), treat as BLOCKER — do not proceed to Part 5.
 
 **Phase 7 findings → AC mapping**: For each Phase 7 finding, identify affected components via file:line references, then use Phase 2's AC→Component mapping to find associated ACs. Findings with no specific component reference are system-level and noted separately.
+
+**Secondary Threshold Check**: After diagnosing all ACs, count secondary ACs with `Weak` diagnosis. If >20% of total secondary ACs have only L3/L4 evidence, list the excess in the Warnings section of the report.
 
 ### Core AC Rules
 
@@ -138,7 +142,7 @@ Evaluate in order — first matching diagnosis wins:
 
 ## Part 4: Independent Verification
 
-An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + Phase 6 test results + Phase 7 audit report + source code.
+An independent subagent (oracle or dedicated verifier, not involved in Parts 1–3) receives the acceptance report + Phase 1–3 documents + Phase 6 test results + Phase 7 audit report + test code files + implementation source code.
 
 ### Verification Checklist
 
@@ -150,6 +154,7 @@ An independent subagent (oracle or dedicated verifier, not involved in Parts 1�
 - [ ] No Test Plan vs No Test Code: diagnosis correctly distinguishes the two
 - [ ] Non-automatable justification: each Core AC claiming L3/L4 only has specific, defensible justification (not generic "hard to test")
 - [ ] Phase 7 fix reflection: if Phase 7 found and fixed bugs, verify the fixes are reflected as implementation evidence in the relevant AC rows
+- [ ] Phase 7 Impact completeness: all unresolved findings from the Phase 7 audit report (below C/H severity) are listed with their affected ACs, and the risk assessment includes finding ID, potential impact, and recommended attention level
 
 ### Gate
 
@@ -179,7 +184,7 @@ Submit to user: acceptance report (Part 3, verified by Part 4) + Phase 6 Release
 | No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
 | No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
 | No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 |
-| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
+| Weak (core) | Phase 4 | Phase 4 | Phase 4→5→6→7→8 (unless non-automatable — documented justification required) |
 | Secondary warning | — | No rollback | Recorded in report, user decides |
 
 **Rules:** (1) Rollback preserves upstream phase artifacts. (2) All Ralph loops from rollback point onward must re-run. (3) Phase 6 always full re-run from its Sub-Phase 0. (4) Phase 7 full re-run after Phase 6 passes. (5) Phase 8 re-runs after Phase 7 passes (full traceability reconstruction). (6) **Multiple BLOCKERs** targeting different phases → rollback to the earliest (lowest-numbered) target phase; this subsumes all later-phase rollbacks.
