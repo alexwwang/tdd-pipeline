@@ -22,6 +22,8 @@ description: >
 
 Before scanning patterns, enumerate ALL interacting component pairs. Missing a pair means undetected bugs.
 
+**⛔ De-duplication rule**: If Phase 6 Part 3 (Integration Gap Detection Checklist) already covered all interacting pairs across all 14 dimensions, **skip Phase 7 Part 1 dimension check entirely** and proceed to Part 2. Only re-analyze pairs or dimensions that Phase 6 did not cover. This avoids redundant analysis and ensures Phase 7 focuses on the 16-pattern catalog (Part 2) and execution-order analysis (Part 3) — the incremental value Phase 7 provides over Phase 6.
+
 ### Pair Types (check each)
 
 | Pair Type | How to Identify | Example |
@@ -327,14 +329,52 @@ The verifier receives the Phase 7 findings report and the source code. Verify ea
 - **Execution order checked**: Does Part 3 address every validation chain in the codebase?
 - **Evidence present**: Each finding cites specific file:line or grep output — not just descriptions
 
+### Severity Classification
+
+Phase 7 findings use the pipeline-wide severity system:
+
+| Severity | Meaning |
+|----------|---------|
+| **C** (Critical) | Release-blocking — finding indicates a systemic quality failure that undermines the current release |
+| **H** (High) | Significant quality risk — genuine bug or omission that should be fixed before release |
+| **M** (Medium) | Moderate issue — defect or gap that does not block release but should be documented and reviewed |
+| **P** (Petty) | Minor — wording, formatting, or non-functional concern that does not affect release decision |
+| **L** (Low) | Informational — observation for future reference, not actionable for current release |
+
+When a finding's C/H/M severity is ambiguous, default to the lower severity. The gate condition below uses C/H as the pass/fail threshold — all **unresolved** C/H findings must be addressed (either fixed or rejected by verifier) before Phase 7 passes.
+
+**Note**: Phase 7's severity system is self-contained and independent from the Ralph loop severity (C/H/M/P/L/I). In the Ralph loop, gate blocks on C/H/M; in Phase 7, gate blocks on C/H only (M is recorded but does not block). See `SKILL.md` Severity Systems for the full comparison.
+
 ### Gate Condition
 
 Phase 7 passes when:
 - All coverage checks show complete (or gaps are explicitly acknowledged and justified)
-- Zero findings remain at C/H that are unaddressed
+- Zero findings remain at C/H that are unresolved
 - False positive rate is documented
 
-**⛔ Findings rejected by the verifier are removed from the report. They do NOT need to be fixed. Downgraded findings retain their new severity.**
+**⛔ Findings rejected by the verifier are removed from the report. They do NOT need to be fixed. Downgraded findings retain their new severity — a C/H finding downgraded below C/H (to M or lower) counts as resolved for the gate condition.**
+
+**⚠️ Contested downgrade escalation**: If the main agent believes a verifier's downgrade is incorrect (e.g., a genuine C bug was downgraded to M), the main agent may **escalate to the user** with: (a) the original finding and severity, (b) the verifier's downgrade rationale, (c) the main agent's counter-argument. The user makes the final severity determination. Until the user resolves the escalation, the finding is treated as unresolved.
+
+### Rollback Guidance
+
+Phase 7 findings indicate bugs or omissions that prior phases missed. When a C/H finding is **confirmed** by the verifier (not rejected):
+1. Determine the finding's root cause layer using the Phase 6 categorization (test gap, code bug, design flaw, requirement misunderstanding, or config/environment — see `phase-6-pre-release-testing.md` Rollback Paths).
+2. Apply the Phase 6 rollback table to identify the target phase.
+3. Roll back to the target phase, fix, and re-run from that phase through Phase 7.
+4. If root cause is unclear (finding crosses multiple layers), escalate to user.
+5. **Fallback for non-fitting findings**: Some Phase 7 patterns (e.g., Pattern 10 Version Drift, Pattern 15 Implicit Contract Violations) may not cleanly map to Phase 6's five root cause categories. If a finding does not fit any category, escalate to user with the finding's actual root cause description and let the user determine the appropriate rollback target. Do not force-fit a finding into an inappropriate category.
+
+   **Escalation template for non-standard rollback**:
+   ```
+   Finding: [ID] [severity] — [one-line description]
+   Root cause: [why this doesn't fit the standard 5 categories]
+   Closest standard category: [which of test gap/code bug/design flaw/requirement/config is nearest, and why it's not exact]
+   Recommended rollback target: [Phase N]
+   Alternative: [different rollback target or no rollback with justification]
+   ```
+
+Findings rejected by the verifier do NOT trigger rollback.
 
 ### Next Phase
 

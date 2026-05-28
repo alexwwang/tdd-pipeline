@@ -65,7 +65,7 @@ stubs:
 
 **Before review**: Write an outline. If it contains ≥ 3 test modules or ≥ 5 test groups, follow the Task Tree & Context Management protocol in SKILL.md (index.md first → parallel modules → merged Ralph loop).
 
-After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
+Before running the Ralph review, complete the `phase-4-test-infrastructure-checklist.md` (9-item structural audit + verification gate). Then run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
 Upon gate pass + user approval, proceed to Phase 5 → `phase-5-business-code.md`.
 
 **Phase 4 Code Review Specifics**: The reviewer must check:

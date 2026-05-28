@@ -76,18 +76,19 @@ If not, supplement before proceeding.
             block_until_resolved
     ```
 
-   edge_categories = [
-     null_inputs, empty_collections, max_values,
-     concurrent_access, timeouts, network_failures,
-     invalid_state_transitions,
-     serialization_boundary,
-     error_handler_correctness,
-     implicit_contract,
-     resource_leak,
-     cascading_failure,
-     performance_logic,
-   ]
-```
+    ```python
+    edge_categories = [
+      null_inputs, empty_collections, max_values,
+      concurrent_access, timeouts, network_failures,
+      invalid_state_transitions,
+      serialization_boundary,
+      error_handler_correctness,
+      implicit_contract,
+      resource_leak,
+      cascading_failure,
+      performance_logic,
+    ]
+    ```
 
 ## Deliverable Template
 

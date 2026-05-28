@@ -16,6 +16,8 @@ Product Design → Technical Solution → Test Plan → Test Code → Business C
 ```
 
 > **Core Principle**: If you cannot write a failing test for it, you do not understand it well enough to build it.
+>
+> **Pace Principle**: 慢就是快，欲速不达 (Slow is fast; haste makes waste). The Ralph loop's review rounds are not overhead — they are where quality is built. Every shortcut through a gate saves minutes now but costs hours in debugging later.
 
 ## The 8 Phases
 
@@ -36,8 +38,8 @@ Phases 1–5 are **creation phases** with Ralph-loop review. Phase 6 is the **va
 
 Phases 1–5 each end with a mandatory review loop:
 
-- **Stop condition**: 2 consecutive rounds with zero **new** C/H/M1 findings (M2 and L do not reset the counter). Issues already listed in the Known Issues document do not count as new. Can trigger at any round ≥ 2. No round cap.
-- **Persistent issues escalation**: if the same C/H/M1 findings recur despite fixes → model evaluates root cause → escalate to user for clarification OR rollback to prior phase
+- **Stop condition**: 2 consecutive rounds with zero **new** C/H/M findings (P and L do not reset the counter; known issues excluded). Issues already listed in the Known Issues document do not count as new. Can trigger at any round ≥ 2. No round cap.
+- **Persistent issues escalation**: if the same C/H/M findings recur despite fixes → model evaluates root cause → escalate to user for clarification OR rollback to prior phase
 - **Known Issues management**: deferred findings are recorded in a KI document; re-evaluated every 3 rounds and at loop end (valid, fixed, severity change, false positive)
 - **Independent reviewer** subagent for each round
 
@@ -85,17 +87,20 @@ At each phase, only load the corresponding phase file. Do not load all files at 
 | `ralph-review-loop.md` | Shared review protocol with decision flowchart |
 | `ralph-gpav.md` | GPAV submission protocol, RPS scanner (loaded when Watchdog active) |
 | `ralph-continuation.md` | Rounds 2+ protocol: evaluation, stop conditions, flowchart |
-| `ralph-contested.md` | Contested issue protocol (loaded when C/H/M1 is REJECTed) |
+| `ralph-contested.md` | Contested issue protocol (loaded when C/H/M is REJECTed) |
 | `ralph-examples.md` | Worked examples: stop conditions, contested issues (loaded on demand) |
 | `ralph-log-template.md` | Review log format template (loaded at loop start) |
 | `review-design.md` | Design review checklist + Recall prompt (Phase 1–3) |
 | `review-code.md` | Code review checklist + Recall prompt (Phase 4–5) |
 | `review-precision-filter.md` | Dual-pass Precision Filter prompt + aggregation (shared) |
+| `severity-migration.md` | Severity classification migration guide (pre-v0.13 → v0.13). Loaded on demand. |
 | `task-tree.md` | Task decomposition, context management, versioning (loaded only when SPLIT=true) |
 | `phase-1-product-design.md` | Requirements gathering via deep-interview, core/secondary classification |
 | `phase-2-technical-solution.md` | Architecture via Planner→Architect→Critic consensus, key/peripheral classification |
 | `phase-3-test-plan.md` | Test strategy with coverage matrices and priority consistency validation |
+| `phase-3-edge-reference.md` | Edge case discovery and coverage guidelines for test planning. Loaded with Phase 3 review only (not during deliverable creation). |
 | `phase-4-test-code.md` | Write all tests first (must compile, must fail at runtime) |
+| `phase-4-test-infrastructure-checklist.md` | Test infrastructure validation checklist. Applied after test code, before Ralph review. |
 | `phase-5-business-code.md` | Implement minimum code to pass tests, then refactor |
 | `phase-6-pre-release-testing.md` | Pre-release testing, 追问 (root cause investigation) protocol, rollback paths, release gate verification |
 | `phase-6-root-cause-investigation.md` | Bug root cause investigation (Layer Isolation, 5-Why, Fix Verification) + common bug patterns. Loaded only when a Phase 6 sub-phase fails. |
@@ -121,7 +126,7 @@ Use natural language triggers in your AI coding tool:
 ## Key Rules
 
 - **TDD is non-negotiable**: no business code until tests exist and fail
-- **Phases 1–5: Ralph loop gate** — zero defect-layer (C/H/M1) issues to pass
+- **Phases 1–5: Ralph loop gate** — zero defect-layer (C/H/M) issues to pass
 - **Phase 6: validation closure** — sub-phase gates + 追问 (root cause investigation) (not Ralph loop)
 - **Phase 7: system audit** — incremental second pass after Phase 6, 16-pattern catalog + pair discovery + execution-order analysis
 - **Phase 8: acceptance** — functional verification after Phase 7, requirements traceability + AC coverage + user go/no-go
@@ -129,10 +134,11 @@ Use natural language triggers in your AI coding tool:
 - **Priority drives depth**: core/key items get comprehensive testing; secondary/peripheral get basic coverage
 - **Cross-phase consistency**: priority classifications must be traceable and justified across all phases
 - **Phase 6 failure → rollback**: root cause determines rollback target; full Phase 6 rerun after any fix, then continue through Phase 7→8
+- **Dual severity systems**: Ralph loop (Phases 1–5) uses C/H/M/P/L/I with gate blocking on M+; Pipeline (Phases 6–8) uses C/H/M/P/L with gate blocking on C/H only. See `SKILL.md` for full details.
 
 ## Dual-Pass Review Mode
 
-The Ralph loop uses a **two-pass Recall/Precision pipeline** by default. Single-pass mode is available as a fallback for already-converged rounds. This mode is based on the key insight that **splitting recall and precision into separate prompts outperforms a single complex prompt** ([G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)).
+The Ralph loop uses a **two-pass Recall/Precision pipeline** in all rounds. Single-pass mode was removed — `ralph-review-loop.md` now mandates dual-pass for every round ("⛔ Single-pass is forbidden"). This mode is based on the key insight that **splitting recall and precision into separate prompts outperforms a single complex prompt** ([G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)).
 
 ### How it works
 
@@ -147,8 +153,8 @@ Between passes, the main agent **gathers verifiable facts** from the codebase (g
 
 | Mode | When | Cost |
 |------|------|------|
-| **Dual-pass** (default) | All rounds except already-converged zero-finding rounds; complex deliverables; code review; previous round had ≥ 3 false positives | 2× LLM calls per round, but fewer total rounds |
-| **Single-pass** | Already-converged rounds (consecutive-zero counter ≥ 1), simple deliverables, low risk | 1× LLM call |
+| **Dual-pass** (all rounds) | All rounds — single-pass is forbidden per `ralph-review-loop.md` | 2× LLM calls per round, but fewer total rounds |
+| ~~Single-pass~~ | ~~Removed — dual-pass is now mandatory~~ | ~~1× LLM call~~ |
 
 ### Verified results
 
@@ -177,14 +183,18 @@ The dual-pass also discovered an additional real bug that single-pass missed: re
 
 ## Installation
 
-Copy all skill files to your Claude Code skills directory:
+Copy all skill files to your AI coding tool's skills directory:
 
 ```bash
-# macOS/Linux
+# Claude Code (macOS/Linux)
 cp skill/*.md ~/.claude/skills/tdd-pipeline/
+
+# OpenCode (macOS/Linux)
+cp skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 
 # Verify
 ls ~/.claude/skills/tdd-pipeline/
+ls ~/.config/opencode/skills/tdd-pipeline/
 ```
 
 Or clone and symlink:
@@ -193,7 +203,11 @@ Or clone and symlink:
 git clone <repo-url> ~/tdd-pipeline
 mkdir -p ~/.claude/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.claude/skills/tdd-pipeline/
+mkdir -p ~/.config/opencode/skills/tdd-pipeline
+ln -s ~/tdd-pipeline/skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 ```
+
+**Note**: The project's AGENTS.md requires syncing to **both** deployment targets (`~/.claude/skills/tdd-pipeline/` and `~/.config/opencode/skills/tdd-pipeline/`). The OpenCode path is required if you use OpenCode as your AI coding tool.
 
 ### Double-Blind Experiment Skill
 
@@ -222,7 +236,7 @@ tdd-pipeline/
 │   ├── ralph-review-loop.md              ← shared review protocol (Phases 1–5 only)
 │   ├── ralph-gpav.md                     ← GPAV submission protocol (Watchdog active)
 │   ├── ralph-continuation.md             ← Rounds 2+: evaluation, stop conditions, flowchart
-│   ├── ralph-contested.md                ← contested issue protocol (on REJECT C/H/M1)
+│   ├── ralph-contested.md                ← contested issue protocol (on REJECT C/H/M)
 │   ├── ralph-examples.md                 ← worked examples (contested issues, stop scenarios)
 │   ├── ralph-log-template.md             ← review log format template
 │   ├── review-design.md                  ← design review checklist + Recall prompt (Phase 1–3)
@@ -262,6 +276,8 @@ MIT
 一个严格的 8 阶段 TDD 开发工作流，专为 AI 辅助编程设计。阶段 1–5 在管线级别强制执行 **Red-Green-Refactor**，每个阶段结束后有 Ralph 循环审核。阶段 6 是管线的**验证闭环** —— 系统化预发布测试、缺陷根因追问（追问方法）和回滚路径。阶段 7 是**增量系统审计** —— 第二轮质量审核，包含 16 模式目录、集成对发现和执行顺序分析。阶段 8 是**功能验收** —— 需求追溯、AC 级别验证和发布决策。
 
 > **核心原则**：如果你无法为某个功能写出一个失败的测试，说明你对它的理解还不够深入。
+>
+> **节奏原则**：慢就是快，欲速不达。Ralph 循环的审查轮次不是开销——质量就是在这里构建的。每个跨越关卡的捷径省下了几分钟，但日后调试要花几小时。
 
 ## 8 个阶段
 
@@ -282,8 +298,8 @@ MIT
 
 阶段 1–5 每个结束后启动强制审核循环：
 
-- **唯一停止条件**：连续两轮零缺陷层新发现（C/H/M1 均无新增，M2 和 L 不重置计数器）。已知问题文档中已列示的问题不算新发现。可在任意 ≥ 2 轮时触发。无轮次上限。
-- **持续问题升级**：同类 C/H/M1 问题反复出现且修复无效时 → 模型评估根因 → 向用户确认关键信息或回退到上一阶段排查
+- **唯一停止条件**：连续两轮零缺陷层新发现（C/H/M 均无新增，P/L 和已知问题不重置计数器）。已知问题文档中已列示的问题不算新发现。可在任意 ≥ 2 轮时触发。无轮次上限。
+- **持续问题升级**：同类 C/H/M 问题反复出现且修复无效时 → 模型评估根因 → 向用户确认关键信息或回退到上一阶段排查
 - **已知问题管理**：未当场修复的问题写入 Known Issues 文档；每 3 轮及循环结束时对所有 KI 做评估（真实性、失效、升降级）
 - 每轮由**独立审核 subagent** 执行
 
@@ -331,17 +347,20 @@ Phase 3: 测试深度由上游分类驱动
 | `ralph-review-loop.md` | 共享审核协议（含决策流程图） |
 | `ralph-gpav.md` | GPAV 提交协议、RPS 扫描器（Watchdog 激活时加载） |
 | `ralph-continuation.md` | 第 2 轮起协议：评估、停止条件、决策流程图 |
-| `ralph-contested.md` | 争议问题协议（REJECT C/H/M1 时加载） |
+| `ralph-contested.md` | 争议问题协议（REJECT C/H/M 时加载） |
 | `ralph-examples.md` | 示例集：停止条件、争议问题（按需加载） |
 | `ralph-log-template.md` | 审查日志格式模板（循环启动时加载） |
 | `review-design.md` | 方案审查清单 + Recall 提示词（阶段 1–3） |
 | `review-code.md` | 代码审查清单 + Recall 提示词（阶段 4–5） |
 | `review-precision-filter.md` | 双轮 Precision Filter 提示词 + 聚合逻辑（共用） |
+| `severity-migration.md` | 严重级别迁移指南（pre-v0.13 → v0.13）。按需加载。 |
 | `task-tree.md` | 任务拆解、上下文管理、版本管理（仅在 SPLIT=true 时加载） |
 | `phase-1-product-design.md` | 深度访谈收集需求、core/secondary 分类 |
 | `phase-2-technical-solution.md` | Planner→Architect→Critic 共识架构、key/peripheral 分类 |
 | `phase-3-test-plan.md` | 测试策略含覆盖矩阵和优先级一致性校验 |
+| `phase-3-edge-reference.md` | 边界情况发现与覆盖指南。仅 Phase 3 审查期间加载（创建交付物期间不加载）。 |
 | `phase-4-test-code.md` | 先写全部测试（必须可编译，必须运行时失败） |
+| `phase-4-test-infrastructure-checklist.md` | 测试基础设施验证清单。测试代码完成后、Ralph 审查前使用。 |
 | `phase-5-business-code.md` | 实现最小代码使测试通过，然后重构 |
 | `phase-6-pre-release-testing.md` | 预发布测试、追问协议、回滚路径、发布关卡验证（管线验证闭环） |
 | `phase-6-root-cause-investigation.md` | 缺陷根因调查（分层定位、5-Why、修复验证）+ 常见 bug 模式。仅在阶段 6 子阶段失败时加载。 |
@@ -368,7 +387,7 @@ Phase 3: 测试深度由上游分类驱动
 
 ## 双轮审查模式
 
-Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在已收敛轮次（连续零发现计数器 ≥ 1）时使用。该方法的核心洞见：**将召回率和精确率拆分到两个独立的 prompt 中，效果优于单个复杂 prompt**（[G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)）。
+Ralph 循环在所有轮次中使用**双轮 Recall/Precision 审查**。单轮模式已移除 — `ralph-review-loop.md` 现在强制要求每轮使用双轮审查（"⛔ 禁止单轮审查"）。该方法的核心洞见：**将召回率和精确率拆分到两个独立的 prompt 中，效果优于单个复杂 prompt**（[G-Research, "Building a code review tool: The LLM patterns that actually work"](https://www.gresearch.com/news/building-a-code-review-tool-the-llm-patterns-that-actually-work/)）。
 
 ### 工作原理
 
@@ -383,8 +402,8 @@ Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在�
 
 | 模式 | 适用场景 | 开销 |
 |------|----------|------|
-| **双轮**（默认） | 除已收敛轮次外的所有轮次；复杂交付物；代码审查（阶段 4–5）；前一轮产生 ≥ 3 个误报 | 每轮 2 次 LLM 调用，但总轮数更少 |
-| **单轮** | 已收敛轮次（连续零发现计数器 ≥ 1）、简单交付物、低风险 | 每轮 1 次 LLM 调用 |
+| **双轮**（所有轮次） | 所有轮次 — 单轮审查已禁止，见 `ralph-review-loop.md` | 每轮 2 次 LLM 调用，但总轮数更少 |
+| ~~单轮~~ | ~~已移除 — 双轮审查现为强制要求~~ | ~~每轮 1 次 LLM 调用~~ |
 
 ### 验证结果
 
@@ -413,14 +432,18 @@ Ralph 循环默认使用**双轮 Recall/Precision 审查**。单轮模式仅在�
 
 ## 安装方法
 
-将 skill 文件复制到 Claude Code 的 skills 目录：
+将 skill 文件复制到 AI 编码工具的 skills 目录：
 
 ```bash
-# macOS/Linux
+# Claude Code（macOS/Linux）
 cp skill/*.md ~/.claude/skills/tdd-pipeline/
+
+# OpenCode（macOS/Linux）
+cp skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 
 # 验证
 ls ~/.claude/skills/tdd-pipeline/
+ls ~/.config/opencode/skills/tdd-pipeline/
 ```
 
 或克隆后符号链接：
@@ -429,7 +452,11 @@ ls ~/.claude/skills/tdd-pipeline/
 git clone <仓库地址> ~/tdd-pipeline
 mkdir -p ~/.claude/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.claude/skills/tdd-pipeline/
+mkdir -p ~/.config/opencode/skills/tdd-pipeline
+ln -s ~/tdd-pipeline/skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 ```
+
+**注意**：项目 AGENTS.md 要求同步到**两个**部署目标（`~/.claude/skills/tdd-pipeline/` 和 `~/.config/opencode/skills/tdd-pipeline/`）。如果你使用 OpenCode 作为 AI 编码工具，必须配置 OpenCode 路径。
 
 ### 双盲实验技能
 
@@ -458,7 +485,7 @@ tdd-pipeline/
 │   ├── ralph-review-loop.md              ← 共享审核协议（仅阶段 1–5）
 │   ├── ralph-gpav.md                     ← GPAV 提交协议（Watchdog 激活时）
 │   ├── ralph-continuation.md             ← 第 2 轮起：评估、停止条件、流程图
-│   ├── ralph-contested.md                ← 争议问题协议（REJECT C/H/M1 时）
+│   ├── ralph-contested.md                ← 争议问题协议（REJECT C/H/M 时）
 │   ├── ralph-examples.md                 ← 示例集（争议问题、停止条件）
 │   ├── ralph-log-template.md             ← 审查日志格式模板
 │   ├── review-design.md                  ← 方案审查清单 + Recall 提示词（阶段 1–3）
@@ -488,7 +515,7 @@ tdd-pipeline/
 ## 核心规则
 
 - **TDD 不可妥协**：测试代码不存在且未失败时，禁止编写业务代码
-- **阶段 1–5：Ralph 循环关卡** — 零缺陷层（C/H/M1）问题方可通过
+- **阶段 1–5：Ralph 循环关卡** — 零缺陷层（C/H/M）问题方可通过
 - **阶段 6：验证闭环** — 子阶段 gate + 追问协议（非 Ralph 循环）
 - **阶段 7：系统审计** — 阶段 6 完成后的增量第二轮审核，16 模式目录 + 对发现 + 执行顺序分析
 - **阶段 8：功能验收** — 阶段 7 完成后的功能验证，需求追溯 + AC 覆盖度 + 用户 go/no-go
@@ -496,6 +523,7 @@ tdd-pipeline/
 - **优先级驱动深度**：core/key 全面测试；secondary/peripheral 基本覆盖
 - **跨阶段一致性**：优先级分类必须可追溯、有理由地贯穿所有阶段
 - **阶段 6 失败 → 回滚**：根因决定回滚目标；修复后全量重跑阶段 6，然后继续执行阶段 7→8
+- **双严重级别系统**：Ralph 循环（阶段 1–5）使用 C/H/M/P/L/I，gate 阻塞于 M+；Pipeline（阶段 6–8）使用 C/H/M/P/L，gate 阻塞于 C/H。详见 `SKILL.md`。
 
 ## 许可证
 

@@ -82,7 +82,7 @@ V5: Regression test added → same bug caught if it returns?
 
 ## Part 3: Common Bug Patterns & Quick Checks
 
-Based on 18 bugs from Aristotle v1.1. Check proactively before they bite.
+Based on 18 bugs from Aristotle v1.1. Check proactively before they bite. **Note**: Phase 7 (`phase-7-system-quality-audit.md` Part 2) expands this to a 16-pattern catalog with 4 additional patterns: Version Drift, Auth/Permission Boundary, Implicit Contract Violations, and Data Validation Logic Defects. Pattern numbering differs between Phase 6 and Phase 7 — use pattern names (not numbers) for cross-reference.
 
 > Adapt grep paths/extensions to your project. The categories are universal even if paths are not.
 

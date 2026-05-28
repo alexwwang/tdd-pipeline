@@ -2,10 +2,10 @@
 name: pre-release-testing
 description: >
   Pre-release testing and bug root cause analysis for the TDD pipeline's
-  validation closure (Phase 6). Covers: sub-phase testing (Phase 0–3,
+  validation closure (Phase 6). Covers: Sub-Phase testing (Phase 0–3,
   with conditional Phase 1.5 Soak Test and Phase 1.6 Contract Verification),
   追问 (root cause investigation) protocol with termination guarantees, rollback paths, and Release
-  Gate Checklist. On sub-phase failure, additionally load
+  Gate Checklist. On Sub-Phase failure, additionally load
   phase-6-root-cause-investigation.md.
 ---
 
@@ -36,7 +36,7 @@ pytest                    # Python
 vitest run                # TypeScript
 ```
 
-**Gate:** All unit tests pass. Zero exceptions.
+**Gate:** All unit tests pass — zero test failures, errors, or exceptions during test execution.
 
 > Unit tests typically catch ~22% of real bugs. The rest are integration or cross-cutting. Passing this gate is necessary but far from sufficient.
 
@@ -127,8 +127,8 @@ Catches bugs requiring subjective judgment (comprehensibility of messages, appro
 - [ ] Documentation accurate (test counts, paths, commands)
 - [ ] User-visible behaviors manually verified
 - [ ] Known limitations documented
-- [ ] Resource stability verified (soak test passed, no leaks)
-- [ ] API contracts verified (no schema drift between components)
+- [ ] Resource stability verified (soak test passed, no leaks) *(required only if system has long-running processes, connection pools, or caches — see Phase 1.5 "When to run" for applicability)*
+- [ ] API contracts verified (no schema drift between components) *(required only if ≥2 independent deployable components communicate via API/IPC — see Phase 1.6 "When to run" for applicability)*
 - [ ] Fault tolerance tested (non-critical dependency failure degrades gracefully)
 - [ ] Error handler coverage (every catch block tested)
 - [ ] No retry amplification (retry budget bounded under failure injection)
@@ -161,6 +161,8 @@ N/A without evidence is the checklist equivalent of re-labeling H issues as "acc
 
 For each pair of interacting components, walk through every row. If any cell is "we don't know," that's your gap.
 
+*(The same 14 dimensions appear in phase-7-system-quality-audit.md Part 1. Phase 7 will skip its dimension check if Phase 6 already covered all pairs. Keep both lists in sync.)*
+
 | Gap | Question | Evidence to collect |
 |-----|----------|-------------------|
 | **Schema** | Do components agree on data formats? | Compare input/output schemas at each boundary |
@@ -188,11 +190,11 @@ Phase 6 is the pipeline's **validation closure** — it validates Phases 1–5 o
 
 | Mechanism | When | Purpose |
 |-----------|------|---------|
-| **Sub-phase gates** | Phase 0–3 (0 → 1 → 1.5? → 1.6? → 2 → 3) | Objective pass/fail verification |
-| **追问 protocol** | Sub-phase failure | Root cause investigation with termination guarantees |
-| **Release Gate Checklist** | All sub-phases pass | Evidence compilation for Phase 7→8→user decision |
+| **Sub-Phase gates** | Phase 0–3 (0 → 1 → 1.5? → 1.6? → 2 → 3) | Objective pass/fail verification |
+| **追问 protocol** | Sub-Phase failure | Root cause investigation with termination guarantees |
+| **Release Gate Checklist** | All Sub-Phases pass | Evidence compilation for Phase 7→8→user decision |
 
-### Sub-phase Execution Rules
+### Sub-Phase Execution Rules
 
 1. **Strict sequential**: Phase 0 → 1 → 1.5 (if applicable) → 1.6 (if applicable) → 2 → 3. No skipping.
 2. **Gate is pass/fail**: No severity classification. Green or red.
@@ -228,7 +230,7 @@ Root cause directly determines rollback target (T1 guarantees actionability, no 
 | Test gap | Phase 4 | Phase 4 → 5 → 6 → 7 → 8 |
 | Code bug | Phase 5 | Phase 5 → 6 → 7 → 8 |
 | Design flaw | Phase 2 | Phase 2 → 3 → 4 → 5 → 6 → 7 → 8 |
-| Requirement error | Phase 1 | Full pipeline |
+| Requirement misunderstanding | Phase 1 | Full pipeline |
 | Config/environment only | Fix config | Phase 6 only (full re-run), then 7 → 8 |
 
 **Rules:** (1) Phase 6 rerun is always full from Phase 0, never incremental. (2) Rollback to Phase 1–3 preserves existing code but requires new Ralph loops. (3) Config-only fixes need no code change.

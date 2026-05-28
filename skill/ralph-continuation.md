@@ -6,20 +6,22 @@ Load this file after Round 1 completes. Contains: main agent evaluation rules, s
 
 ⛔ **MUST NOT blindly adopt all suggestions.** Evaluate each against project context, then make an explicit decision:
 
-| Decision | Applicable To | Conditions |
-|----------|--------------|------------|
-| **ADOPT** | All items | Default for C/H/M — apply the fix. P ADOPT is preferred but optional. |
-| **MODIFY** | All items | Suggestion has merit but needs adaptation — apply modified version, document deviation |
-| **REJECT** | P/L/I items + Critical Opinions | Full discretion, just document rationale |
-| **REJECT** | C/H/M items | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See `ralph-contested.md` for the contested issue protocol. |
+| Decision   | Applicable To                   | Conditions                                                                                                                                                                   |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ADOPT**  | All items                       | Default for C/H/M — apply the fix. P ADOPT is preferred but optional.                                                                                                        |
+| **MODIFY** | All items                       | Suggestion has merit but needs adaptation — apply modified version, document deviation                                                                                       |
+| **REJECT** | P/L/I items + Critical Opinions | Full discretion, just document rationale                                                                                                                                     |
+| **REJECT** | C/H/M items                     | **Restricted** — only when reviewer's assumption about the project is factually incorrect. Must provide evidence. See `ralph-contested.md` for the contested issue protocol. |
 
 ### REJECT Rules for C/H/M Issues
 
 C/H/M means **must fix**. REJECT is an **exception**, valid only when:
+
 - Reviewer's assumption about requirements, constraints, or prior-phase outputs is factually wrong
 - Reviewer identified a "defect" that is actually intended behavior documented elsewhere
 
 **Invalid REJECT reasons** (will not pass gate):
+
 - "We don't have time" / "I disagree with the priority" / "It works in practice"
 
 ### ❌ What wrong evaluation looks like
@@ -64,58 +66,84 @@ Findings already in the KI document are **known**, not **new**. Known findings e
 The Ralph loop has **two exit paths**:
 
 1. **Stop**: 2 consecutive rounds with zero **new** C/H/M findings (P/L do not reset counter; known issues excluded). No round cap.
-2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
+2. **Persistent Issues Escalation**: If the same C/H/M findings recur across multiple rounds despite fixes, assess root cause — is this an implementation issue, or a prior-phase problem (unclear requirement, design flaw, test gap)? If prior-phase: escalate to user for clarification, or rollback per `ralph-review-loop.md` §Cross-Phase Escalation.
 
 ### ⛔ AVOID — Common Stop Condition Mistakes (READ CAREFULLY)
 
-| ❌ WRONG | ✅ CORRECT |
-|----------|-----------|
-| Stopping after 1 zero round (need 2 **consecutive**) | Continue. Stop requires round N-1 AND round N both with 0 new C/H/M findings. |
-| Declaring stop immediately after fixing issues (fix round ≠ zero round) | Fix → next review round → reviewer confirms → then evaluate counter. |
-| Counting new P or L findings as resetting the counter | P/L are quality-tier — triaged but do NOT reset. Only new C/H/M reset. Zero new C/H/M + any P/L → counter increments. |
-| Counting re-discovered KI entries as "new findings" | Only findings NOT already in the KI document count as new. Known = excluded from counter. |
-| Re-labeling H/M as "accepted design deviations" or P to avoid counting | Use Contested Issue Protocol. Unresolved C/H/M block the gate. |
-| Skipping KI re-evaluation at rounds divisible by 3 | Counter does NOT increment unless KI re-evaluation is performed this round. |
+| ❌ WRONG                                                                 | ✅ CORRECT                                                                                                             |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Stopping after 1 zero round (need 2 **consecutive**)                    | Continue. Stop requires round N-1 AND round N both with 0 new C/H/M findings.                                         |
+| Declaring stop immediately after fixing issues (fix round ≠ zero round) | Fix → next review round → reviewer confirms → then evaluate counter.                                                  |
+| Counting new P or L findings as resetting the counter                   | P/L are quality-tier — triaged but do NOT reset. Only new C/H/M reset. Zero new C/H/M + any P/L → counter increments. |
+| Counting re-discovered KI entries as "new findings"                     | Only findings NOT already in the KI document count as new. Known = excluded from counter.                             |
+| Re-labeling H/M as "accepted design deviations" or P to avoid counting  | Use Contested Issue Protocol. Unresolved C/H/M block the gate.                                                        |
+| Skipping KI re-evaluation at rounds divisible by 3                      | Counter does NOT increment unless KI re-evaluation is performed this round.                                           |
 
 ### Decision Flowchart
 
 ```
 Evaluate after each round N, in this order (before starting round N+1):
 
-1. Receive reviewer report (severity issues + constructive suggestions + critical opinions)
-1b. ⛔ Fact-gather gate: if {VERIFIED_FACTS} is empty, HALT — gather codebase facts before proceeding to Precision.
-2. Main agent critical evaluation: ADOPT/REJECT/MODIFY each item (see §Main Agent Critical Evaluation)
+1. Receive confirmed_findings from Precision Filter (output of dual-pass Steps A–C
+   in ralph-review-loop.md §Review Process). If Steps A–C were not all completed
+   this round (e.g. fact-gather was skipped), that round is invalid — re-run from
+   Step B before proceeding here.
+2. Main agent critical evaluation: ADOPT/REJECT/MODIFY each item
+   (see §Main Agent Critical Evaluation above)
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
- 3. Apply all ADOPTed and MODIFYed C/H/M fixes
- 3b. ⛔ Contested issue check — load `ralph-contested.md` if EITHER condition is true:
-     a. Any C/H/M was REJECTed → include in next round's reviewer context
-     b. Same C/H/M issue was downgraded (relabel to P/L/I or severity lowered) for the 2nd time → contested issue triggered
- 3c. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle). Track downgraded C/H/M items for cross-round matching.
-  4. ⛔ KI Re-evaluation Gate (rounds divisible by 3): counter does NOT increment unless KI re-evaluation is performed this round.
-5. GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
-   - Include ALL items in tally: ADOPTed, MODIFYed, AND contested (REJECTED items still in tally)
-   - In dual-pass mode: submit confirmed findings only (not raw recall output)
- 6. Classify findings: **new** (not in KI document) vs **known** (already in KI). Known findings excluded from counter. Contested C/H/M re-raises are always new.
- 7. Count new C/H/M findings. If any new C/H/M remain → Reset consecutive-zero counter to 0 → Go to round N+1
- 8. If zero new C/H/M but new P or L found:
-    → P/L triage (ADOPT preferred but optional) → Increment consecutive-zero counter by 1 → Go to round N+1
- 9. If zero new findings (only I, known re-findings, or nothing):
+3. Apply all ADOPTed and MODIFYed C/H/M fixes
+   ⛔ Steps 2 → 3 are sequential. Do not begin 3 before 2 is complete.
+3b. ⛔ Contested issue check — load `ralph-contested.md` if EITHER condition is true:
+    a. Any C/H/M was REJECTed → include in next round's reviewer context
+    b. Same C/H/M issue was downgraded (relabel to P/L/I or severity lowered)
+       for the 2nd time → contested issue triggered
+3c. Record unadopted findings to KI document (deduplicate first — see §Known Issues Lifecycle).
+    Track downgraded C/H/M items for cross-round matching.
+    ⛔ Steps 3 → 3b → 3c are sequential. Do not begin 3c before 3b is complete.
+4.  ⛔ KI Re-evaluation Gate (rounds divisible by 3): counter does NOT increment
+    unless KI re-evaluation is performed this round.
+5.  GPAV: Submit gate tally to Watchdog via ralph_round_finding (if active)
+    - Include ALL items in tally: ADOPTed, MODIFYed, AND contested
+    - In dual-pass mode: submit confirmed findings only (not raw recall output)
+6.  Classify findings: **new** (not in KI document) vs **known** (already in KI).
+    Known findings excluded from counter. Contested C/H/M re-raises are always new.
+7.  Count new C/H/M findings. If any new C/H/M remain → Reset consecutive-zero
+    counter to 0 → Go to round N+1
+8.  If zero new C/H/M but new P or L found:
+    → P/L triage (ADOPT preferred but optional)
+    → Increment consecutive-zero counter by 1 → Go to round N+1
+9.  If zero new findings (only I, known re-findings, or nothing):
     → Increment consecutive-zero counter by 1
-    → Counter = 1:
-      → Go to round N+1
-    → Counter = 2:
-      → Go to round N+1 (articulation runs at start of next round)
- 9b. ⛔ Pre-Stop Articulation Gate (only when counter = 2 before proceeding):
-     Articulate: rounds completed, dimensions covered per round, task complexity justification, what issue type is most likely to be missed, remaining KI count and triage accuracy. If you cannot clearly articulate → reset counter to 1. If articulation reveals concerns 2× in a row → reset counter to 0.
-      → Articulation confirms safe → ✅ STOP → proceed to step 11
-      → Articulation reveals concerns → counter already reset → Go to round N+1
- 10. Before starting round N+1, assess: are the same C/H/M findings recurring despite fixes?
+    → Counter = 1: Go to round N+1
+    → Counter = 2: ⛔ DO NOT declare STOP yet. Proceed immediately to step 9b.
+
+9b. ⛔ Pre-Stop Articulation Gate — BLOCKING, executes THIS round before any other action.
+    ⛔ NOT deferred to the start of the next round.
+    ⛔ STOP may NOT be declared until this block is produced and verdict is SAFE-TO-STOP.
+    Output the following block verbatim (fill in brackets):
+
+    === PRE-STOP ARTICULATION ===
+    Rounds completed: [N]
+    Dimensions covered: [what each round checked — one line per round]
+    Complexity justification: [why 2 consecutive zero rounds is sufficient for THIS specific task]
+    Most likely missed issue type: [what category could still be lurking]
+    Remaining KI entries: [count] — triage accuracy: [ACCURATE / CONCERNS: ...]
+    Verdict: SAFE-TO-STOP | CONCERNS-FOUND
+    =============================
+
+    → Verdict = SAFE-TO-STOP  →  ✅ STOP  →  proceed to step 11
+    → Verdict = CONCERNS-FOUND  →  reset counter to 1  →  Go to round N+1
+    → If CONCERNS-FOUND appears on 2 consecutive articulations
+      →  reset counter to 0  →  Go to round N+1
+
+10. Before starting round N+1, assess: are the same C/H/M findings recurring
+    despite fixes?
     → If yes: evaluate root cause → ⛔ ESCALATE to user or ROLLBACK to prior phase
-     → If findings are genuinely new each round → Go to round N+1
- 11. ⛔ User Approval Gate (only after ✅ STOP):
-     ⛔ DO NOT ask user about phase transition, "should we proceed", or "ready for next phase" before ✅ STOP.
-     → User rejects → see current phase file §User Approval
+    → If findings are genuinely new each round → Go to round N+1
+11. ⛔ User Approval Gate (only after ✅ STOP):
+    ⛔ DO NOT ask user about phase transition before ✅ STOP.
+    → User rejects → see current phase file §User Approval
 ```
 
 ### 🔒 Pre-Stop Articulation — ❌ AVOID Superficial Articulation
@@ -132,9 +160,9 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 Review checklists are loaded per-phase from dedicated files:
 
-| Phase | Load this file | Contains |
-|-------|---------------|----------|
+| Phase            | Load this file     | Contains                                |
+| ---------------- | ------------------ | --------------------------------------- |
 | **1–3** (Design) | `review-design.md` | Design review checklist + Recall prompt |
-| **4–5** (Code) | `review-code.md` | Code review checklist + Recall prompt |
+| **4–5** (Code)   | `review-code.md`   | Code review checklist + Recall prompt   |
 
 See `ralph-examples.md` for worked examples covering: intermittent zeros (A), L does not reset counter (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).
