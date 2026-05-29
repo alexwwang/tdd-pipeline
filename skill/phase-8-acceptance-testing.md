@@ -36,7 +36,7 @@ From Phase 3's Requirements Coverage Matrix: `Test File` + `Test Name` → `Test
 
 Phase 3 Design Coverage cross-validation: for each AC row, cross-check that components have ≥1 test case. Flag gaps → Warnings in Part 3 ("Cross-validation gap: no test case for component").
 
-Phase 6 mapping: only **pass** results = L1. FAIL/SKIP = no L1 (SKIP from scaffold tests with `skip` markers expected for non-automatable ACs). Sub-Phase 1 integration/E2E = L2. For multi-AC integration tests: assign L2 to all validated ACs; partial coverage = note in report, no full L2 unless all components covered. If Phase 6 results are not in structured format, report affected ACs as Unknown.
+Phase 6 mapping: only **pass** results = L1. FAIL/SKIP = no L1 (SKIP from scaffold tests with `skip` markers expected for non-automatable ACs). Sub-Phase 1 integration/E2E = L2. For multi-AC integration tests: assign L2 to all validated ACs; partial coverage = note in report, no full L2 unless all components covered. Sub-Phase 3 manual checklist: map each item to AC rows via the component(s) column. If Phase 6 results are not in structured format, report affected ACs as Unknown. **Parameterized tests**: use the base test name (before `[`) for AC mapping, preserve the full name in evidence.
 
 Phase 7 fixed issues: if Phase 6 re-run results available AND show L1/L2, upgrade Evidence Level. If no re-run, retain original level + note fix in Phase 7 Impact.
 
@@ -106,7 +106,7 @@ After Weak matches via first-matching-wins, check reclassification:
 
 ### Multi-component ACs
 
-**Weakest-link rule**: AC overall diagnosis = worst among components. **Severity order** (worst→best): Bad Requirement > No Design > No Test Plan > No Test Code > No Impl > Weak > Unknown > Covered.
+**Weakest-link rule**: AC overall diagnosis = worst among components. **Severity order** (worst→best): Bad Requirement > No Design > No Test Plan > No Test Code > No Impl > Weak > Unknown > Covered. **Per-AC vs per-component**: diagnoses 1–4 (Bad Requirement through No Test Code) are evaluated once for the entire AC using Phase 1–3 artifacts — if any matches, it applies to all components and per-component evaluation is skipped. Diagnoses 5–8 (No Impl through Covered) are evaluated independently per component, then weakest-link is applied across components.
 
 Evidence Level = lowest across components. Format: `test_case (evidence_level)` per component, comma-separated.
 
@@ -121,6 +121,8 @@ Evidence Level = lowest across components. Format: `test_case (evidence_level)` 
 | (3) Unresolved C/H | BLOCKER. Do not complete Parts 3–5; report to user with abbreviated report | N/A (BLOCKER) |
 | (4) Unresolved P | Phase 7 Impact section, informational | Not required |
 | (5) Rejected | Phase 7 Impact section, informational | Not required |
+
+**Phase 7 → AC mapping**: identify affected components via file:line references, then use Phase 2's AC→Component mapping to find associated ACs. Findings with no specific component reference are system-level — noted separately in Phase 7 Impact.
 
 **Attention levels** (for report presentation):
 
