@@ -79,23 +79,67 @@ for round N:
   # ⛔ This step is performed by the MAIN AGENT, not a subagent.
   # ⛔ Do NOT dispatch Precision subagent until VERIFIED_FACTS is non-empty.
   # Use facts_to_gather from review-design.md OR review-code.md §Fact-Gathering.
-  # Produce visible output: VERIFIED_FACTS = { <finding_id>: <evidence or REFUTED> }
+  # Produce visible output: VERIFIED_FACTS = { <finding_id>: <raw_evidence> }
   # If VERIFIED_FACTS is empty after attempting fact-gather → HALT, diagnose blocker.
+  #
+  # ⛔⛔⛔ FACT-GATHER OUTPUT FORMAT — RAW FACTS ONLY ⛔⛔⛔
+  # Fact-gather MUST produce ONLY raw evidence (exact quotes, line numbers,
+  # structural observations). It MUST NOT contain:
+  #   - CONFIRM / DOWNGRADE / REJECT verdicts
+  #   - Main agent's opinion on whether a finding is valid
+  #   - Severity reclassification suggestions
+  #   - "Pre-evaluation" or "pre-judgment" of any kind
+  #
+  # WHY: The Precision subagent's ENTIRE VALUE is independent judgment.
+  # If main agent pre-judges findings during fact-gather, the Precision
+  # subagent receives biased input → independence destroyed → dual-pass
+  # degrades to single-pass with extra steps.
+  #
+  # CORRECT:  "C-001: Line 46 writes 're-run with flags'. Line 102 writes 'Do NOT initiate re-runs'."
+  # WRONG:    "C-001: CONFIRM — lines 46 and 102 contradict"
   VERIFIED_FACTS ← main_agent_fact_gather(recall_output)
 
   # ── STEP C: Precision Filter ──────────────────────────────────────────────────
   # Load review-precision-filter.md. Inject VERIFIED_FACTS + recall_output.
   # ⛔ Same prompt contamination rules as Step A apply to the Precision prompt too.
+  #
+  # ⛔⛔⛔ PRECISION MUST RUN AS INDEPENDENT SUBAGENT ⛔⛔⛔
+  # The Precision pass MUST be dispatched as a separate subagent (oracle or
+  # equivalent). The main agent MUST NOT:
+  #   - Execute Precision judgments itself (no CONFIRM/DOWNGRADE/REJECT by main)
+  #   - Pre-filter which findings to send (send ALL findings, always)
+  #   - Pre-sort findings by expected outcome
+  #   - Include its own pre-evaluation in the Precision prompt
+  #
+  # The Precision prompt MUST contain:
+  #   1. ALL raw Recall findings (complete list, no omissions)
+  #   2. VERIFIED_FACTS (raw evidence only, no verdicts)
+  #   3. The Precision filter instructions (from review-precision-filter.md)
+  # The Precision prompt MUST NOT contain:
+  #   1. Main agent's pre-judgment on any finding
+  #   2. "Suggested" or "recommended" verdicts
+  #   3. Hints about which findings are "probably false positives"
+  #
+  # WHY: Main agent has context bias (it built the recall prompt, gathered facts,
+  # and formed opinions). Independent Precision breaks this bias loop.
+  # If main agent = Precision agent, dual-pass collapses to echo chamber.
   confirmed_findings ← Precision subagent(VERIFIED_FACTS, recall_output)
 
-  # ── STEP D: Evaluate → Fix → Log  (SEQUENTIAL: D1 must complete before D2,
-  #                                               D2 must complete before D3) ──
+  # ── STEP D: Evaluate → Fix → Scan → Log  (SEQUENTIAL: each step must complete
+  #                                                     before the next begins) ──
   # D1: main_agent evaluates each confirmed finding → ADOPT | REJECT | MODIFY
   #     (see ralph-continuation.md §Main Agent Critical Evaluation)
   # D2: fix all ADOPTed/MODIFYed C/H/M (P/L/I/ADOPTed_opinions optional)
+  # D2.5: ⛔ Post-Fix Cross-Reference Consistency Scan (MANDATORY)
+  #       For each fix: identify touched concepts → grep all reviewed files →
+  #       verify no contradictions with untouched content → verify mirror tables.
+  #       If contradiction found: resolve before proceeding.
+  #       See ralph-continuation.md §Step 3a for full protocol.
+  #       This is the #1 defense against oscillating review rounds.
   # D3: log { round, tally, contested, evaluation_decisions, fixes_applied }
   # ⛔ Do NOT begin D2 before D1 is complete.
-  # ⛔ Do NOT begin D3 before D2 is complete.
+  # ⛔ Do NOT begin D2.5 before D2 is complete.
+  # ⛔ Do NOT begin D3 before D2.5 is complete.
   main_agent_evaluate_and_fix(confirmed_findings)
   log: { round, tally, contested, evaluation_decisions, fixes_applied }
 ```
@@ -104,15 +148,29 @@ for round N:
 
 ⛔ **Single-pass is forbidden.** All rounds MUST use Recall → fact-gather → Precision.
 
+**⛔ Three-agent separation (inviolable)**: Recall, Fact-Gather, and Precision are THREE distinct roles that MUST NOT collapse into fewer:
+
+| Role | Agent | Produces | Forbidden Output |
+|------|-------|----------|-----------------|
+| Recall | Independent subagent | Raw findings list | — |
+| Fact-Gather | Main agent | Raw evidence only (quotes, line refs, structural observations) | CONFIRM/DOWNGRADE/REJECT, pre-judgments, severity suggestions |
+| Precision | Independent subagent (NOT main agent) | CONFIRM/DOWNGRADE/REJECT per finding | — |
+
+**Collapse scenarios that MUST be avoided:**
+- ❌ Main agent does Fact-Gather + Precision in one step → echo chamber
+- ❌ Main agent pre-judges findings during Fact-Gather → biases Precision
+- ❌ Main agent filters which findings reach Precision → Recall coverage wasted
+- ❌ Precision prompt contains main agent's verdicts → independence destroyed
+
 | Phase     | Load                         | Contains                                      |
 | --------- | ---------------------------- | --------------------------------------------- |
 | 1–3       | `review-design.md`           | Checklist + Recall prompt + fact-gather guide |
 | 4–5       | `review-code.md`             | Checklist + Recall prompt + fact-gather guide |
 | Precision | `review-precision-filter.md` | Precision Filter prompt + aggregation         |
 
-**Sequence**: Recall Pass → Gather Facts → Precision Filter → confirmed_findings → tally
+**Sequence**: Recall Pass → Gather Facts (raw only) → Precision Filter (independent subagent) → confirmed_findings → tally
 
-Skip fact-gather → false positives pass filter → wasted fix rounds.
+Skip fact-gather → false positives pass filter → wasted fix rounds. Pre-judge during fact-gather → Precision becomes rubber stamp → dual-pass degrades to single-pass.
 
 ❌ **Reviewer prompt contamination**: injecting round counts ("Round 2 of N"), prior-round results ("R1 found X"), cumulative tallies, or fix lists into the Recall/Precision prompt. Contaminated prompts create anchoring bias — the reviewer reproduces prior conclusions instead of independent assessment.
 

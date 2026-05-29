@@ -164,6 +164,17 @@ gate_pass = ALL:
   failure:      error paths designed (not just happy path)
   lean:         every abstraction justified (no over-engineering)
   boundary:     single_responsibility + blast_radius + min_api_surface ✓
+  split:        (only when SPLIT=true) ALL of:
+                  - Can each module's responsibility be expressed in one sentence?
+                    No → boundary too broad; consider splitting or redefining
+                  - If a module's requirements change, how many other modules are affected?
+                    >1 → extract the shared concern into index.md contracts
+                  - Are index.md contracts sufficient for each module to be written
+                    independently, without reading other modules' implementations?
+                    No → contracts incomplete; supplement before re-review
+                  - Can each module be tested in isolation without mocking other
+                    modules' internals?
+                    No → boundary is wrong; redesign the split
   security:     threat_model + trust_boundaries + data_protection + test_scenarios ✓
   quality:      operability + observability + data + performance + maintainability ✓
   nfr:          non-functional constraints documented

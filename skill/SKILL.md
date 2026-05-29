@@ -97,12 +97,13 @@ The pipeline uses two severity systems for different scopes:
 | System | Used In | Levels | Gate Threshold | Purpose |
 |--------|---------|--------|----------------|---------|
 | **Ralph loop severity** | Phases 1–5 review rounds | C/H/M/P/L/I | Zero C/H/M to pass gate | Review artifact quality — defined in `ralph-review-loop.md` |
-| **Pipeline severity** | Phase 6–8 gates | C/H/M/P/L | Zero C/H to pass gate (M recorded but does not block) | Release readiness — defined in `phase-7-system-quality-audit.md` |
+| **Pipeline severity** | Phase 6–7 gates | C/H/M/P/L | Zero C/H to pass gate (M recorded but does not block) | Release readiness — defined in `phase-7-system-quality-audit.md` |
+| **Phase 8 diagnosis gate** | Phase 8 acceptance | Diagnosis-based BLOCKERs + Phase 7 unresolved C/H + Phase 6 system-level FAILs | Zero BLOCKERs to pass gate (see `phase-8-acceptance-testing.md` Diagnosis Table) | Requirements completeness — BLOCKERs are per-diagnosis, not C/H severity |
 
-- **Key difference**: Ralph loop gate blocks on M (defect-tier); Pipeline gate blocks on C/H only (M is advisory).
+- **Key difference**: Ralph loop gate blocks on M (defect-tier); Pipeline gate (Phase 6–7) blocks on C/H only (M is advisory). Phase 8 uses its own diagnosis-based gate — a No Test Code or Weak core diagnosis is a BLOCKER regardless of severity classification.
 - Ralph loop severity: C/H/M (defect tier, counted in stop condition) + P (proposal, not counted) + L (low, not counted) + I (info). See `ralph-review-loop.md` for full definitions.
 - Pipeline severity: C (critical) + H (high) + M (medium) + P (petty) + L (low). Note: Pipeline P = petty (minor formatting concern), not to be confused with Ralph P = proposal (architectural restructuring suggestion).
-- **Phase 8 secondary AC threshold**: If >20% of secondary ACs have Weak diagnosis (L3-only evidence, no L1/L2), they are flagged as warnings in the acceptance report. (L1=unit test, L2=integration/E2E, L3=manual, L4=Part 4 independent verification metadata — L1/L2/L3 are per-AC evidence levels; L4 is report-level metadata, not AC evidence. Full definitions in `phase-8-acceptance-testing.md` Evidence Levels table.) See `phase-8-acceptance-testing.md` Secondary Threshold Check.
+- **Phase 8 secondary AC threshold**: If >20% of secondary ACs have Weak diagnosis (L3-only evidence, no L1/L2), the excess above 20% are flagged as warnings in the acceptance report (the first N = floor(20% × total) are accepted as ✱, ordered by AC# numeric suffix lowest first). (L1=unit test, L2=integration/E2E, L3=manual, L4=Part 4 independent verification metadata — L1/L2/L3 are per-AC evidence levels; L4 is report-level metadata, not AC evidence. Full definitions in `phase-8-acceptance-testing.md` Evidence Levels table.) See `phase-8-acceptance-testing.md` Secondary Threshold Check.
 
 ## Anti-Patterns
 
@@ -115,10 +116,10 @@ The pipeline uses two severity systems for different scopes:
 | Bypass Ralph gates (Phase 1–5) | Hidden flaws propagate downstream | Run until gate pass, enforce zero C/H/M |
 | One giant test file | Poor organization, hard to maintain | 1 file per component/module |
 | Only happy-path tests | Misses real-world failures | MUST test errors + boundaries |
-| Phase 6 partial re-run | Fixes may introduce regressions | Always full re-run from Phase 6 Phase 0, then continue through Phase 7→8 |
+| Phase 6 partial re-run | Fixes may introduce regressions | Always full re-run from Phase 6 Sub-Phase 0, then continue through Phase 7→8 |
 | Skip 追问 (root cause investigation) when Phase 6 fails | Fixes symptom, not root cause | Run Layer Isolation + 5-Why + T1-T3 |
 | Skip Phase 7 system audit | Undocumented system defects may reach production | Always run Phase 7 after Phase 6 passes |
-| Accept BLOCKERs without rollback | Pipeline gate is bypassed — release quality unknown | BLOCKER = no release; rollback per Phase 8 rules |
+| Accept BLOCKERs without resolution | Release quality unknown — BLOCKERs were reported but ignored | Report BLOCKERs to user for decision; do not proceed to release while BLOCKERs remain unresolved (exception: escalated Unknown BLOCKERs where Phase 6 re-run already failed — user may accept risk per Phase 8 Part 5 Step 1) |
 
 ## Split Decision
 
@@ -161,31 +162,5 @@ When Phase 6 discovers issues, the 追问 (root cause investigation) determines 
 | Config/environment only | Fix config | Phase 6 only (full re-run), then 7 → 8 |
 
 See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investigation) protocol with termination criteria and rollback procedures. *(This table is mirrored in phase-6-pre-release-testing.md — keep in sync.)*
-
-## Rollback from Phase 8
-
-When Phase 8 discovers uncovered requirements, the diagnosis determines which phase to roll back to:
-
-| Diagnosis | Root Cause | Rollback To | Re-run Scope |
-|-----------|-----------|-------------|-------------|
-| Bad Requirement | Phase 1 | Phase 1 | Full pipeline |
-| No Design | Phase 2 | Phase 2 | Phase 2→3→4→5→6→7→8 |
-| No Test Plan | Phase 3 | Phase 3 | Phase 3→4→5→6→7→8 |
-| No Test Code | Phase 4 | Phase 4 | Phase 4→5→6→7→8 |
-| No Impl | Phase 5 | Phase 5 | Phase 5→6→7→8 (also verify Phase 4 test files exist; if missing, rollback to Phase 4 instead) |
-| Weak (core) | Phase 4 (or Phase 3) | Phase 4 (or Phase 3) | Phase 4→5→6→7→8 (unless inherently non-automatable — documented justification required; if Phase 3 planned only manual testing → Phase 3→4→5→6→7→8) |
-| Unknown | Phase 6 | Phase 6 | Phase 6→7→8 (full re-run from Sub-Phase 0; if evidence remains missing after re-run, escalate to user) |
-| Secondary warning | — | No rollback (default) | Recorded in report, user decides. If user chooses to rollback: Bad Requirement → Phase 1, other secondary gaps → Phase per diagnosis table |
-| Secondary: Bad Requirement | Phase 1 | Phase 1 (user choice) | Full pipeline — same path as core, but user-initiated |
-| Secondary: No Design | Phase 2 | Phase 2 (user choice) | Phase 2→3→4→5→6→7→8 — same path as core, but user-initiated |
-| Secondary: No Test Plan | Phase 3 | Phase 3 (user choice) | Phase 3→4→5→6→7→8 — same path as core, but user-initiated |
-| Secondary: No Test Code | Phase 4 | Phase 4 (user choice) | Phase 4→5→6→7→8 — same path as core, but user-initiated |
-| Secondary: No Impl | Phase 5 | Phase 5 (user choice) | Phase 5→6→7→8 — same path as core, but user-initiated |
-| Secondary: Weak | Phase 4 | No rollback (default) | Accepted up to 20% of secondary ACs; excess → warning only |
-| Secondary: Unknown | Phase 6 | No rollback (default) | Warning — recorded in report. Phase 6 re-run only if user chooses (not forced like core Unknown) |
-| Phase 7 unresolved C/H | Phase 7 (via Phase 6 root cause) | Per Phase 7 rollback guidance (Phase 7 delegates to Phase 6 root cause categories: test gap, code bug, design flaw, requirement misunderstanding, config/environment) | Rollback to Phase 7 → apply Phase 7's root cause layer → target phase → re-run from target through Phase 7→8. Note: this is a two-level indirection — Phase 8 detects the issue, Phase 7 determines the root cause layer, Phase 6 (or earlier) is the actual rollback target |
-| Phase 6 system-level failure | Phase 6 (system-level check) | Phase 6 | Phase 6→7→8 (full re-run from Sub-Phase 0; system-level failures bypass AC-level diagnosis — they indicate a systemic quality issue requiring full Phase 6 re-execution). "System-level failure" = a Phase 6 Sub-Phase 1.5/1.6/2 check that FAILs (see phase-6-pre-release-testing.md for definitions) |
-
-See `phase-8-acceptance-testing.md` for the complete diagnosis table and rollback procedures. *(This table is mirrored in phase-8-acceptance-testing.md — keep in sync.)* When multiple BLOCKERs target different phases, rollback to the earliest phase (this subsumes all later-phase rollbacks). Exception: Phase 7 unresolved C/H BLOCKERs follow Phase 7's own rollback guidance, not the generic earliest-phase rule. When Phase 8 AC BLOCKERs and Phase 7 C/H BLOCKERs coexist, rollback to the earliest target across both sets.
 
 

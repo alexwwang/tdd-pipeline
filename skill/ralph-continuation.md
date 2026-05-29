@@ -94,6 +94,20 @@ Evaluate after each round N, in this order (before starting round N+1):
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
    ⛔ Steps 2 → 3 are sequential. Do not begin 3 before 2 is complete.
+3a. ⛔ **Post-Fix Cross-Reference Consistency Scan** — before proceeding to 3b,
+    verify each fix did not introduce contradictions with the rest of the document(s):
+    a. **Identify touched concepts**: extract key terms, status symbols, format templates,
+       and column names modified by each fix.
+    b. **Scan for collisions**: grep all reviewed files for each touched concept.
+       Check: does the fix contradict any untouched occurrence?
+    c. **Verify template consistency**: if a fix changes a report format, definition, or
+       template, verify all references to that format/template in the same document
+       still align (e.g. Coverage Summary format vs "release-ready" definition).
+    d. **Verify mirror tables**: if the review covers SKILL.md or any file with mirrored
+       tables (marked "keep in sync"), verify the mirror is still consistent after fixes.
+    e. **If contradiction found**: resolve before proceeding. Do NOT leave it for the next
+       round to discover — that creates oscillation (fix → new contradiction → fix → ...).
+    ⛔ This scan is MANDATORY. Skipping it is the #1 cause of oscillating review rounds.
 3b. ⛔ Contested issue check — load `ralph-contested.md` if EITHER condition is true:
     a. Any C/H/M was REJECTed → include in next round's reviewer context
     b. Same C/H/M issue was downgraded (relabel to P/L/I or severity lowered)
