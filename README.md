@@ -207,7 +207,7 @@ mkdir -p ~/.config/opencode/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 ```
 
-**Note**: The project's AGENTS.md requires syncing to **both** deployment targets (`~/.claude/skills/tdd-pipeline/` and `~/.config/opencode/skills/tdd-pipeline/`). The OpenCode path is required if you use OpenCode as your AI coding tool.
+**Note**: Skill files must be synced to **both** deployment targets (`~/.claude/skills/tdd-pipeline/` and `~/.config/opencode/skills/tdd-pipeline/`). The OpenCode path is required if you use OpenCode as your AI coding tool.
 
 ### Double-Blind Experiment Skill
 
@@ -456,7 +456,7 @@ mkdir -p ~/.config/opencode/skills/tdd-pipeline
 ln -s ~/tdd-pipeline/skill/*.md ~/.config/opencode/skills/tdd-pipeline/
 ```
 
-**注意**：项目 AGENTS.md 要求同步到**两个**部署目标（`~/.claude/skills/tdd-pipeline/` 和 `~/.config/opencode/skills/tdd-pipeline/`）。如果你使用 OpenCode 作为 AI 编码工具，必须配置 OpenCode 路径。
+**注意**：Skill 文件必须同步到**两个**部署目标（`~/.claude/skills/tdd-pipeline/` 和 `~/.config/opencode/skills/tdd-pipeline/`）。如果你使用 OpenCode 作为 AI 编码工具，必须配置 OpenCode 路径。
 
 ### 双盲实验技能
 
