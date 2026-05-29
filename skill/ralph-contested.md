@@ -8,6 +8,35 @@ Defines the contested issue protocol, escalation rules, and invariants.
 
 ## Contested Issue Protocol
 
+### Contested State Block (Mandatory Output)
+
+After every REJECT or DOWNGRADE decision on a C/H/M issue, the main agent MUST emit
+the following block before performing any fix work or logging for that round.
+One block per affected issue_id.
+
+```
+[CONTESTED STATE: <issue_id>]
+current_decision:          REJECT | DOWNGRADE | ADOPT | MODIFY
+prior_downgrade_count:     <N>   ← increments each time this issue was previously downgraded/rejected
+dispute_rounds:            <N>   ← 0 on first rejection; increments each round reviewer re-raises
+grounds_same_as_prior:     YES | NO | N/A (N/A on first rejection)
+escalation_due:            NO | YES
+next_action:               ADOPT | MODIFY | REJECT | ESCALATE_TO_USER
+```
+
+Validity rules (self-check before emitting next_action):
+- `current_decision = REJECT`  and  `grounds_same_as_prior = YES`  →  next_action MUST be ADOPT or MODIFY  (Rule 3)
+- `dispute_rounds >= 2`                                             →  escalation_due = YES  →  next_action MUST be ESCALATE_TO_USER  (Rule 4)
+- `escalation_due = YES`  and  next_action ≠ ESCALATE_TO_USER      →  protocol violation
+- `next_action = REJECT`  while  `dispute_rounds >= 2`             →  protocol violation
+
+⛔ Omitting this block for any REJECT or DOWNGRADE decision is a protocol violation.
+⛔ Writing next_action = REJECT after dispute_rounds >= 2 is a protocol violation.
+⛔ Writing next_action = REJECT when grounds_same_as_prior = YES is a protocol violation.
+⛔ Fix work or logging MUST NOT begin until this block is emitted and next_action is valid.
+
+---
+
 When the main agent REJECTs a C/H/M issue, it becomes a **contested issue**:
 
 1. The main agent documents the REJECTION rationale in the review log.

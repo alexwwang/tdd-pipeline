@@ -99,6 +99,26 @@ for round N:
   # WRONG:    "C-001: CONFIRM — lines 46 and 102 contradict"
   VERIFIED_FACTS ← main_agent_fact_gather(recall_output)
 
+  # ⛔ MANDATORY OUTPUT — emit the following block verbatim before proceeding to Step C.
+  # Step C MUST NOT begin until this block appears in the output.
+  #
+  #   [FACT-GATHER COMPLETE]
+  #   findings_received: <N from Recall output>
+  #   facts_gathered: <M entries in VERIFIED_FACTS>
+  #   VERIFIED_FACTS = {
+  #     <finding_id>: <raw evidence — exact quote or line reference>
+  #     ...
+  #   }
+  #   blocker: NONE | <reason if facts_gathered = 0>
+  #
+  # Validity rules (self-check before continuing):
+  #   - findings_received > 0 and facts_gathered > 0  → proceed to Step C
+  #   - findings_received > 0 and facts_gathered = 0  → emit blocker, HALT
+  #   - findings_received = 0                         → emit blocker, HALT
+  #
+  # ⛔ facts_gathered = 0 while findings_received > 0 is a protocol violation.
+  # ⛔ Emitting CONFIRM/DOWNGRADE/REJECT inside VERIFIED_FACTS is a protocol violation.
+
   # ── STEP C: Precision Filter ──────────────────────────────────────────────────
   # Load review-precision-filter.md. Inject VERIFIED_FACTS + recall_output.
   # ⛔ Same prompt contamination rules as Step A apply to the Precision prompt too.
@@ -142,6 +162,27 @@ for round N:
   # ⛔ Do NOT begin D3 before D2.5 is complete.
   main_agent_evaluate_and_fix(confirmed_findings)
   log: { round, tally, contested, evaluation_decisions, fixes_applied }
+
+  # ⛔ MANDATORY ROUND CLOSE — emit the following block as the FINAL output of every round,
+  # after the log entry and before any other action.
+  #
+  #   [ROUND <N> CLOSE]
+  #   new_C: <n>   new_H: <n>   new_M: <n>
+  #   cumulative_open_CHM: <n>
+  #   consecutive_zero_CHM_rounds: <0|1|2>
+  #   gate_proceed: NO | YES
+  #   next_action: CONTINUE_LOOP | STOP_LOOP
+  #
+  # Validity rules (self-check before emitting next_action):
+  #   - gate_proceed = YES   requires consecutive_zero_CHM_rounds = 2  → next_action = STOP_LOOP
+  #   - gate_proceed = NO    regardless of any other condition          → next_action = CONTINUE_LOOP
+  #
+  # ⛔ next_action = STOP_LOOP is INVALID unless consecutive_zero_CHM_rounds = 2.
+  # ⛔ Emitting next_action = STOP_LOOP when gate_proceed = NO is a protocol violation.
+  # ⛔ Omitting this block entirely is a protocol violation equivalent to fabricating gate_proceed = YES.
+  #
+  # If next_action = CONTINUE_LOOP → load ralph-continuation.md for the next round.
+  # If next_action = STOP_LOOP     → loop ends; proceed to post-loop deliverable.
 ```
 
 ## Dual-Pass Mode (Mandatory)
