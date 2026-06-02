@@ -6,7 +6,7 @@ description: |
   tier file (tier-1.md, tier-2.md, or tier-3.md). Each tier file is a
   self-contained protocol for that stakes level.
 author: community
-version: 3.0.0
+version: 3.1.0
 date: 2026-05-21
 ---
 
