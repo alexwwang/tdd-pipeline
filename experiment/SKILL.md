@@ -47,11 +47,25 @@ not two scenarios. Prepare all scenarios before starting evaluators.
 
 ## Common Failure Modes
 
+### Execution-stage (caught by protocol)
+
 1. **Phantom Delivery**: Evaluator says "file not found" — verify files exist before running
 2. **Self-Scoring**: Orchestrator scores results themselves — delegate to independent agent
-3. **Single-Scenario Claims**: One data point has high variance — run ≥ 3 scenarios
-4. **Ground Truth Favoritism**: Majority of GT items test the variable directly — cap at ≤ 1/3
 5. **Context Contamination**: Same agent evaluates then scores — scorer must be fresh instance
+
+### Design-stage (caught by pre-experiment gates)
+
+3. **Single-Scenario Claims**: One data point has high variance — run ≥ 3 scenarios
+   - Root cause: Protocol requires ≥N scenarios but does not enforce diversity.
+     Three scenarios of the same type pass the count check but miss defects
+     only visible in a different task type.
+   - Fix: Gate 3 requires ≥ 2 distinct requirement types.
+
+4. **Ground Truth Favoritism**: Majority of GT items test the variable directly — cap at ≤ 1/3
+   - Root cause: Protocol states the ≤ 1/3 rule but has no enforcement mechanism.
+     Rubric and GT can violate the rule without triggering any error.
+   - Fix: Gate 1 auto-counts variable-specific dimensions; Gate 2 verifies
+     declared annotation matches actual count.
 
 ## References
 

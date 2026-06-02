@@ -58,6 +58,62 @@ experiment/
     └── ...
 ```
 
+### Step 1.5: Pre-Experiment Design Gates
+
+**These checks MUST pass before proceeding to Step 2. If any fails, fix the design and re-check.**
+
+#### Gate 1: Rubric Variable Balance
+
+Count variable-specific dimensions in `scoring-rubric.md`. If the rubric marks which dimensions
+test the variable directly, verify the count matches the declared number.
+
+```bash
+# Extract variable-specific dimension count from rubric
+# Adapt the grep pattern to match your rubric's convention
+VARIABLE_COUNT=$(grep -ci "variable-specific\|test.*variable\|signal purity" experiment/scoring-rubric.md || echo 0)
+TOTAL_DIMS=$(grep -cE '^\s*[0-9]+\.|^\s*-\s+\*\*[A-Z]' experiment/scoring-rubric.md || echo 1)
+echo "Variable-specific: $VARIABLE_COUNT / $TOTAL_DIMS dimensions"
+if [ "$VARIABLE_COUNT" -gt "$((TOTAL_DIMS / 3))" ]; then
+  echo "FAIL: Variable-specific dimensions ($VARIABLE_COUNT) exceed 1/3 of total ($TOTAL_DIMS)"
+  echo "Fix: Remove or generalize variable-specific dimensions until ≤ 1/3"
+  exit 1
+fi
+echo "PASS: Variable balance OK"
+```
+
+Manual fallback: Count dimensions that directly test the experimental variable.
+If manual count disagrees with rubric's declared count, **use the manual count**.
+
+#### Gate 2: Ground Truth Annotation Accuracy
+
+Verify the number of variable-specific items declared in ground truth matches the actual count.
+
+```bash
+for s in experiment/scenario-*/ground-truth.md; do
+  DECLARED=$(grep -oiE '[0-9]+ of [0-9]+|variable-specific.*[0-9]+' "$s" | grep -oE '[0-9]+' | head -1)
+  ACTUAL=$(grep -ciE 'variable-specific|tests.*variable|variable.*impact' "$s" || echo 0)
+  if [ "$DECLARED" != "$ACTUAL" ]; then
+    echo "FAIL: $s declares $DECLARED variable-specific items but manual count finds $ACTUAL"
+    echo "Fix: Correct the annotation to match actual count"
+    exit 1
+  fi
+  echo "PASS: $s annotation accurate ($ACTUAL variable-specific)"
+done
+```
+
+#### Gate 3: Scenario Diversity
+
+Verify scenarios cover at least 2 distinct requirement types. Designer must document
+the requirement type for each scenario in the experiment plan.
+
+| Scenario | Requirement Type | Key Dimension Tested |
+|----------|-----------------|---------------------|
+| 1        | (fill in)       | (fill in)           |
+| 2        | (fill in)       | (fill in)           |
+| 3        | (fill in)       | (fill in)           |
+
+If all scenarios share the same requirement type, **add a different type before proceeding**.
+
 ### Step 2: Verify Delivery
 
 ```bash
@@ -115,9 +171,11 @@ If scorer produces invalid output, discard partial results and re-run (≤ 3 att
 ## Ground Truth Design Rules
 
 1. **Balanced**: ≤ 1/3 of items directly test the variable; ≥ 6 items total
-2. **Calibrated**: Mark importance based on domain judgment, not inflated for one variant
-3. **Independent authorship**: Ideally written by someone who didn't design variants; at minimum,
-   write GT BEFORE running evaluators
+2. **Annotation-accurate**: Declared variable-specific item count must match actual count.
+   Do not trust AI-generated annotations — verify manually. (Checked at Gate 2)
+3. **Calibrated**: Mark importance based on domain judgment, not inflated for one variant
+4. **Independent authorship**: Ideally written by someone who didn't design variants; at minimum,
+    write GT BEFORE running evaluators
 
 ## Scoring Rubric Design
 
@@ -137,6 +195,9 @@ Specify: dimensions, scale (ratio or interval), aggregation method.
 - [ ] Scorer received de-identified outputs only (no original prompts)
 - [ ] Scorer received ground-truth.md and scoring-rubric.md
 - [ ] Re-runs capped at ≤ 3 attempts per variant per scenario
+- [ ] Rubric variable balance verified: variable-specific dimensions ≤ 1/3 of total (Gate 1)
+- [ ] GT annotation accuracy verified: declared count matches actual in all scenarios (Gate 2)
+- [ ] Scenario diversity verified: ≥ 2 distinct requirement types documented (Gate 3)
 - [ ] ≥ 3 scenarios tested
 - [ ] Ground truth balanced (≤ 1/3 variable-specific; ≥ 6 items)
 - [ ] GT written before evaluators
