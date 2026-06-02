@@ -11,7 +11,9 @@ Phases 1–5 only. Phase 6 uses `phase-6-pre-release-testing.md` Part 5.
 
 Spawn an **independent subagent** not involved in creating the deliverable. Provide prior phase outputs for cross-phase consistency.
 
-**Reviewer prompt MUST NOT contain**: stop conditions, cumulative tallies, prior round findings, fix lists, round counts, loop state, or scope-limiting hints. Principle: reviewer evaluates only the current deliverable; past/future loop state creates anchoring bias.
+**Reviewer prompt MUST NOT contain**: stop conditions, cumulative tallies, prior round findings, fix lists, round counts, or loop state. Principle: reviewer evaluates only the current deliverable; past/future loop state creates anchoring bias.
+
+**Reviewer prompt MUST contain**: a `[REVIEW SCOPE]` block derived from the current phase file. This is NOT a scope-limiting hint — it is a phase boundary declaration that prevents cross-phase noise. See §Review Scope Declaration below.
 
 ⛔ **Before dispatching ANY reviewer subagent (Recall or Precision), verify prompt contains NONE of**:
 - round number ("Round N", "第N轮", "N of 10")
@@ -19,6 +21,31 @@ Spawn an **independent subagent** not involved in creating the deliverable. Prov
 - cumulative totals ("total N issues so far", "累计N个问题")
 - fix status ("all issues resolved", "已全部修复")
 - stop-condition hints ("if clean you may stop", "可提前结束", "looks good overall")
+
+## Review Scope Declaration
+
+Every reviewer subagent prompt MUST open with a `[REVIEW SCOPE]` block. This block
+is populated from the current phase file's Gate checklist — it is not ad-hoc.
+
+**Structure**:
+```
+[REVIEW SCOPE — PHASE <N>: <Phase Name>]
+IN SCOPE: <items drawn verbatim from the Gate checklist of the current phase file>
+OUT OF SCOPE (do not raise as C/H/M — log as DEFERRED if noted at all):
+  - Implementation details → Phase 3/4
+  - Test execution results → Phase 3
+  - Performance optimization → Phase 5
+  - Any concern whose resolution requires output from a later phase
+DEFERRED items: record in findings list with tag [DEFERRED], severity I.
+                They do NOT enter the fix loop and do NOT count toward stop condition.
+```
+
+**Rule**: A finding is IN SCOPE if and only if it can be evaluated and fixed
+using only the current phase's deliverable and prior-phase outputs already available.
+If fixing the finding requires waiting for a later phase's output → OUT OF SCOPE → DEFERRED.
+
+⛔ This block is scope declaration, not anchoring. It does not reference prior round
+findings, fix status, or cumulative tallies — those remain forbidden.
 
 ## Severity Classification
 
@@ -71,7 +98,15 @@ for round N:
   #    [ ] fix status (e.g. "all issues resolved", "已全部修复")
   #    [ ] stop-condition hints (e.g. "if clean you may stop", "可提前结束")
   #
-  # ⛔ Only after confirming ALL FIVE items are ABSENT may you dispatch Recall.
+  # ⛔ SCOPE PRESENCE CHECK — output this checklist and confirm each item
+  #    is PRESENT in the Recall subagent prompt before dispatching:
+  #
+  #    [ ] [REVIEW SCOPE] block derived from current phase Gate checklist
+  #    [ ] IN SCOPE items populated
+  #    [ ] OUT OF SCOPE items populated
+  #
+  # ⛔ Only after confirming ALL FIVE absence items AND ALL THREE presence items
+  #    may you dispatch Recall.
   # Dispatch: deliverable + prior_phase_outputs + contested_issues → Recall subagent
   recall_output ← Recall subagent
 
@@ -122,6 +157,8 @@ for round N:
   # ── STEP C: Precision Filter ──────────────────────────────────────────────────
   # Load review-precision-filter.md. Inject VERIFIED_FACTS + recall_output.
   # ⛔ Same prompt contamination rules as Step A apply to the Precision prompt too.
+  # ⛔ Same scope presence rules as Step A apply to the Precision prompt too.
+  #    [REVIEW SCOPE] block must be forwarded from Recall into Precision unchanged.
   #
   # ⛔⛔⛔ PRECISION MUST RUN AS INDEPENDENT SUBAGENT ⛔⛔⛔
   # The Precision pass MUST be dispatched as a separate subagent (oracle or

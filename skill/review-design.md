@@ -9,7 +9,7 @@ The reviewer must verify each item below. When defects are found, provide constr
 - [ ] **Axiom 1 — Independence** (Phase 2): FR-DP uncoupled (or decoupled with adjustment order documented)
 - [ ] **Axiom 2 — Information** (Phase 2, if alternatives): Coupled designs eliminated, simplest remaining selected
 - [ ] **FR Purity**: ACs describe WHAT not HOW (no implementation leakage)
-- [ ] **Completeness & Traceability**: All prior-phase requirements covered; every acceptance criterion maps to a test or design element
+- [ ] **Completeness & Traceability**: All prior-phase requirements covered; every AC maps to a test or design element
 - [ ] **Consistency**: No contradictions with prior phase outputs
 - [ ] **Clarity**: Unambiguous, explicit, no hand-waving
 - [ ] **Correctness & Boundaries**: Every AC has testable verification; edge cases, error paths, and failure modes covered; no non-deterministic behavior
@@ -26,49 +26,89 @@ Use the standard reviewer prompt from `ralph-review-loop.md` §Reviewer Selectio
 
 If using dual-pass mode, inject this as the Recall subagent prompt:
 
-```
-你是一位独立审查专家（Recall Pass）。你的职责是尽可能全面地发现所有潜在问题。
-后续会有另一位专家对你的发现进行精确性过滤。
+```text
+You are an independent review expert (Recall Pass). Your job is to find all potential
+issues as comprehensively as possible. A second expert will filter your findings for
+precision.
 
-**核心原则：宁可多报，不可遗漏。**
+Core principle: over-report rather than miss.
+- If unsure whether an issue is real, report it anyway with lower confidence.
+- If something looks suspicious but lacks full evidence, report it.
+- Do not skip anything questionable just because it "might not be a problem".
 
-- 如果你不确定某个问题是否真实存在，仍然报告它，但标记较低的 confidence
-- 如果你认为某处可能有问题但缺乏充分证据，仍然报告它
-- 不要因为"可能不是问题"就跳过任何可疑之处
+## Review Scope
 
-## 审查维度
-逐一检查以下维度：
-1. ⭐ 独立性公理（Phase 2 only）：FR-DP 设计矩阵是否已构造？是否存在耦合（同一 FR 受多个 DP 影响，同一 DP 影响多个 FR）？准耦合是否有调整顺序？
-2. ⭐ 信息公理（Phase 2 only，多方案时）：耦合方案是否已被淘汰？剩余方案是否按简洁度（耦合点最少）选优？
-3. ⭐ FR 纯度（Phase 1/2）：AC 是否描述"做什么"（功能域）而非"怎么做"（物理域）？是否混入了实现细节（如特定技术选型）？
-4. 完整性与可追溯性：是否覆盖了前序阶段的所有需求？每个验收标准是否映射到测试或设计元素？
-5. 一致性：是否与前序阶段输出矛盾？
-6. 清晰性：是否无歧义、明确、无 hand-waving？
-7. 正确性与边界审查：每个验收标准是否有对应的可测试验证条件？边界条件和错误情况是否被覆盖？是否存在非确定性行为（如无 tiebreaker 的排序）？
-8. 可行性：这能实际构建和测试吗？
-9. 向后兼容：API 变更是否会导致调用方崩溃？
-10. 安全深度审查：跟踪所有外部输入的数据流 — 哪些入口接受外部输入？数据在哪里跨越信任域？敏感数据是否可能暴露给不该看到的人？认证/授权是否在每个入口点执行？是否存在绕过验证的路径？
-11. 资源/性能审查：数据量增长时行为如何？打开的连接/句柄是否在所有路径（含错误路径）上正确关闭？是否有潜在的内存增长或资源耗尽路径？检查每个 WHERE/JOIN 列是否有索引覆盖（注意 composite PK prefix scan 限制：PK(a,b) 对 WHERE b=? 无效）
+Injected by the main agent from the current phase file. Do not modify.
 
-## 交付物
+{REVIEW_SCOPE}
+
+⛔ OUT OF SCOPE items: if worth noting, use severity I with tag [DEFERRED].
+   Must NOT be labeled C/H/M/P. Do not enter the fix loop.
+
+## Review Dimensions
+
+Check only the IN SCOPE dimensions declared in {REVIEW_SCOPE}:
+
+1. ⭐ Independence Axiom (Phase 2 only): Is the FR-DP design matrix constructed?
+   Is there coupling (one FR affected by multiple DPs, or one DP affecting multiple
+   FRs)? Are quasi-coupled designs documented with adjustment order?
+
+2. ⭐ Information Axiom (Phase 2 only, when alternatives exist): Have coupled designs
+   been eliminated? Is the simplest remaining design selected (fewest coupling points)?
+
+3. ⭐ FR Purity (Phase 1/2): Do ACs describe WHAT (functional domain) not HOW
+   (physical domain)? Is implementation detail leaking in (e.g. specific technology
+   choices)?
+
+4. Completeness & Traceability: Are all prior-phase requirements covered? Does every
+   AC map to a test or design element?
+
+5. Consistency: Any contradictions with prior phase outputs?
+
+6. Clarity: Unambiguous, explicit, no hand-waving?
+
+7. Correctness & Boundaries: Does every AC have a testable verification condition?
+   Are edge cases and error paths covered? Any non-deterministic behavior (e.g.
+   sorting without tiebreaker)?
+
+8. Feasibility: Can this actually be built and tested?
+
+9. Backward Compatibility: Will API changes break callers?
+
+10. Security Deep Review: Trace all external input data flows — which entry points
+    accept external input? Where does data cross trust boundaries? Can sensitive data
+    be exposed to unauthorized parties? Is auth/validation enforced at every entry
+    point? Are there validation bypass paths?
+
+11. Resource/Performance: How does behavior change as data grows? Are
+    connections/handles correctly closed on all paths including error paths? Any
+    potential memory growth or resource exhaustion? Check every WHERE/JOIN column for
+    index coverage (note composite PK prefix scan limitation: PK(a,b) does not cover
+    WHERE b=?).
+
+## Deliverable
+
 {DELIVERABLE}
 
-## 前序阶段输出（用于跨阶段一致性检查）
+## Prior Phase Outputs (for cross-phase consistency)
+
 {PRIOR_PHASE_OUTPUTS}
 
-## 争议事项（来自上一轮）
+## Contested Issues (from prior round)
+
 {CONTESTED_ISSUES}
 
-## 输出格式
-对每个发现，严格按以下 JSON 格式输出：
+## Output Format
+
+For each finding, output strictly as JSON:
 {
-  "id": "F-{序号}",
+  "id": "F-{sequence}",
   "severity": "C|H|M|P|L|I",
-  "category": "{分类}",
-  "location": "{文件:行号或文档章节}",
-  "description": "{问题描述}",
-  "evidence": "{具体证据引用}",
-  "suggestion": "{修复建议}",
+  "category": "{category}",
+  "location": "{file:line or document section}",
+  "description": "{issue description}",
+  "evidence": "{specific evidence reference}",
+  "suggestion": "{fix suggestion}",
   "confidence": 0.0-1.0
 }
 ```
@@ -77,7 +117,7 @@ If using dual-pass mode, inject this as the Recall subagent prompt:
 
 Between Recall and Precision passes, the main agent gathers these facts from the project:
 
-```
+```text
 facts_to_gather = [
   read the relevant prior-phase outputs (to verify cross-phase consistency claims)
   check the requirements document (to verify completeness claims)

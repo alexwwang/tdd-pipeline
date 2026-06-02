@@ -153,6 +153,34 @@ quality = {
 After completing this deliverable, run the `ralph-review-loop.md` protocol (see SKILL.md §Ralph Loop Review).
 Upon gate pass + user approval, proceed to Phase 3 → `phase-3-test-plan.md`.
 
+## Review Scope (injected into every Phase 2 reviewer prompt)
+
+```
+[REVIEW SCOPE — PHASE 2: Technical Solution]
+IN SCOPE:
+  - coverage:      all Phase 1 ACs are reachable with this design
+  - classification: all components/interfaces/failure_modes ∈ {key, peripheral}
+  - consistency:   Phase 1 core ACs map to ≥1 Phase 2 key component (downgrades justified)
+  - testability:   interfaces concrete enough for Phase 3 test authoring
+  - failure:       error paths designed (not just happy path)
+  - lean:          every abstraction justified (no over-engineering)
+  - boundary:      single_responsibility + blast_radius + min_api_surface ✓
+  - security:      threat_model + trust_boundaries + data_protection ✓
+  - quality:       operability + observability + data + performance + maintainability ✓
+  - nfr:           non-functional constraints documented
+  - decisions:     alternatives + trade-offs recorded
+
+OUT OF SCOPE (tag as [DEFERRED] with severity I if noted — do NOT raise as C/H/M):
+  - Test case design or test coverage depth → Phase 3
+  - Implementation approach or code structure → Phase 4
+  - Performance profiling or optimization → Phase 5
+  - Any requirement not in the current Phase 1 deliverable (future scope)
+  - Operational concerns resolvable only after implementation exists
+```
+
+⛔ Populate the `[REVIEW SCOPE]` block in every reviewer prompt from the IN SCOPE /
+OUT OF SCOPE lists above. Do not paraphrase — copy verbatim to prevent drift.
+
 ## Gate: Reviewer Checklist
 
 ```

@@ -1,10 +1,13 @@
 # Code Review (Phase 4–5)
 
-This file is loaded ONLY during code reviews (Phases 4–5). For design reviews, load `review-design.md` instead.
+This file is loaded ONLY during code reviews (Phases 4–5). For design reviews, load
+`review-design.md` instead.
 
 ## Code Review Checklist
 
-The reviewer must verify each item below. When defects are found, provide constructive suggestions per `ralph-review-loop.md` §Reviewer Output Requirements. When substantive strategic concerns exist, provide critical opinions.
+The reviewer must verify each item below. When defects are found, provide constructive
+suggestions per `ralph-review-loop.md` §Reviewer Output Requirements. When substantive
+strategic concerns exist, provide critical opinions.
 
 - [ ] **Test quality**: Completeness, edge cases, descriptive names, one assertion per test where practical
 - [ ] **Code quality**: Clean code, no duplication, proper abstractions, follows language idioms
@@ -29,70 +32,115 @@ The reviewer must verify each item below. When defects are found, provide constr
 - Is refactoring clean? Any regressions introduced?
 - Is the minimum code principle respected? No gold-plating?
 - Does every line of business code have test coverage?
-- Are review prompt contents clean? (No round counts, tallies, or fix lists leaked into reviewer prompts — RPS will flag these)
+- Are review prompt contents clean? (No round counts, tallies, or fix lists leaked
+  into reviewer prompts — RPS will flag these)
 
 ## Single-Pass Review
 
-Use the standard reviewer prompt from `ralph-review-loop.md` §Reviewer Selection, injecting the checklist above as the review scope.
+Use the standard reviewer prompt from `ralph-review-loop.md` §Reviewer Selection,
+injecting the checklist above as the review scope.
 
 ## Dual-Pass Recall Prompt
 
 If using dual-pass mode, inject this as the Recall subagent prompt:
 
-```
-你是一位独立审查专家（Recall Pass）。你的职责是尽可能全面地发现所有潜在问题。
-后续会有另一位专家对你的发现进行精确性过滤。
+```text
+You are an independent review expert (Recall Pass). Your job is to find all potential
+issues as comprehensively as possible. A second expert will filter your findings for
+precision.
 
-**核心原则：宁可多报，不可遗漏。**
+Core principle: over-report rather than miss.
+- If unsure whether an issue is real, report it anyway with lower confidence.
+- If something looks suspicious but lacks full evidence, report it.
+- Do not skip anything questionable just because it "might not be a problem".
 
-- 如果你不确定某个问题是否真实存在，仍然报告它，但标记较低的 confidence
-- 如果你认为某处可能有问题但缺乏充分证据，仍然报告它
-- 不要因为"可能不是问题"就跳过任何可疑之处
+## Review Scope
 
-## 审查维度
-逐一检查以下维度：
-1. 正确性：逻辑错误、遗漏情况、不变量破坏
-2. 完整性：死代码残留、遗漏的清理、孤立的引用（import/列名/变量）
-3. 一致性：命名不一致、混合约定、部分重构
-4. 安全性：数据暴露、注入风险、缺少验证
-5. 性能：不必要的计算、资源泄漏、N+1 模式
-6. 测试质量：缺失断言、弱化覆盖、不应删除的测试
-7. 可维护性：可读性、文档缺口、令人困惑的抽象
-8. TDD 合规：{Phase 4: 所有测试是否确实失败？无过早实现？} / {Phase 5: 最小实现原则？无过度工程？}
-9. 向后兼容：公开 API 删除/签名变更是否安全？
-10. import 清理：是否有残留的 import/导出
-11. 安全深度审查：跟踪所有外部输入的数据流（从入口到使用点）— 列名/值是否通过字符串拼接构造 SQL？验证是否在每个信任边界执行？是否有绕过验证的路径？敏感数据是否在日志/错误消息中泄露？
-12. 测试缺口审查：是否每个 AC 都有对应测试？edge case 是否有测试覆盖？错误路径是否有测试？是否存在"应该存在但不存在"的测试？是否存在非确定性的测试断言？检查所有 ORDER BY/LIMIT 查询：当多行具有相同排序键值时，结果是否非确定性？是否有唯一 tiebreaker？
-13. 资源安全审查：打开的资源（文件/连接/句柄）是否在所有路径（含错误路径）上正确关闭？是否有资源在循环或递归中累积？是否有潜在的连接池耗尽场景？检查每个 WHERE 子句和 JOIN 条件引用的列：是否有索引覆盖？注意 composite PK 只有 prefix scan 有效（如 PK(a,b) 对 WHERE a=? 有效但对 WHERE b=? 无效）
+Injected by the main agent from the current phase file. Do not modify.
 
-## 交付物
+{REVIEW_SCOPE}
+
+⛔ OUT OF SCOPE items: if worth noting, use severity I with tag [DEFERRED].
+   Must NOT be labeled C/H/M/P. Do not enter the fix loop.
+
+## Review Dimensions
+
+Check only the IN SCOPE dimensions declared in {REVIEW_SCOPE}:
+
+1.  Correctness: Logic errors, missing cases, broken invariants.
+
+2.  Completeness: Dead code remnants, missed cleanups, orphaned references
+    (imports, column names, variables).
+
+3.  Consistency: Naming inconsistencies, mixed conventions, partial refactoring.
+
+4.  Security: Data exposure, injection risks, missing validation.
+
+5.  Performance: Unnecessary computation, resource leaks, N+1 patterns.
+
+6.  Test quality: Missing assertions, weakened coverage, tests that should not
+    have been deleted.
+
+7.  Maintainability: Readability, documentation gaps, confusing abstractions.
+
+8.  TDD compliance:
+    - Phase 4: Are all tests genuinely failing? No premature implementation?
+    - Phase 5: Is the minimum implementation principle respected? No over-engineering?
+
+9.  Backward compatibility: Are public API removals or signature changes safe?
+
+10. Import cleanup: Any residual imports/exports of deleted symbols.
+
+11. Security deep review: Trace all external input data flows from entry point to
+    use site — are column names/values used in string-concatenated SQL? Is
+    validation enforced at every trust boundary? Are there bypass paths? Is
+    sensitive data leaked in logs or error messages?
+
+12. Test gap review: Does every AC have a corresponding test? Are edge cases
+    covered? Are error paths tested? Are there tests that should exist but don't?
+    Are there non-deterministic assertions? Check all ORDER BY/LIMIT queries: when
+    multiple rows share the same sort key, is the result non-deterministic? Is there
+    a unique tiebreaker?
+
+13. Resource safety: Are opened resources (files, connections, handles) correctly
+    closed on all paths including error paths? Do any resources accumulate in loops
+    or recursion? Are there connection pool exhaustion scenarios? Check every WHERE
+    clause and JOIN condition column for index coverage (note composite PK prefix
+    scan limitation: PK(a,b) covers WHERE a=? but NOT WHERE b=?).
+
+## Deliverable
+
 {DELIVERABLE}
 
-## 前序阶段输出（用于跨阶段一致性检查）
+## Prior Phase Outputs (for cross-phase consistency)
+
 {PRIOR_PHASE_OUTPUTS}
 
-## 争议事项（来自上一轮）
+## Contested Issues (from prior round)
+
 {CONTESTED_ISSUES}
 
-## 输出格式
-对每个发现，严格按以下 JSON 格式输出：
+## Output Format
+
+For each finding, output strictly as JSON:
 {
-  "id": "F-{序号}",
+  "id": "F-{sequence}",
   "severity": "C|H|M|P|L|I",
-  "category": "{分类}",
-  "location": "{文件:行号或描述}",
-  "description": "{问题描述}",
-  "evidence": "{具体证据引用}",
-  "suggestion": "{修复建议}",
+  "category": "{category}",
+  "location": "{file:line or description}",
+  "description": "{issue description}",
+  "evidence": "{specific evidence reference}",
+  "suggestion": "{fix suggestion}",
   "confidence": 0.0-1.0
 }
 ```
 
 ## Fact-Gathering for Precision Filter (Code Review)
 
-Between Recall and Precision passes, the main agent gathers these facts from the codebase:
+Between Recall and Precision passes, the main agent gathers these facts from the
+codebase:
 
-```
+```text
 facts_to_gather = [
   grep for residual references to deleted symbols (classes, functions, variables, columns)
   cat the actual implementation of suspect functions (not the diff, the full code)
@@ -101,4 +149,5 @@ facts_to_gather = [
 ]
 ```
 
-Then inject gathered facts into the Precision Filter prompt from `review-precision-filter.md`.
+Then inject gathered facts into the Precision Filter prompt from
+`review-precision-filter.md`.

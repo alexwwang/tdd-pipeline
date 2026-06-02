@@ -88,10 +88,13 @@ Evaluate after each round N, in this order (before starting round N+1):
    in ralph-review-loop.md §Review Process). If Steps A–C were not all completed
    this round (e.g. fact-gather was skipped), that round is invalid — re-run from
    Step B before proceeding here.
-2. Main agent critical evaluation: ADOPT/REJECT/MODIFY each item
+2. Main agent critical evaluation: ADOPT/REJECT/MODIFY/DEFER each item
    (see §Main Agent Critical Evaluation above)
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
+   - DEFERRED (tag [DEFERRED], severity I) → do NOT evaluate, do NOT fix, do NOT
+     count toward stop condition. Log to KI document with phase target noted.
+     These are out-of-scope findings from the reviewer; they carry zero loop cost.
 3. Apply all ADOPTed and MODIFYed C/H/M fixes
    ⛔ Steps 2 → 3 are sequential. Do not begin 3 before 2 is complete.
 3a. ⛔ **Post-Fix Cross-Reference Consistency Scan** — before proceeding to 3b,
