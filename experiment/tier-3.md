@@ -61,67 +61,11 @@ experiment log BEFORE running any evaluator. This record is required for p-value
 
 ### Step 1.5: Pre-Experiment Design Gates
 
-**These checks MUST pass before proceeding to Step 2. If any fails, fix the design and re-check.**
-**At T3, all three gates must be verified by someone who did not design the variants.**
+Run the three gates defined in `SKILL.md → Pre-Experiment Design Gates`.
 
-#### Gate 1: Rubric Variable Balance
-
-Count variable-specific dimensions in `scoring-rubric.md`. If the rubric marks which dimensions
-test the variable directly, verify the count matches the declared number.
-
-```bash
-# Extract variable-specific dimension count from rubric
-# Adapt the grep pattern to match your rubric's convention
-VARIABLE_COUNT=$(grep -ci "variable-specific\|test.*variable\|signal purity" experiment/scoring-rubric.md || echo 0)
-TOTAL_DIMS=$(grep -cE '^\s*[0-9]+\.|^\s*-\s+\*\*[A-Z]' experiment/scoring-rubric.md || echo 1)
-echo "Variable-specific: $VARIABLE_COUNT / $TOTAL_DIMS dimensions"
-if [ "$VARIABLE_COUNT" -gt "$((TOTAL_DIMS / 3))" ]; then
-  echo "FAIL: Variable-specific dimensions ($VARIABLE_COUNT) exceed 1/3 of total ($TOTAL_DIMS)"
-  echo "Fix: Remove or generalize variable-specific dimensions until ≤ 1/3"
-  exit 1
-fi
-echo "PASS: Variable balance OK"
-```
-
-Manual fallback: Count dimensions that directly test the experimental variable.
-If manual count disagrees with rubric's declared count, **use the manual count**.
-
-At T3: Independent reviewer must also verify the count (not just the Designer).
-
-#### Gate 2: Ground Truth Annotation Accuracy
-
-Verify the number of variable-specific items declared in ground truth matches the actual count.
-
-```bash
-for s in experiment/scenario-*/ground-truth.md; do
-  DECLARED=$(grep -oiE '[0-9]+ of [0-9]+|variable-specific.*[0-9]+' "$s" | grep -oE '[0-9]+' | head -1)
-  ACTUAL=$(grep -ciE 'variable-specific|tests.*variable|variable.*impact' "$s" || echo 0)
-  if [ "$DECLARED" != "$ACTUAL" ]; then
-    echo "FAIL: $s declares $DECLARED variable-specific items but manual count finds $ACTUAL"
-    echo "Fix: Correct the annotation to match actual count"
-    exit 1
-  fi
-  echo "PASS: $s annotation accurate ($ACTUAL variable-specific)"
-done
-```
-
-At T3: Independent reviewer must verify annotations in addition to the Designer.
-
-#### Gate 3: Scenario Diversity
-
-Verify scenarios cover at least 2 distinct requirement types. Designer must document
-the requirement type for each scenario in the experiment plan.
-
-| Scenario | Requirement Type | Key Dimension Tested |
-|----------|-----------------|---------------------|
-| 1        | (fill in)       | (fill in)           |
-| 2        | (fill in)       | (fill in)           |
-| 3        | (fill in)       | (fill in)           |
-| 4        | (fill in)       | (fill in)           |
-| 5        | (fill in)       | (fill in)           |
-
-If all scenarios share the same requirement type, **add a different type before proceeding**.
-At T3: Independent reviewer must confirm diversity classification is valid.
+**T3 addition**: All three gates MUST be verified by someone who did not design
+the variants — not just the Designer. Independent reviewer verifies: rubric
+balance count (Gate 1), GT annotations (Gate 2), diversity classification (Gate 3).
 
 ### Step 2: Verify Delivery
 
@@ -227,11 +171,8 @@ in addition to the Designer's bias check.
 - [ ] Scorer received ground-truth.md and scoring-rubric.md
 - [ ] Re-runs capped at ≤ 3 attempts per variant per scenario
 - [ ] Per-variant re-run rates compared; if >2× differential, flagged as selection-bias risk
-- [ ] Rubric variable balance verified: variable-specific dimensions ≤ 1/3 of total (Gate 1)
 - [ ] Independent reviewer verified rubric balance (T3 requirement)
-- [ ] GT annotation accuracy verified: declared count matches actual in all scenarios (Gate 2)
 - [ ] Independent reviewer verified GT annotations (T3 requirement)
-- [ ] Scenario diversity verified: ≥ 2 distinct requirement types documented (Gate 3)
 - [ ] Independent reviewer confirmed diversity classification (T3 requirement)
 - [ ] ≥ 5 scenarios tested
 - [ ] Ground truth balanced (≤ 1/3 variable-specific; ≥ 10 items)

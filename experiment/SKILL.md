@@ -47,25 +47,30 @@ not two scenarios. Prepare all scenarios before starting evaluators.
 
 ## Common Failure Modes
 
-### Execution-stage (caught by protocol)
+1. **Phantom Delivery**: Evaluator says "file not found"
+2. **Self-Scoring**: Orchestrator scores results themselves
+3. **Single-Scenario Claims**: One data point has high variance — ⛔ 3 same-type
+   scenarios pass the count check but miss defects only visible in different task types
+4. **Ground Truth Favoritism**: Majority of GT items test the variable directly — ⛔
+   stating the ≤ 1/3 rule does not enforce it; rubric and GT can silently violate
+   without triggering any error
+5. **Context Contamination**: Same agent evaluates then scores
 
-1. **Phantom Delivery**: Evaluator says "file not found" — verify files exist before running
-2. **Self-Scoring**: Orchestrator scores results themselves — delegate to independent agent
-5. **Context Contamination**: Same agent evaluates then scores — scorer must be fresh instance
+## Pre-Experiment Design Gates
 
-### Design-stage (caught by pre-experiment gates)
+⛔ These gates MUST pass before running evaluators. If any fails, fix and re-check.
 
-3. **Single-Scenario Claims**: One data point has high variance — run ≥ 3 scenarios
-   - Root cause: Protocol requires ≥N scenarios but does not enforce diversity.
-     Three scenarios of the same type pass the count check but miss defects
-     only visible in a different task type.
-   - Fix: Gate 3 requires ≥ 2 distinct requirement types.
+### Gate 1: Rubric Variable Balance
+Variable-specific dimensions in `scoring-rubric.md` MUST be ≤ 1/3 of total.
+⛔ Do not trust automated counts — if manual count disagrees, use manual count.
 
-4. **Ground Truth Favoritism**: Majority of GT items test the variable directly — cap at ≤ 1/3
-   - Root cause: Protocol states the ≤ 1/3 rule but has no enforcement mechanism.
-     Rubric and GT can violate the rule without triggering any error.
-   - Fix: Gate 1 auto-counts variable-specific dimensions; Gate 2 verifies
-     declared annotation matches actual count.
+### Gate 2: Ground Truth Annotation Accuracy
+Declared variable-specific item count in each `scenario-*/ground-truth.md` MUST
+match actual count. ⛔ Do not trust AI-generated annotations — verify manually.
+
+### Gate 3: Scenario Diversity
+Scenarios MUST cover ≥ 2 distinct requirement types. Document type per scenario
+in experiment plan.
 
 ## References
 
