@@ -38,15 +38,13 @@ Core principle: over-report rather than miss.
 
 ## Input Contract
 
-This prompt contains the following injected variables. Do not modify them.
-
-| Variable | Source | Format |
-|----------|--------|--------|
-| {REVIEW_SCOPE} | Current phase Gate checklist | Structured text (IN SCOPE / OUT OF SCOPE) |
-| {DELIVERABLE} | Current phase output | Full document content |
-| {PRIOR_PHASE_OUTPUTS} | Previous phase deliverables | Document list |
-| {CONTESTED_ISSUES} | Prior round REJECTed C/H/M | JSON list (empty for Round 1) |
-| {KNOWN_ISSUES} | KI document | Structured text (injected every 3 rounds) |
+| Variable | Required |
+|----------|----------|
+| {REVIEW_SCOPE} | ✅ |
+| {DELIVERABLE} | ✅ |
+| {PRIOR_PHASE_OUTPUTS} | ✅ |
+| {CONTESTED_ISSUES} | ✅（empty for Round 1） |
+| {KNOWN_ISSUES} | Every 3 rounds |
 
 ## Review Scope
 

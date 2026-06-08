@@ -88,8 +88,8 @@ Evaluate after each round N, in this order (before starting round N+1):
    in ralph-review-loop.md §Review Process). If Steps A–C were not all completed
    this round (e.g. fact-gather was skipped), that round is invalid — re-run from
    Step B before proceeding here.
-2. Dispatch Reviewer subagent (load `review-reviewer.md`) with confirmed findings
-   + deliverable + project context. Reviewer produces ADOPT/REJECT/MODIFY/DEFER
+2. Dispatch Eval-Fix subagent (load `review-evalfix.md`) with confirmed findings
+   + deliverable + project context. Produces ADOPT/REJECT/MODIFY/DEFER
    decisions with fix suggestions.
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
@@ -184,6 +184,6 @@ Review checklists are loaded per-phase from dedicated files:
 | **4–5** (Code)   | `review-code.md`         | Code review checklist + Recall prompt + investigation guide |
 | **All** (Fact-Gather) | `review-fact-gather.md` | Location-mapping prompt (shared) |
 | **All** (Precision) | `review-precision-filter.md` | Precision Filter prompt (shared) |
-| **All** (Reviewer) | `review-reviewer.md`   | Evaluation + fix suggestion prompt (shared) |
+| **All** (Eval-Fix) | `review-evalfix.md`   | Evaluation + fix suggestion prompt (shared) |
 
 See `ralph-examples.md` for worked examples covering: intermittent zeros (A), L does not reset counter (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).

@@ -185,15 +185,15 @@ for round N:
   confirmed_findings ← Precision subagent(location_map, recall_output)
 
   # ── STEP D: Evaluate + Fix + Scan + Log ───────────────────────────────────────
-  # The Reviewer subagent evaluates confirmed findings and produces fix suggestions.
+  # The Eval-Fix subagent evaluates confirmed findings and produces fix suggestions.
   # The main agent then mechanically applies fixes and performs cross-reference scan.
 
-  # D1: Reviewer subagent evaluates each confirmed finding
-  # Load review-reviewer.md. Inject confirmed findings + deliverable + context.
+  # D1: Eval-Fix subagent evaluates each confirmed finding
+  # Load review-evalfix.md. Inject confirmed findings + deliverable + context.
   # ⛔ Same prompt contamination rules as Step A apply.
-  # ⛔ Reviewer subagent MUST NOT directly edit files — output suggestions only.
+  # ⛔ Eval-Fix subagent MUST NOT directly edit files — output suggestions only.
   # Output: ADOPT | REJECT | MODIFY | DEFER per finding, with fix suggestions.
-  reviewer_decisions ← Reviewer subagent(confirmed_findings)
+  reviewer_decisions ← Eval-Fix subagent(confirmed_findings)
 
   # D2: Apply fixes (main agent — mechanical execution, no judgment)
   for each ADOPT/MODIFY in reviewer_decisions:
@@ -245,7 +245,7 @@ for round N:
 | Recall | Independent subagent | Raw findings list | — |
 | Fact-Gather | Independent subagent | Document location index (paths + scopes) | Evaluation, quotes, summaries, any judgment |
 | Precision | Independent subagent (NOT main agent) | CONFIRM/DOWNGRADE/REJECT per finding | — |
-| Reviewer | Independent subagent (NOT main agent) | ADOPT/REJECT/MODIFY/DEFER + fix suggestions | Direct file edits |
+| Eval-Fix | Independent subagent (NOT main agent) | ADOPT/REJECT/MODIFY/DEFER + fix suggestions | Direct file edits |
 | Main Agent | Orchestrator | Dispatch, merge, apply fixes, log | Any review judgment or evaluation |
 
 **Collapse scenarios that MUST be avoided:**
@@ -261,7 +261,7 @@ for round N:
 | 4–5       | `review-code.md`                  | Checklist + Recall prompt + investigation guide |
 | Fact-Gather | `review-fact-gather.md`         | Location-mapping prompt + anti-corruption rules |
 | Precision | `review-precision-filter.md`      | Precision Filter prompt + aggregation         |
-| Reviewer  | `review-reviewer.md`              | Evaluation prompt + fix suggestion template    |
+| Eval-Fix | `review-evalfix.md`              | Evaluation prompt + fix suggestion template    |
 
 **Sequence**: Recall Pass → Locate Documents (Fact-Gather) → Precision Filter (independent) → Reviewer (evaluate + suggest fixes) → Main Agent (apply + scan + log)
 
@@ -345,15 +345,6 @@ When splitting, the main agent creates a delegation plan:
 4. Save each sub-task output: `r{round}-{stage}-{sub_task_id}.json`
 5. Merge outputs before proceeding to next pipeline step
 
-### Merge Rules
-
-```
-recall_merged = concat(all recall JSON arrays)
-location_map_merged = merge by finding_id (union of doc refs)
-precision_merged = merge verdicts (dedup by finding_id)
-reviewer_merged = merge decisions (1:1 per finding)
-```
-
 ## Task Naming Convention
 
 All files and tasks use the following naming convention:
@@ -364,9 +355,9 @@ All files and tasks use the following naming convention:
 
 **File naming patterns**:
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Deliverable | `{yymmdd-summary}/p{N}-{desc}.md` | `260608-user-auth/p1-requirements.md` |
-| Review temp | `r{round}-{stage}-{sub_task_id}.json` | `r1-factgather-cluster-001.json` |
-| Review log | `{yymmdd-summary}/review-log-p{N}-r{round}.md` | `260608-user-auth/review-log-p4-r1.md` |
-| Split plan | `{yymmdd-summary}/split-plan-p{N}-r{round}.md` | `260608-user-auth/split-plan-p5-r1.md` |
+| Type | Pattern |
+|------|---------|
+| Deliverable | `{yymmdd-summary}/p{N}-{desc}.md` |
+| Review temp | `r{round}-{stage}-{sub_task_id}.json` |
+| Review log | `{yymmdd-summary}/review-log-p{N}-r{round}.md` |
+| Split plan | `{yymmdd-summary}/split-plan-p{N}-r{round}.md` |

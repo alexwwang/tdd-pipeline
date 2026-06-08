@@ -82,7 +82,7 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
   - Code review (Phase 4–5) → `review-code.md`
   - Fact-Gather subagent (location mapping) → `review-fact-gather.md`
   - Precision filter (dual-pass mode) → `review-precision-filter.md`
-  - Reviewer subagent (evaluate + fix suggestions) → `review-reviewer.md`
+  - Eval-Fix subagent (evaluate + fix suggestions) → `review-evalfix.md`
 - **Ralph loop support files** (loaded on demand):
   - GPAV protocol (Watchdog active) → `ralph-gpav.md`
   - Continuation protocol (Rounds 2+) → `ralph-continuation.md`
@@ -165,16 +165,6 @@ When Phase 6 discovers issues, the 追问 (root cause investigation) determines 
 
 See `phase-6-pre-release-testing.md` for the complete 追问 (root cause investigation) protocol with termination criteria and rollback procedures. *(This table is mirrored in phase-6-pre-release-testing.md — keep in sync.)*
 
-## Workload Assessment
-
-Before dispatching any review subagent, the main agent estimates whether the task fits
-within a single subagent's context window. If the estimated prompt exceeds 40% of the
-subagent's maximum context, the work is split across multiple dispatches.
-
-See `ralph-review-loop.md` §Workload Split Protocol for the full assessment criteria,
-split strategies per review stage, and merge rules. See `task-tree.md` §Review Split
-Protocol for the delegation plan format and recursive splitting rules.
-
 ## Task Naming Convention
 
 All review artifacts use a standardized naming convention:
@@ -188,7 +178,7 @@ All review artifacts use a standardized naming convention:
 |----------|---------|
 | Deliverable | `{yymmdd-summary}/p{N}-{desc}.md` |
 | Review temp | `r{round}-{stage}-{sub_task_id}.json` |
-| Review log | `{yymmmm-summary}/review-log-p{N}-r{round}.md` |
+| Review log | `{yymmdd-summary}/review-log-p{N}-r{round}.md` |
 | Split plan | `{yymmdd-summary}/split-plan-p{N}-r{round}.md` |
 
 See `ralph-review-loop.md` §Task Naming Convention for the complete specification.
