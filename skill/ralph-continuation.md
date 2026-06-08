@@ -88,14 +88,15 @@ Evaluate after each round N, in this order (before starting round N+1):
    in ralph-review-loop.md §Review Process). If Steps A–C were not all completed
    this round (e.g. fact-gather was skipped), that round is invalid — re-run from
    Step B before proceeding here.
-2. Main agent critical evaluation: ADOPT/REJECT/MODIFY/DEFER each item
-   (see §Main Agent Critical Evaluation above)
+2. Dispatch Reviewer subagent (load `review-reviewer.md`) with confirmed findings
+   + deliverable + project context. Reviewer produces ADOPT/REJECT/MODIFY/DEFER
+   decisions with fix suggestions.
    - REJECT of C/H/M → contested issue → include in next round's context for reviewer
    - REJECTed C/H/M remain in tally until reviewer explicitly drops them
    - DEFERRED (tag [DEFERRED], severity I) → do NOT evaluate, do NOT fix, do NOT
      count toward stop condition. Log to KI document with phase target noted.
      These are out-of-scope findings from the reviewer; they carry zero loop cost.
-3. Apply all ADOPTed and MODIFYed C/H/M fixes
+3. Main agent mechanically applies all ADOPTed and MODIFYed C/H/M fixes
    ⛔ Steps 2 → 3 are sequential. Do not begin 3 before 2 is complete.
 3a. ⛔ **Post-Fix Cross-Reference Consistency Scan** — before proceeding to 3b,
     verify each fix did not introduce contradictions with the rest of the document(s):
@@ -177,9 +178,12 @@ Evaluate after each round N, in this order (before starting round N+1):
 
 Review checklists are loaded per-phase from dedicated files:
 
-| Phase            | Load this file     | Contains                                |
-| ---------------- | ------------------ | --------------------------------------- |
-| **1–3** (Design) | `review-design.md` | Design review checklist + Recall prompt |
-| **4–5** (Code)   | `review-code.md`   | Code review checklist + Recall prompt   |
+| Phase            | Load this file           | Contains                                  |
+| ---------------- | ------------------------ | ----------------------------------------- |
+| **1–3** (Design) | `review-design.md`       | Design review checklist + Recall prompt + investigation guide |
+| **4–5** (Code)   | `review-code.md`         | Code review checklist + Recall prompt + investigation guide |
+| **All** (Fact-Gather) | `review-fact-gather.md` | Location-mapping prompt (shared) |
+| **All** (Precision) | `review-precision-filter.md` | Precision Filter prompt (shared) |
+| **All** (Reviewer) | `review-reviewer.md`   | Evaluation + fix suggestion prompt (shared) |
 
 See `ralph-examples.md` for worked examples covering: intermittent zeros (A), L does not reset counter (B), correct stop (C), persistent issues escalation (D), contested issue lifecycle with graceful concession (E), contested issue via MODIFY — principled compromise (F), and contested issue escalation with 5-section dossier (G).

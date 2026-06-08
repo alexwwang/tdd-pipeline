@@ -87,6 +87,22 @@ Legacy mapping: `severity-migration.md`
 ```
 for round N:
 
+  # ── STEP 0: Workload Assessment ─────────────────────────────────────────────
+  # Before dispatching any subagent, the main agent estimates workload:
+  #
+  #   estimated_context = prompt_tokens + deliverable_size
+  #   if estimated_context > 40% of subagent max_context → SPLIT_REQUIRED
+  #   if findings_count > 30 → SPLIT_REQUIRED (Recall/Precision only)
+  #
+  # If SPLIT_REQUIRED:
+  #   Create a delegation plan (see §Workload Split Protocol below).
+  #   Dispatch sub-tasks sequentially or in parallel per plan.
+  #   Save each sub-task output to a temp file.
+  #   Merge outputs before proceeding to next step.
+  #
+  # Temp file naming: r{round}-{stage}-{sub_task_id}.json
+  #   e.g. r1-recall-mod-auth.json, r1-factgather-cluster-001.json
+
   # ── STEP A: Recall Pass ──────────────────────────────────────────────────────
   # Load review-design.md (Phase 1–3) OR review-code.md (Phase 4–5).
   # ⛔ PROMPT CONTAMINATION CHECK — output this checklist and confirm each item
@@ -110,52 +126,38 @@ for round N:
   # Dispatch: deliverable + prior_phase_outputs + contested_issues → Recall subagent
   recall_output ← Recall subagent
 
-  # ── STEP B: Fact-Gathering (main agent — NOT delegatable to subagent) ────────
-  # ⛔ This step is performed by the MAIN AGENT, not a subagent.
-  # ⛔ Do NOT dispatch Precision subagent until VERIFIED_FACTS is non-empty.
-  # Use facts_to_gather from review-design.md OR review-code.md §Fact-Gathering.
-  # Produce visible output: VERIFIED_FACTS = { <finding_id>: <raw_evidence> }
-  # If VERIFIED_FACTS is empty after attempting fact-gather → HALT, diagnose blocker.
-  #
-  # ⛔⛔⛔ FACT-GATHER OUTPUT FORMAT — RAW FACTS ONLY ⛔⛔⛔
-  # Fact-gather MUST produce ONLY raw evidence (exact quotes, line numbers,
-  # structural observations). It MUST NOT contain:
-  #   - CONFIRM / DOWNGRADE / REJECT verdicts
-  #   - Main agent's opinion on whether a finding is valid
-  #   - Severity reclassification suggestions
-  #   - "Pre-evaluation" or "pre-judgment" of any kind
-  #
-  # WHY: The Precision subagent's ENTIRE VALUE is independent judgment.
-  # If main agent pre-judges findings during fact-gather, the Precision
-  # subagent receives biased input → independence destroyed → dual-pass
-  # degrades to single-pass with extra steps.
-  #
-  # CORRECT:  "C-001: Line 46 writes 're-run with flags'. Line 102 writes 'Do NOT initiate re-runs'."
-  # WRONG:    "C-001: CONFIRM — lines 46 and 102 contradict"
-  VERIFIED_FACTS ← main_agent_fact_gather(recall_output)
+  # ── STEP B: Fact-Gathering (independent subagent) ────────────────────────────
+  # Load review-fact-gather.md. Inject RAW_FINDINGS + phase-specific guide.
+  # ⛔ Fact-Gather subagent MUST be independent from Recall and Precision.
+  # ⛔ Fact-Gather subagent produces ONLY location references (paths + scopes).
+  #    It MUST NOT contain: evaluation, quotes, summaries, or any judgment.
+  # Dispatch: recall_output + {FACT_INVESTIGATION_GUIDE} → Fact-Gather subagent
+  # Output: location_map = { <finding_id>: [ {path, scope, scope_description} ] }
+  # ⛔ Do NOT dispatch Precision subagent until location_map is non-empty.
+  location_map ← Fact-Gather subagent(recall_output)
 
   # ⛔ MANDATORY OUTPUT — emit the following block verbatim before proceeding to Step C.
   # Step C MUST NOT begin until this block appears in the output.
   #
   #   [FACT-GATHER COMPLETE]
   #   findings_received: <N from Recall output>
-  #   facts_gathered: <M entries in VERIFIED_FACTS>
-  #   VERIFIED_FACTS = {
-  #     <finding_id>: <raw evidence — exact quote or line reference>
+  #   locations_mapped: <M entries in location_map>
+  #   location_map = {
+  #     <finding_id>: [{path, scope, scope_description}]
   #     ...
   #   }
-  #   blocker: NONE | <reason if facts_gathered = 0>
+  #   blocker: NONE | <reason if locations_mapped = 0>
   #
   # Validity rules (self-check before continuing):
-  #   - findings_received > 0 and facts_gathered > 0  → proceed to Step C
-  #   - findings_received > 0 and facts_gathered = 0  → emit blocker, HALT
-  #   - findings_received = 0                         → emit blocker, HALT
+  #   - findings_received > 0 and locations_mapped > 0  → proceed to Step C
+  #   - findings_received > 0 and locations_mapped = 0  → emit blocker, HALT
+  #   - findings_received = 0                           → emit blocker, HALT
   #
-  # ⛔ facts_gathered = 0 while findings_received > 0 is a protocol violation.
-  # ⛔ Emitting CONFIRM/DOWNGRADE/REJECT inside VERIFIED_FACTS is a protocol violation.
+  # ⛔ locations_mapped = 0 while findings_received > 0 is a protocol violation.
+  # ⛔ Emitting evaluation or quoted content in location_map is a protocol violation.
 
   # ── STEP C: Precision Filter ──────────────────────────────────────────────────
-  # Load review-precision-filter.md. Inject VERIFIED_FACTS + recall_output.
+  # Load review-precision-filter.md. Inject location_map + recall_output.
   # ⛔ Same prompt contamination rules as Step A apply to the Precision prompt too.
   # ⛔ Same scope presence rules as Step A apply to the Precision prompt too.
   #    [REVIEW SCOPE] block must be forwarded from Recall into Precision unchanged.
@@ -170,34 +172,44 @@ for round N:
   #
   # The Precision prompt MUST contain:
   #   1. ALL raw Recall findings (complete list, no omissions)
-  #   2. VERIFIED_FACTS (raw evidence only, no verdicts)
+  #   2. location_map (document locations to investigate — NOT quoted content)
   #   3. The Precision filter instructions (from review-precision-filter.md)
   # The Precision prompt MUST NOT contain:
   #   1. Main agent's pre-judgment on any finding
   #   2. "Suggested" or "recommended" verdicts
   #   3. Hints about which findings are "probably false positives"
   #
-  # WHY: Main agent has context bias (it built the recall prompt, gathered facts,
-  # and formed opinions). Independent Precision breaks this bias loop.
+  # WHY: Main agent has context bias (it built the recall prompt, dispatched
+  # fact-gather, and formed opinions). Independent Precision breaks this bias loop.
   # If main agent = Precision agent, dual-pass collapses to echo chamber.
-  confirmed_findings ← Precision subagent(VERIFIED_FACTS, recall_output)
+  confirmed_findings ← Precision subagent(location_map, recall_output)
 
-  # ── STEP D: Evaluate → Fix → Scan → Log  (SEQUENTIAL: each step must complete
-  #                                                     before the next begins) ──
-  # D1: main_agent evaluates each confirmed finding → ADOPT | REJECT | MODIFY
-  #     (see ralph-continuation.md §Main Agent Critical Evaluation)
-  # D2: fix all ADOPTed/MODIFYed C/H/M (P/L/I/ADOPTed_opinions optional)
+  # ── STEP D: Evaluate + Fix + Scan + Log ───────────────────────────────────────
+  # The Reviewer subagent evaluates confirmed findings and produces fix suggestions.
+  # The main agent then mechanically applies fixes and performs cross-reference scan.
+
+  # D1: Reviewer subagent evaluates each confirmed finding
+  # Load review-reviewer.md. Inject confirmed findings + deliverable + context.
+  # ⛔ Same prompt contamination rules as Step A apply.
+  # ⛔ Reviewer subagent MUST NOT directly edit files — output suggestions only.
+  # Output: ADOPT | REJECT | MODIFY | DEFER per finding, with fix suggestions.
+  reviewer_decisions ← Reviewer subagent(confirmed_findings)
+
+  # D2: Apply fixes (main agent — mechanical execution, no judgment)
+  for each ADOPT/MODIFY in reviewer_decisions:
+      apply_fix(decision.fix_suggestion, decision.fix_code)
+
   # D2.5: ⛔ Post-Fix Cross-Reference Consistency Scan (MANDATORY)
   #       For each fix: identify touched concepts → grep all reviewed files →
   #       verify no contradictions with untouched content → verify mirror tables.
   #       If contradiction found: resolve before proceeding.
   #       See ralph-continuation.md §Step 3a for full protocol.
   #       This is the #1 defense against oscillating review rounds.
+
   # D3: log { round, tally, contested, evaluation_decisions, fixes_applied }
   # ⛔ Do NOT begin D2 before D1 is complete.
   # ⛔ Do NOT begin D2.5 before D2 is complete.
   # ⛔ Do NOT begin D3 before D2.5 is complete.
-  main_agent_evaluate_and_fix(confirmed_findings)
   log: { round, tally, contested, evaluation_decisions, fixes_applied }
 
   # ⛔ MANDATORY ROUND CLOSE — emit the following block as the FINAL output of every round,
@@ -224,31 +236,36 @@ for round N:
 
 ## Dual-Pass Mode (Mandatory)
 
-⛔ **Single-pass is forbidden.** All rounds MUST use Recall → fact-gather → Precision.
+⛔ **Single-pass is forbidden.** All rounds MUST use Recall → fact-gather → Precision → Reviewer.
 
-**⛔ Three-agent separation (inviolable)**: Recall, Fact-Gather, and Precision are THREE distinct roles that MUST NOT collapse into fewer:
+**⛔ Five-agent separation (inviolable)**: Recall, Fact-Gather, Precision, Reviewer, and Main Agent are FIVE distinct roles that MUST NOT collapse into fewer:
 
 | Role | Agent | Produces | Forbidden Output |
 |------|-------|----------|-----------------|
 | Recall | Independent subagent | Raw findings list | — |
-| Fact-Gather | Main agent | Raw evidence only (quotes, line refs, structural observations) | CONFIRM/DOWNGRADE/REJECT, pre-judgments, severity suggestions |
+| Fact-Gather | Independent subagent | Document location index (paths + scopes) | Evaluation, quotes, summaries, any judgment |
 | Precision | Independent subagent (NOT main agent) | CONFIRM/DOWNGRADE/REJECT per finding | — |
+| Reviewer | Independent subagent (NOT main agent) | ADOPT/REJECT/MODIFY/DEFER + fix suggestions | Direct file edits |
+| Main Agent | Orchestrator | Dispatch, merge, apply fixes, log | Any review judgment or evaluation |
 
 **Collapse scenarios that MUST be avoided:**
-- ❌ Main agent does Fact-Gather + Precision in one step → echo chamber
-- ❌ Main agent pre-judges findings during Fact-Gather → biases Precision
-- ❌ Main agent filters which findings reach Precision → Recall coverage wasted
-- ❌ Precision prompt contains main agent's verdicts → independence destroyed
+- ❌ Fact-Gather + Precision merged → Fact-Gather's location role polluted by judgment
+- ❌ Precision + Reviewer merged → confirm/reject judgment biases fix suggestions
+- ❌ Main agent executes any review pass → context bias destroys independence
+- ❌ Fact-Gather outputs quoted content or opinions → biases Precision's independent reading
+- ❌ Reviewer directly edits files → bypasses cross-reference scan
 
-| Phase     | Load                         | Contains                                      |
-| --------- | ---------------------------- | --------------------------------------------- |
-| 1–3       | `review-design.md`           | Checklist + Recall prompt + fact-gather guide |
-| 4–5       | `review-code.md`             | Checklist + Recall prompt + fact-gather guide |
-| Precision | `review-precision-filter.md` | Precision Filter prompt + aggregation         |
+| Phase     | Load                              | Contains                                      |
+| --------- | --------------------------------- | --------------------------------------------- |
+| 1–3       | `review-design.md`                | Checklist + Recall prompt + investigation guide |
+| 4–5       | `review-code.md`                  | Checklist + Recall prompt + investigation guide |
+| Fact-Gather | `review-fact-gather.md`         | Location-mapping prompt + anti-corruption rules |
+| Precision | `review-precision-filter.md`      | Precision Filter prompt + aggregation         |
+| Reviewer  | `review-reviewer.md`              | Evaluation prompt + fix suggestion template    |
 
-**Sequence**: Recall Pass → Gather Facts (raw only) → Precision Filter (independent subagent) → confirmed_findings → tally
+**Sequence**: Recall Pass → Locate Documents (Fact-Gather) → Precision Filter (independent) → Reviewer (evaluate + suggest fixes) → Main Agent (apply + scan + log)
 
-Skip fact-gather → false positives pass filter → wasted fix rounds. Pre-judge during fact-gather → Precision becomes rubber stamp → dual-pass degrades to single-pass.
+Skip fact-gather → Precision lacks location context → relies solely on LLM judgment. Fact-Gather outputs opinions → biases Precision → dual-pass degrades to single-pass.
 
 ❌ **Reviewer prompt contamination**: injecting round counts ("Round 2 of N"), prior-round results ("R1 found X"), cumulative tallies, or fix lists into the Recall/Precision prompt. Contaminated prompts create anchoring bias — the reviewer reproduces prior conclusions instead of independent assessment.
 
@@ -282,3 +299,74 @@ gate_proceed = 2 consecutive rounds with zero new C/H/M findings
 ## Next Round
 
 After Round 1: load `ralph-continuation.md` (evaluation, flowchart, stop conditions) and `ralph-contested.md` (when C/H/M is REJECTed). Log format: `ralph-log-template.md`.
+
+## Workload Split Protocol
+
+Before dispatching any subagent, the main agent estimates whether the task fits within
+a single subagent's context window.
+
+### Assessment
+
+```
+workload_estimate(prompt_tokens, deliverable_size, findings_count):
+    estimated_context = prompt_tokens + deliverable_size
+
+    if estimated_context > 40% of subagent max_context:
+        return SPLIT_REQUIRED
+
+    # For Recall/Precision, also check findings count
+    if findings_count > 30:
+        return SPLIT_REQUIRED
+
+    return SINGLE_DISPATCH
+```
+
+**40% threshold**: The prompt must leave ≥60% of context for the subagent to read
+files, reason, and produce output.
+
+### Split Strategies
+
+When `SPLIT_REQUIRED`, split by the following dimension depending on the stage:
+
+| Stage | Split Dimension | Method |
+|-------|----------------|--------|
+| Recall | Deliverable modules | Partition by module boundary from `task-tree.md` index.md |
+| Fact-Gather | Findings clusters | Cluster findings by relevant file, dispatch per cluster |
+| Precision | Same clusters as Fact-Gather | Keep findings and locations paired |
+| Reviewer | Fix file overlap | Group confirmed findings by file overlap |
+
+### Delegation Plan
+
+When splitting, the main agent creates a delegation plan:
+
+1. Log: `[WORKLOAD SPLIT] {stage} split into {K} sub-tasks`
+2. Save plan to: `{yymmdd-summary}/split-plan-p{N}-r{round}.md`
+3. Dispatch sub-tasks (parallel where independent, sequential where dependent)
+4. Save each sub-task output: `r{round}-{stage}-{sub_task_id}.json`
+5. Merge outputs before proceeding to next pipeline step
+
+### Merge Rules
+
+```
+recall_merged = concat(all recall JSON arrays)
+location_map_merged = merge by finding_id (union of doc refs)
+precision_merged = merge verdicts (dedup by finding_id)
+reviewer_merged = merge decisions (1:1 per finding)
+```
+
+## Task Naming Convention
+
+All files and tasks use the following naming convention:
+
+- **Requirement ID**: `yymmdd-summary` format (e.g. `260608-user-auth`)
+- **TDD phase identifier**: `p1`–`p8` (not the phase name)
+- **Review stage identifier**: `recall`, `factgather`, `precision`, `evalfix`
+
+**File naming patterns**:
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Deliverable | `{yymmdd-summary}/p{N}-{desc}.md` | `260608-user-auth/p1-requirements.md` |
+| Review temp | `r{round}-{stage}-{sub_task_id}.json` | `r1-factgather-cluster-001.json` |
+| Review log | `{yymmdd-summary}/review-log-p{N}-r{round}.md` | `260608-user-auth/review-log-p4-r1.md` |
+| Split plan | `{yymmdd-summary}/split-plan-p{N}-r{round}.md` | `260608-user-auth/split-plan-p5-r1.md` |

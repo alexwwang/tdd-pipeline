@@ -163,3 +163,81 @@ change: "Phase 2 review: restructured module split — separated PaymentProcesso
 ```
 
 **Rollback**: Mark discarded nodes as `[DISCARDED — rollback to Phase N]`. Do not delete — preserve history.
+
+## 6. Review Split Protocol
+
+When the Ralph loop's Workload Assessment (see `ralph-review-loop.md` §Workload Split
+Protocol) triggers `SPLIT_REQUIRED`, the main agent splits review work across multiple
+subagent dispatches. This is distinct from deliverable splitting (§1–5 above) — review
+splitting operates on the review workload, not the deliverable.
+
+### Split Triggers
+
+```
+if estimated_prompt > 40% of subagent max_context → SPLIT_REQUIRED
+if findings_count > 30 → SPLIT_REQUIRED (Recall/Precision only)
+```
+
+### Split Dimensions by Review Stage
+
+| Stage | Split by | Method |
+|-------|---------|--------|
+| Recall | Deliverable modules | Use module boundaries from `index.md` dependency_map |
+| Fact-Gather | Findings file clusters | Group findings by file path, dispatch per cluster |
+| Precision | Same clusters as Fact-Gather | Keep findings + locations paired |
+| Reviewer | Fix scope overlap | Group confirmed findings by file overlap |
+
+### Delegation Plan
+
+When splitting, create a plan file: `{yymmdd-summary}/split-plan-p{N}-r{round}.md`
+
+```markdown
+# Split Plan: Phase {N} Round {round}
+
+## Reason
+{why the split was triggered — prompt size estimate or findings count}
+
+## Sub-tasks
+
+### recall-1
+- Scope: {module/file list}
+- Estimated prompt: {tokens}
+- Status: PENDING | DISPATCHED | COMPLETE
+
+### recall-2
+- ...
+
+## Merge Strategy
+{how sub-task outputs will be combined}
+```
+
+### Execution and Merge
+
+```
+for each sub_task in plan:
+    dispatch(subagent, fill_template(stage, sub_task.scope))
+    save_output → r{round}-{stage}-{sub_task.id}.json
+
+merged = merge_by_stage(all outputs)
+# Recall: concat JSON arrays
+# Fact-Gather: union doc refs per finding_id
+# Precision: dedup verdicts by finding_id
+# Reviewer: 1:1 per finding
+```
+
+### Recursive Splitting
+
+If a sub-task itself exceeds the 40% threshold, split it recursively using the same
+protocol. Limit: 2 levels of recursion. If still too large after 2 levels, escalate to
+user.
+
+### Task Naming
+
+All review sub-task outputs use the naming convention from
+`ralph-review-loop.md` §Task Naming Convention:
+
+```
+r{round}-{review_stage}-{sub_task_id}.json
+```
+
+Review stage identifiers: `recall`, `factgather`, `precision`, `evalfix`.

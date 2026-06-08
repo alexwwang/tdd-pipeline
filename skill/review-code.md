@@ -54,6 +54,18 @@ Core principle: over-report rather than miss.
 - If something looks suspicious but lacks full evidence, report it.
 - Do not skip anything questionable just because it "might not be a problem".
 
+## Input Contract
+
+This prompt contains the following injected variables. Do not modify them.
+
+| Variable | Source | Format |
+|----------|--------|--------|
+| {REVIEW_SCOPE} | Current phase Gate checklist | Structured text (IN SCOPE / OUT OF SCOPE) |
+| {DELIVERABLE} | Current phase output | Full document content |
+| {PRIOR_PHASE_OUTPUTS} | Previous phase deliverables | Document list |
+| {CONTESTED_ISSUES} | Prior round REJECTed C/H/M | JSON list (empty for Round 1) |
+| {KNOWN_ISSUES} | KI document | Structured text (injected every 3 rounds) |
+
 ## Review Scope
 
 Injected by the main agent from the current phase file. Do not modify.
@@ -137,17 +149,28 @@ For each finding, output strictly as JSON:
 
 ## Fact-Gathering for Precision Filter (Code Review)
 
-Between Recall and Precision passes, the main agent gathers these facts from the
-codebase:
+Between Recall and Precision passes, the Fact-Gather subagent (see `review-fact-gather.md`)
+locates relevant documents for each finding. The following investigation guide is injected
+as `{FACT_INVESTIGATION_GUIDE}` into the Fact-Gather prompt:
 
 ```text
-facts_to_gather = [
-  grep for residual references to deleted symbols (classes, functions, variables, columns)
-  cat the actual implementation of suspect functions (not the diff, the full code)
-  read config files referenced in findings (to verify staleness)
-  check __all__ / exports for orphaned references
-]
-```
+FACT_INVESTIGATION_GUIDE (Code Review — Phase 4–5):
 
-Then inject gathered facts into the Precision Filter prompt from
-`review-precision-filter.md`.
+For each finding, locate:
+1. Residual references to deleted symbols (classes, functions, variables, columns)
+   - grep for symbol names across all source files
+   - Check imports, exports, __all__ declarations
+   - Path patterns: src/**/*.{ts,js,py,go,rs}
+2. The actual implementation of suspect functions
+   - Find the full function body (not just the diff)
+   - Check callers and callees
+3. Config files referenced in findings
+   - Verify staleness claims against actual config content
+   - Path patterns: *.config.*, .env*, docker-compose*.yml
+4. Export/import declarations for orphaned references
+   - Check __all__, index.ts barrel files, module exports
+   - Verify no symbol is exported but unused or used but unexported
+5. Test files corresponding to the finding's location
+   - Verify test coverage claims
+   - Path patterns: tests/**/*, **/*.test.*, **/*.spec.*
+```

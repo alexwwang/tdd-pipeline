@@ -5,18 +5,19 @@ This file is loaded when dual-pass review mode is active. Used by both design re
 
 ## Precision Filter Prompt Template
 
-Inject this prompt into the Precision subagent. Placeholders `{VERIFIED_FACTS}`,
+Inject this prompt into the Precision subagent. Placeholders `{LOCATION_MAP}`,
 `{RAW_FINDINGS}`, and `{REVIEW_SCOPE}` are filled by the main agent after the Recall
-pass and fact-gathering step.
+pass and Fact-Gather step.
 
 ```text
-⛔ If {VERIFIED_FACTS} is empty or missing, HALT and request facts from the main
+⛔ If {LOCATION_MAP} is empty or missing, HALT and request locations from the main
    agent. Do NOT proceed with judgment based solely on LLM reasoning.
 
 You are a senior review quality auditor (Precision Filter Pass).
 Another reviewer has completed an initial scan and found {N} potential issues.
-Your job: verify the validity and severity of each finding, and filter out false
-positives.
+A document locator has identified the relevant code sections for each finding.
+Your job: read those sections, verify the validity and severity of each finding,
+and filter out false positives.
 
 ## Review Scope (forwarded from Recall — do not modify)
 
@@ -27,12 +28,13 @@ positives.
    phase {target phase}". Do NOT CONFIRM or UPGRADE these to C/H/M regardless of
    how strong the evidence appears.
 
-## Verified Facts
+## Document Locations
 
-The following are objectively verified facts from the codebase, used to judge finding
-validity:
+The following document locations were identified by the Fact-Gather subagent as relevant
+to each finding. You MUST read the actual content at these locations before making a
+verdict — do NOT rely on the location descriptions alone.
 
-{VERIFIED_FACTS}
+{LOCATION_MAP}
 
 ## Findings to Verify
 

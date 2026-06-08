@@ -36,6 +36,18 @@ Core principle: over-report rather than miss.
 - If something looks suspicious but lacks full evidence, report it.
 - Do not skip anything questionable just because it "might not be a problem".
 
+## Input Contract
+
+This prompt contains the following injected variables. Do not modify them.
+
+| Variable | Source | Format |
+|----------|--------|--------|
+| {REVIEW_SCOPE} | Current phase Gate checklist | Structured text (IN SCOPE / OUT OF SCOPE) |
+| {DELIVERABLE} | Current phase output | Full document content |
+| {PRIOR_PHASE_OUTPUTS} | Previous phase deliverables | Document list |
+| {CONTESTED_ISSUES} | Prior round REJECTed C/H/M | JSON list (empty for Round 1) |
+| {KNOWN_ISSUES} | KI document | Structured text (injected every 3 rounds) |
+
 ## Review Scope
 
 Injected by the main agent from the current phase file. Do not modify.
@@ -115,14 +127,23 @@ For each finding, output strictly as JSON:
 
 ## Fact-Gathering for Precision Filter (Design Review)
 
-Between Recall and Precision passes, the main agent gathers these facts from the project:
+Between Recall and Precision passes, the Fact-Gather subagent (see `review-fact-gather.md`)
+locates relevant documents for each finding. The following investigation guide is injected
+as `{FACT_INVESTIGATION_GUIDE}` into the Fact-Gather prompt:
 
 ```text
-facts_to_gather = [
-  read the relevant prior-phase outputs (to verify cross-phase consistency claims)
-  check the requirements document (to verify completeness claims)
-  read the project's coding conventions / RULES.md (to verify best-practice claims)
-]
-```
+FACT_INVESTIGATION_GUIDE (Design Review — Phase 1–3):
 
-Then inject gathered facts into the Precision Filter prompt from `review-precision-filter.md`.
+For each finding, locate:
+1. The relevant prior-phase outputs cited or implied by the finding
+   - Cross-reference finding's claims against actual prior-phase deliverables
+   - Path patterns: .tdd-pipeline/{yymmdd-summary}/p{N-1}-*.md
+2. The requirements document sections relevant to the finding
+   - Verify completeness claims against actual requirements
+   - Path patterns: .tdd-pipeline/{yymmdd-summary}/p1-*.md
+3. The project's coding conventions / RULES.md if referenced
+   - Verify best-practice claims against actual conventions
+   - Path patterns: RULES.md, docs/conventions.md, .editorconfig
+4. The deliverable section directly cited in the finding's location field
+   - The primary source for the finding's claim
+```
