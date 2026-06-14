@@ -2,6 +2,28 @@
 
 Phases 1–5 only. Phase 6 uses `phase-6-pre-release-testing.md` Part 5.
 
+## SELF-MONITORING (Execute before Step 0 each round — highest priority)
+
+Before each review round begins (before Step 0 Workload Assessment), run the following self-check.
+
+**[SM-1] Mandatory reload triggers** (any one condition → reload immediately):
+- You cannot state the complete Stop Condition definition without consulting this file
+- You cannot name all five roles in the Five-agent separation without consulting this file
+- You cannot list all required fields of the `[ROUND N CLOSE]` block without consulting this file
+- User input contains keywords: "context", "compressed", "reset", "reload"
+- `rounds_since_reload` in `[ROUND N CLOSE]` has reached 5
+
+**[SM-2] Reload action**:
+```
+Read("skill/ralph-review-loop.md")
+```
+After reload, reset `rounds_since_reload` to 0. Continue the current round — do NOT reset round count or CHM tally.
+
+**[SM-3] Counter maintenance**:
+`rounds_since_reload` is maintained in the `[ROUND N CLOSE]` block each round (see §Review Process below). Increment by 1 each round; reset to 0 after reload. If context compression causes the counter to be lost, the capability-degradation signals in [SM-1] serve as the fallback trigger.
+
+> ⛔ This mechanism is non-optional. Reload cost is negligible; missing protocol details mid-loop is not.
+
 ## When to Invoke
 
 - **After Phases 1–3 (design phases)**: Launch Ralph loop **design review**
@@ -221,6 +243,7 @@ for round N:
   #   consecutive_zero_CHM_rounds: <0|1|2>
   #   gate_proceed: NO | YES
   #   next_action: CONTINUE_LOOP | STOP_LOOP
+  #   rounds_since_reload: <n>   # +1 each round; reset to 0 after reload (see §SELF-MONITORING)
   #
   # Validity rules (self-check before emitting next_action):
   #   - gate_proceed = YES   requires consecutive_zero_CHM_rounds = 2  → next_action = STOP_LOOP

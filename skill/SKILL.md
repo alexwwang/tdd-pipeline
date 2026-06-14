@@ -1,6 +1,6 @@
 ---
 name: tdd-pipeline
-version: 0.20.0
+version: 0.21.0
 description: >
   A rigorous TDD development workflow enforcing Red-Green-Refactor at the
   pipeline level: Product Design → Technical Solution → Test Plan → Test
@@ -91,6 +91,16 @@ When the **Watchdog** is active, each review round's findings MUST be submitted 
   - Review log template → `ralph-log-template.md`
   - Severity migration guide (pre-v0.13 → v0.13) → `severity-migration.md`
 - Task tree → `task-tree.md` (loaded ONLY when Split Decision evaluates to SPLIT=true)
+
+### Skill Reload Protocol
+
+During Ralph loop execution, the main agent must maintain a `rounds_since_reload` counter in every `[ROUND N CLOSE]` block (defined in `ralph-review-loop.md` §SELF-MONITORING):
+
+- Increment by 1 each round
+- When it reaches 5, or when a capability-degradation signal fires: execute `Read("skill/ralph-review-loop.md")` before the next round's Step 0, then reset to 0
+- Reload does NOT reset round count or CHM tally
+
+This rule is the orchestrator-layer backstop for `ralph-review-loop.md` §SELF-MONITORING. Both are active simultaneously.
 
 ## Severity Systems
 
